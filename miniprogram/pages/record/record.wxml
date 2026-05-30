@@ -1,125 +1,95 @@
-<!-- pages/record/record.wxml — 记账页（自定义键盘版） -->
+<!-- pages/record/record.wxml — 记账页（全平铺版） -->
 <view class="container">
 
-  <!-- 顶部：当前账本 -->
-  <view class="top-bar">
-    <view class="ledger-info" bindtap="goManage">
-      <text class="ledger-icon">{{currentLedger.icon || '📒'}}</text>
-      <text class="ledger-name">{{currentLedger.name || '我的账本'}}</text>
-      <text class="ledger-arrow">▼</text>
+  <!-- 收入/支出切换 + 金额 -->
+  <view class="type-amount">
+    <view class="type-switch">
+      <view class="type-btn {{billType === 'expense' ? 'active expense' : ''}}" bindtap="switchType" data-type="expense">支出</view>
+      <view class="type-btn {{billType === 'income' ? 'active income' : ''}}" bindtap="switchType" data-type="income">收入</view>
+    </view>
+    <view class="amount-display">
+      <text class="amount-symbol">¥</text>
+      <text class="amount-value">{{amountStr || '0'}}</text>
+      <view class="cursor" wx:if="{{!amountStr}}"></view>
     </view>
   </view>
 
-  <!-- 收入/支出切换 -->
-  <view class="type-switch">
-    <view class="type-btn {{billType === 'expense' ? 'active expense' : ''}}" bindtap="switchType" data-type="expense">
-      支出
-    </view>
-    <view class="type-btn {{billType === 'income' ? 'active income' : ''}}" bindtap="switchType" data-type="income">
-      收入
-    </view>
-  </view>
-
-  <!-- 金额显示 + 分类 + 备注 -->
-  <view class="input-area">
-    <view class="amount-row">
-      <view class="category-badge" bindtap="showCategoryPicker">
-        <text class="category-badge-icon">{{selectedCategoryInfo.icon || '📦'}}</text>
-        <text class="category-badge-name">{{selectedCategoryInfo.name || '分类'}}</text>
-        <text class="category-badge-arrow">▼</text>
-      </view>
-      <view class="amount-display">
-        <text class="amount-symbol">¥</text>
-        <text class="amount-value">{{amountStr || '0'}}</text>
-        <view class="amount-cursor" wx:if="{{!amountStr}}"></view>
-      </view>
-    </view>
-    <view class="note-row">
-      <input class="note-input" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200" focus="{{false}}" />
-    </view>
-    <!-- 快捷选项 -->
-    <view class="quick-options">
-      <view class="quick-opt" bindtap="selectPayer">
-        <text class="quick-opt-icon">👤</text>
-        <text class="quick-opt-text">{{currentPayerName}}</text>
-      </view>
-      <view class="quick-opt" bindtap="toggleDate">
-        <text class="quick-opt-icon">📅</text>
-        <text class="quick-opt-text">{{dateText}}</text>
-      </view>
-      <view class="quick-opt" bindtap="selectAccount">
-        <text class="quick-opt-icon">💳</text>
-        <text class="quick-opt-text">{{selectedAccountName}}</text>
-      </view>
-      <view class="quick-opt" wx:if="{{members.length > 1}}" bindtap="toggleSplit">
-        <text class="quick-opt-icon">⚖️</text>
-        <text class="quick-opt-text">分摊</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 分类选择面板（点击分类badge展开） -->
-  <view class="category-panel" wx:if="{{showCategories}}">
-    <view class="category-grid">
-      <view class="category-item {{selectedCategory === item.key ? 'selected' : ''}}"
+  <!-- 分类：直接平铺 -->
+  <view class="section-flat">
+    <text class="flat-label">分类</text>
+    <scroll-view class="category-scroll" scroll-x enable-flex>
+      <view class="cat-item {{selectedCategory === item.key ? 'selected' : ''}}"
             wx:for="{{categoryList}}" wx:key="key"
             bindtap="selectCategory" data-key="{{item.key}}">
-        <text class="category-icon">{{item.icon}}</text>
-        <text class="category-name">{{item.name}}</text>
+        <text class="cat-icon">{{item.icon}}</text>
+        <text class="cat-name">{{item.name}}</text>
       </view>
+    </scroll-view>
+  </view>
+
+  <!-- 花费人：直接平铺 -->
+  <view class="section-flat">
+    <text class="flat-label">花费人</text>
+    <scroll-view class="payer-scroll" scroll-x enable-flex>
+      <view class="person-item {{selectedPayer === item.id ? 'selected' : ''}}"
+            wx:for="{{members}}" wx:key="id"
+            bindtap="pickPayer" data-id="{{item.id}}">
+        <text class="person-avatar">{{item.avatar}}</text>
+        <text class="person-name">{{item.name}}</text>
+      </view>
+      <view class="person-item add" bindtap="showAddMember">
+        <text class="person-avatar">＋</text>
+        <text class="person-name">添加</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 分摊方式：直接平铺（仅支出且多人时显示） -->
+  <view class="section-flat" wx:if="{{billType === 'expense' && members.length > 1}}">
+    <text class="flat-label">分摊</text>
+    <view class="split-bar">
+      <view class="split-opt {{splitMode === 'equal' ? 'active' : ''}}" bindtap="setSplitEqual">均摊</view>
+      <view class="split-opt {{splitMode === 'custom' ? 'active' : ''}}" bindtap="setSplitCustom">自定义</view>
+      <text class="split-preview" wx:if="{{splitMode === 'equal'}}">每人 ¥{{splitPerPerson}}</text>
     </view>
+    <!-- 自定义分摊输入 -->
+    <view class="custom-splits" wx:if="{{splitMode === 'custom'}}">
+      <view class="split-input-row" wx:for="{{splitItems}}" wx:key="memberId">
+        <text class="split-input-avatar">{{item.avatar}}</text>
+        <text class="split-input-name">{{item.name}}</text>
+        <input class="split-input" type="digit" placeholder="0"
+               value="{{item.amountStr}}" bindinput="onSplitAmountInput" data-idx="{{index}}" />
+      </view>
+      <text class="split-remain" wx:if="{{splitRemainder !== 0}}">
+        {{splitRemainder > 0 ? '还差' : '多了'}} ¥{{(Math.abs(splitRemainder)/100).toFixed(2)}}
+      </text>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="note-section">
+    <input class="note-input" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200" />
   </view>
 
   <!-- 自定义数字键盘 -->
-  <view class="keyboard {{billType === 'expense' ? 'keyboard-expense' : 'keyboard-income'}}">
-    <!-- 快捷金额 -->
-    <view class="quick-amounts">
-      <view class="quick-amount" wx:for="{{quickAmounts}}" wx:key="*this"
-            bindtap="quickAmount" data-val="{{item}}">
-        {{item}}
-      </view>
-    </view>
-    <!-- 数字键 4x4 固定布局 -->
+  <view class="keyboard {{billType === 'expense' ? 'kb-expense' : 'kb-income'}}">
     <view class="keypad">
-      <view class="key" bindtap="pressKey" data-val="1" hover-class="key-hover"><text class="key-text">1</text></view>
-      <view class="key" bindtap="pressKey" data-val="2" hover-class="key-hover"><text class="key-text">2</text></view>
-      <view class="key" bindtap="pressKey" data-val="3" hover-class="key-hover"><text class="key-text">3</text></view>
-      <view class="key key-del" bindtap="pressKey" data-val="del" hover-class="key-hover"><text class="key-text">⌫</text></view>
-      <view class="key" bindtap="pressKey" data-val="4" hover-class="key-hover"><text class="key-text">4</text></view>
-      <view class="key" bindtap="pressKey" data-val="5" hover-class="key-hover"><text class="key-text">5</text></view>
-      <view class="key" bindtap="pressKey" data-val="6" hover-class="key-hover"><text class="key-text">6</text></view>
-      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok"><text class="key-text">确认</text></view>
-      <view class="key" bindtap="pressKey" data-val="7" hover-class="key-hover"><text class="key-text">7</text></view>
-      <view class="key" bindtap="pressKey" data-val="8" hover-class="key-hover"><text class="key-text">8</text></view>
-      <view class="key" bindtap="pressKey" data-val="9" hover-class="key-hover"><text class="key-text">9</text></view>
-      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok"><text class="key-text">确认</text></view>
-      <view class="key" bindtap="pressKey" data-val="." hover-class="key-hover"><text class="key-text">.</text></view>
-      <view class="key" bindtap="pressKey" data-val="0" hover-class="key-hover"><text class="key-text">0</text></view>
-      <view class="key" bindtap="pressKey" data-val="00" hover-class="key-hover"><text class="key-text">00</text></view>
-      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok"><text class="key-text">确认</text></view>
-    </view>
-  </view>
-
-  <!-- 人员选择弹窗 -->
-  <view class="modal-mask" wx:if="{{showPayerModal}}" bindtap="closePayerModal">
-    <view class="modal-slide" catchtap="">
-      <view class="slide-header">
-        <text class="slide-title">谁花的钱</text>
-        <text class="slide-close" bindtap="closePayerModal">完成</text>
-      </view>
-      <view class="payer-list">
-        <view class="payer-option {{selectedPayer === item.id ? 'selected' : ''}}"
-              wx:for="{{members}}" wx:key="id"
-              bindtap="pickPayer" data-id="{{item.id}}">
-          <text class="payer-option-avatar">{{item.avatar}}</text>
-          <text class="payer-option-name">{{item.name}}</text>
-          <text class="payer-option-check" wx:if="{{selectedPayer === item.id}}">✓</text>
-        </view>
-        <view class="payer-option add" bindtap="showAddMember">
-          <text class="payer-option-avatar">＋</text>
-          <text class="payer-option-name">添加人员</text>
-        </view>
-      </view>
+      <view class="key" bindtap="pressKey" data-val="1" hover-class="key-hover">1</view>
+      <view class="key" bindtap="pressKey" data-val="2" hover-class="key-hover">2</view>
+      <view class="key" bindtap="pressKey" data-val="3" hover-class="key-hover">3</view>
+      <view class="key key-del" bindtap="pressKey" data-val="del" hover-class="key-hover">⌫</view>
+      <view class="key" bindtap="pressKey" data-val="4" hover-class="key-hover">4</view>
+      <view class="key" bindtap="pressKey" data-val="5" hover-class="key-hover">5</view>
+      <view class="key" bindtap="pressKey" data-val="6" hover-class="key-hover">6</view>
+      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">确认</view>
+      <view class="key" bindtap="pressKey" data-val="7" hover-class="key-hover">7</view>
+      <view class="key" bindtap="pressKey" data-val="8" hover-class="key-hover">8</view>
+      <view class="key" bindtap="pressKey" data-val="9" hover-class="key-hover">9</view>
+      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">确认</view>
+      <view class="key" bindtap="pressKey" data-val="." hover-class="key-hover">.</view>
+      <view class="key" bindtap="pressKey" data-val="0" hover-class="key-hover">0</view>
+      <view class="key" bindtap="pressKey" data-val="00" hover-class="key-hover">00</view>
+      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">确认</view>
     </view>
   </view>
 

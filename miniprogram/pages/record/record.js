@@ -1,4 +1,4 @@
-// pages/record/record.js — 记账页（自定义键盘版）
+// pages/record/record.js — 记账页（全平铺版）
 
 const util = require('../../utils/util')
 const storage = require('../../utils/storage')
@@ -8,191 +8,131 @@ const ledger = require('../../utils/ledger')
 
 Page({
   data: {
-    // 账本
     currentLedger: null,
-    // 类型
     billType: 'expense',
-    // 金额
     amountStr: '',
-    // 分类
     categoryList: [],
     selectedCategory: '',
-    selectedCategoryInfo: { icon: '📦', name: '分类' },
-    showCategories: false,
-    // 备注
     note: '',
-    // 日期
-    dateText: '今天',
-    billDate: 0,
-    // 账户
-    accounts: [],
-    selectedAccount: 'wechat',
-    selectedAccountName: '微信支付',
-    // 人员
     members: [],
     selectedPayer: 'self',
-    currentPayerName: '我',
-    showPayerModal: false,
     showAddMemberModal: false,
     newMemberName: '',
-    // 键盘
-    quickAmounts: ['5', '10', '20', '50', '100', '200'],
+    // 分摊
+    splitMode: 'equal',
+    splitItems: [],
+    splitPerPerson: '0.00',
+    splitRemainder: 0,
+    // 日期/账户
+    billDate: 0,
+    accounts: [],
+    selectedAccount: 'wechat',
   },
 
   onLoad() {
     ledger.initDefaultLedger()
-    this.initData()
-  },
-
-  onShow() {
-    this.refreshLedgerInfo()
-    const members = storage.getMembers()
+    const now = new Date()
     this.setData({
-      accounts: storage.getAccounts(),
-      members,
-      currentPayerName: this.getPayerName(this.data.selectedPayer, members)
-    })
-  },
-
-  getPayerName(payerId, members) {
-    const m = (members || storage.getMembers()).find(m => m.id === payerId)
-    return m ? m.name : '我'
-  },
-
-  refreshLedgerInfo() {
-    const current = ledger.getCurrentLedger()
-    this.setData({ currentLedger: current, accounts: storage.getAccounts() })
-    this.updateAccountName()
-  },
-
-  initData() {
-    this.setData({
-      billDate: Date.now(),
-      dateText: '今天',
+      billDate: now.getTime(),
       categoryList: categories.getCategories('expense'),
-      selectedCategory: '',
-      selectedCategoryInfo: { icon: '📦', name: '分类' },
       accounts: storage.getAccounts(),
       selectedAccount: storage.getSettings().defaultAccount || 'wechat'
     })
-    this.updateAccountName()
   },
 
-  updateAccountName() {
-    const acc = this.data.accounts.find(a => a.key === this.data.selectedAccount || a.id === this.data.selectedAccount)
-    if (acc) this.setData({ selectedAccountName: acc.name })
+  onShow() {
+    const members = storage.getMembers()
+    const current = ledger.getCurrentLedger()
+    this.setData({
+      members,
+      currentLedger: current,
+      accounts: storage.getAccounts()
+    })
+    this.initSplitItems(members)
   },
 
-  // ========== 收入/支出切换 ==========
+  // ========== 收支切换 ==========
   switchType(e) {
     const type = e.currentTarget.dataset.type
     this.setData({
       billType: type,
       categoryList: categories.getCategories(type),
-      selectedCategory: '',
-      selectedCategoryInfo: { icon: '📦', name: '分类' },
-      showCategories: false
+      selectedCategory: ''
     })
   },
 
   // ========== 分类 ==========
-  showCategoryPicker() {
-    this.setData({ showCategories: !this.data.showCategories })
+  selectCategory(e) {
+    this.setData({ selectedCategory: e.currentTarget.dataset.key })
   },
 
-  selectCategory(e) {
-    const key = e.currentTarget.dataset.key
-    const cat = categories.getCategoryBy(key, this.data.billType)
-    this.setData({
-      selectedCategory: key,
-      selectedCategoryInfo: { icon: cat.icon, name: cat.name },
-      showCategories: false
-    })
+  // ========== 花费人 ==========
+  pickPayer(e) {
+    const id = e.currentTarget.dataset.id
+    this.setData({ selectedPayer: id })
+  },
+
+  // ========== 分摊 ==========
+  initSplitItems(members) {
+    const items = (members || []).map(m => ({
+      memberId: m.id, name: m.name, avatar: m.avatar, amount: 0, amountStr: ''
+    }))
+    this.setData({ splitItems: items })
+  },
+
+  setSplitEqual() {
+    this.setData({ splitMode: 'equal' })
+    this.updateSplit()
+  },
+
+  setSplitCustom() {
+    this.setData({ splitMode: 'custom' })
+  },
+
+  updateSplit() {
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    const count = this.data.splitItems.length || 1
+    const perPerson = Math.floor(amountFen / count)
+    this.setData({ splitPerPerson: (perPerson / 100).toFixed(2) })
+    if (this.data.splitMode === 'equal') {
+      const items = this.data.splitItems.map(item => ({
+        ...item, amount: perPerson, amountStr: (perPerson / 100).toFixed(2)
+      }))
+      this.setData({ splitItems: items, splitRemainder: amountFen - perPerson * count })
+    }
+  },
+
+  onSplitAmountInput(e) {
+    const idx = e.currentTarget.dataset.idx
+    const val = e.detail.value
+    const items = [...this.data.splitItems]
+    items[idx].amountStr = val
+    items[idx].amount = util.yuanToFen(parseFloat(val) || 0)
+    const totalSplit = items.reduce((s, i) => s + i.amount, 0)
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    this.setData({ splitItems: items, splitRemainder: amountFen - totalSplit })
   },
 
   // ========== 备注 ==========
   onNoteInput(e) { this.setData({ note: e.detail.value }) },
 
-  // ========== 自定义键盘 ==========
+  // ========== 键盘 ==========
   pressKey(e) {
     const val = e.currentTarget.dataset.val
-    if (val === 'del') return this.deleteChar()
+    if (val === 'del') {
+      let str = this.data.amountStr
+      this.setData({ amountStr: str ? str.slice(0, -1) : '' })
+      this.updateSplit()
+      return
+    }
     if (val === 'ok') return this.submitBill()
-    // 数字和小数点
     let str = this.data.amountStr
     if (val === '.' && str.includes('.')) return
-    if (str.includes('.') && str.split('.')[1].length >= 2) return // 最多2位小数
-    if (str.length >= 10) return // 总长度限制
+    if (str.includes('.') && str.split('.')[1].length >= 2) return
+    if (str.length >= 10) return
     str += val
     this.setData({ amountStr: str })
-  },
-
-  deleteChar() {
-    let str = this.data.amountStr
-    if (!str) return
-    str = str.slice(0, -1)
-    this.setData({ amountStr: str })
-  },
-
-  quickAmount(e) {
-    const val = e.currentTarget.dataset.val
-    this.setData({ amountStr: val })
-  },
-
-  // ========== 快捷选项 ==========
-  selectPayer() { this.setData({ showPayerModal: true }) },
-  closePayerModal() { this.setData({ showPayerModal: false }) },
-
-  pickPayer(e) {
-    const id = e.currentTarget.dataset.id
-    this.setData({
-      selectedPayer: id,
-      currentPayerName: this.getPayerName(id)
-    })
-  },
-
-  toggleDate() {
-    // 用系统日期选择器
-    const that = this
-    wx.showModal({
-      title: '选择日期',
-      editable: true,
-      placeholderText: '格式: YYYY-MM-DD',
-      content: util.formatDate(Date.now()),
-      success(res) {
-        if (res.confirm && res.content) {
-          const [y, m, d] = res.content.split('-')
-          if (y && m && d) {
-            const date = new Date(y, m - 1, d).getTime()
-            const today = util.todayStart()
-            let dateText = res.content
-            if (date === today) dateText = '今天'
-            else if (date === today - 86400000) dateText = '昨天'
-            that.setData({ billDate: date, dateText })
-          }
-        }
-      }
-    })
-  },
-
-  selectAccount() {
-    const accounts = this.data.accounts
-    const names = accounts.map(a => a.name)
-    wx.showActionSheet({
-      itemList: names,
-      success: (res) => {
-        const acc = accounts[res.tapIndex]
-        this.setData({
-          selectedAccount: acc.key || acc.id,
-          selectedAccountName: acc.name
-        })
-      }
-    })
-  },
-
-  toggleSplit() {
-    // TODO: 打开分摊设置弹窗
-    wx.showToast({ title: '分摊设置开发中', icon: 'none' })
+    this.updateSplit()
   },
 
   // ========== 提交 ==========
@@ -206,9 +146,7 @@ Page({
     }
 
     const amountResult = validator.validateAmount(amountStr)
-    if (!amountResult.valid) {
-      wx.showToast({ title: amountResult.msg, icon: 'none' }); return
-    }
+    if (!amountResult.valid) { wx.showToast({ title: amountResult.msg, icon: 'none' }); return }
 
     const bill = {
       amount: util.yuanToFen(amountResult.value),
@@ -217,11 +155,11 @@ Page({
       note: this.data.note,
       account: this.data.selectedAccount,
       date: this.data.billDate || Date.now(),
-      payer: this.data.selectedPayer || 'self'
+      payer: this.data.selectedPayer || 'self',
+      splits: this.buildSplits()
     }
 
-    const isInLedger = ledger.isInLedger()
-    if (isInLedger) {
+    if (ledger.isInLedger()) {
       const current = ledger.getCurrentLedger()
       bill.id = util.genId()
       bill.createdAt = Date.now()
@@ -232,34 +170,28 @@ Page({
       storage.updateAccountBalance(bill.account, delta)
     }
 
-    // 重置
-    this.setData({
-      amountStr: '',
-      selectedCategory: '',
-      selectedCategoryInfo: { icon: '📦', name: '分类' },
-      note: '',
-      showCategories: false
-    })
-
-    const typeLabel = bill.type === 'income' ? '收入' : '支出'
-    wx.showToast({ title: `${typeLabel} ¥${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
+    this.setData({ amountStr: '', selectedCategory: '', note: '' })
+    const label = bill.type === 'income' ? '收入' : '支出'
+    wx.showToast({ title: `${label} ¥${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
   },
 
-  // ========== 人员管理 ==========
-  showAddMember() {
-    this.setData({ showAddMemberModal: true, newMemberName: '' })
+  buildSplits() {
+    if (this.data.billType !== 'expense' || this.data.members.length <= 1) return null
+    if (this.data.splitMode === 'equal') return null
+    return this.data.splitItems.filter(i => i.amount > 0).map(i => ({ memberId: i.memberId, amount: i.amount }))
   },
+
+  // ========== 添加人员 ==========
+  showAddMember() { this.setData({ showAddMemberModal: true, newMemberName: '' }) },
   cancelAddMember() { this.setData({ showAddMemberModal: false }) },
   onNewMemberNameInput(e) { this.setData({ newMemberName: e.detail.value }) },
   confirmAddMember() {
     const name = this.data.newMemberName.trim()
     if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return }
     const members = storage.addMember(name)
-    this.setData({ members, showAddMemberModal: false })
-    wx.showToast({ title: '已添加', icon: 'success' })
+    const newM = members[members.length - 1]
+    const splitItems = [...this.data.splitItems, { memberId: newM.id, name: newM.name, avatar: newM.avatar, amount: 0, amountStr: '' }]
+    this.setData({ members, showAddMemberModal: false, splitItems })
+    this.updateSplit()
   },
-
-  goManage() {
-    wx.switchTab({ url: '/pages/manage/manage' })
-  }
 })
