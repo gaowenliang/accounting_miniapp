@@ -39,7 +39,23 @@ function getCategoryBy(key, type) {
 }
 
 function getCategories(type) {
+  // 先尝试读取缓存（支持自定义分类）
+  try {
+    const cached = wx.getStorageSync('categories_' + type)
+    if (cached && cached.length > 0) return cached
+  } catch (e) {}
   return type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+}
+
+function saveCategories(type, list) {
+  try { wx.setStorageSync('categories_' + type, list) } catch (e) {}
+}
+
+function resetCategories() {
+  try {
+    wx.removeStorageSync('categories_expense')
+    wx.removeStorageSync('categories_income')
+  } catch (e) {}
 }
 
 module.exports = {
@@ -47,5 +63,7 @@ module.exports = {
   INCOME_CATEGORIES,
   DEFAULT_ACCOUNTS,
   getCategoryBy,
-  getCategories
+  getCategories,
+  saveCategories,
+  resetCategories
 }
