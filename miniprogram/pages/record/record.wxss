@@ -62,6 +62,13 @@
 .cat-item.selected .cat-icon { transform: scale(1.1); }
 .cat-item.selected .cat-name { color: #4F46E5; font-weight: 600; }
 
+/* 备注输入 */
+.note-input-main {
+  width: 100%; font-size: 26rpx; color: #374151; padding: 8rpx 0;
+  border: none; background: transparent;
+}
+.note-input-main::placeholder { color: #9CA3AF; }
+
 /* 花费人横向滚动 */
 .payer-scroll { white-space: nowrap; }
 .person-item {

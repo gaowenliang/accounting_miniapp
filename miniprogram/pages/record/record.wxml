@@ -43,6 +43,11 @@
     </view>
   </view>
 
+  <!-- 备注 -->
+  <view class="section-flat">
+    <input class="note-input-main" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200" />
+  </view>
+
   <!-- 花费人：直接平铺 -->
   <view class="section-flat">
     <text class="flat-label">花费人</text>
@@ -100,10 +105,6 @@
         <text class="kb-toolbar-icon">📅</text>
         <text class="kb-toolbar-text">{{dateText}}</text>
       </view>
-      <view class="kb-toolbar-item" bindtap="focusNote">
-        <text class="kb-toolbar-icon">📝</text>
-        <text class="kb-toolbar-text">{{note || '备注'}}</text>
-      </view>
       <view class="kb-toolbar-item" bindtap="pickAccount">
         <text class="kb-toolbar-icon">💳</text>
         <text class="kb-toolbar-text">{{accountName}}</text>
@@ -135,19 +136,7 @@
     <view id="datePicker"></view>
   </picker>
 
-  <!-- 备注弹窗 -->
-  <view class="modal-mask" wx:if="{{showNoteModal}}" bindtap="closeNote">
-    <view class="modal-content" catchtap="">
-      <view class="modal-header">备注</view>
-      <view class="modal-body">
-        <input class="form-input" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" focus="{{showNoteModal}}" maxlength="200" />
-      </view>
-      <view class="modal-footer">
-        <view class="btn-cancel" bindtap="closeNote">取消</view>
-        <view class="btn-primary" bindtap="closeNote">确定</view>
-      </view>
-    </view>
-  </view>
+  <!-- 备注弹窗（备用） -->
 
   <!-- 账户选择弹窗 -->
   <view class="modal-mask" wx:if="{{showAccountPicker}}" bindtap="closeAccountPicker">
