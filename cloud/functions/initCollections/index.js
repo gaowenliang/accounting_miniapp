@@ -5,7 +5,13 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
 exports.main = async (event, context) => {
-  const collections = ['bills', 'accounts', 'budgets']
+  const collections = [
+    'bills',          // 个人账单
+    'ledger_bills',   // 共享账本账单
+    'ledgers',        // 账本
+    'ledger_members', // 账本成员
+    'accounts'        // 账户
+  ]
   const results = []
 
   for (const name of collections) {

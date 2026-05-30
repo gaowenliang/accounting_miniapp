@@ -1,0 +1,205 @@
+<!-- pages/manage/manage.wxml — 管理 -->
+<view class="container">
+
+  <!-- 概览卡片 -->
+  <view class="overview-card">
+    <text class="overview-emoji">💰</text>
+    <text class="overview-name">记账达人</text>
+    <view class="overview-stats">
+      <view class="overview-stat">
+        <text class="stat-num">{{totalBills}}</text>
+        <text class="stat-label">总记录</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="overview-stat">
+        <text class="stat-num">{{totalDays}}</text>
+        <text class="stat-label">记账天数</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="overview-stat">
+        <text class="stat-num">¥{{(totalAssets/100).toFixed(0)}}</text>
+        <text class="stat-label">总资产</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 账本管理 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">📚 账本</text>
+      <view class="header-actions">
+        <text class="action-btn" bindtap="showJoin">加入</text>
+        <text class="action-btn primary" bindtap="showCreateLedger">+ 新建</text>
+      </view>
+    </view>
+    <view class="card">
+      <view class="ledger-item {{currentLedger.id === item.id ? 'current' : ''}}"
+            wx:for="{{ledgerList}}" wx:key="id"
+            bindtap="switchLedgerTap" data-id="{{item.id}}"
+            bindlongpress="goLedgerDetail" data-id="{{item.id}}">
+        <text class="ledger-icon">{{item.icon}}</text>
+        <view class="ledger-info">
+          <text class="ledger-name">{{item.name}}</text>
+          <text class="ledger-meta">{{item.type === 'shared' ? '共享·' + item.memberCount + '人' : '个人'}}</text>
+        </view>
+        <view class="ledger-check" wx:if="{{currentLedger.id === item.id}}">
+          <text class="check-mark">✓</text>
+        </view>
+        <text class="ledger-arrow" wx:else>›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 邀请（共享账本才显示） -->
+  <view class="section" wx:if="{{currentLedger.type === 'shared' && currentLedger.role === 'owner'}}">
+    <view class="card invite-card" bindtap="showInvite">
+      <text class="invite-icon">🔗</text>
+      <text class="invite-text">邀请成员加入「{{currentLedger.name}}」</text>
+      <text class="invite-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 账户管理 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">💳 账户</text>
+    </view>
+    <view class="card">
+      <view class="account-row" wx:for="{{accounts}}" wx:key="id">
+        <text class="account-icon">{{item.icon}}</text>
+        <text class="account-name">{{item.name}}</text>
+        <text class="account-balance {{item.balance >= 0 ? 'text-income' : 'text-expense'}}">
+          ¥{{((item.balance || 0)/100).toFixed(2)}}
+        </text>
+      </view>
+      <view class="add-btn" bindtap="addAccount">
+        <text>＋ 添加账户</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预算 -->
+  <view class="section">
+    <view class="card">
+      <view class="setting-row" bindtap="showBudgetSetting">
+        <view class="setting-left">
+          <text>📊</text>
+          <text class="setting-label">月度预算</text>
+        </view>
+        <view class="setting-right">
+          <text class="setting-value">{{budgetEnabled ? '¥' + budgetAmountText : '未设置'}}</text>
+          <text class="setting-arrow">›</text>
+        </view>
+      </view>
+      <view class="setting-row" wx:if="{{budgetEnabled}}" bindtap="disableBudget">
+        <view class="setting-left">
+          <text>🔕</text>
+          <text class="setting-label">关闭预算</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 其他 -->
+  <view class="section">
+    <view class="card">
+      <view class="setting-row" bindtap="exportData">
+        <view class="setting-left">
+          <text>📤</text>
+          <text class="setting-label">导出数据</text>
+        </view>
+        <text class="setting-arrow">›</text>
+      </view>
+      <view class="setting-row" bindtap="showClearConfirm">
+        <view class="setting-left">
+          <text>🗑️</text>
+          <text class="setting-label danger">清除所有数据</text>
+        </view>
+        <text class="setting-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 创建账本弹窗 -->
+  <view class="modal-mask" wx:if="{{showLedgerModal}}" bindtap="cancelCreateLedger">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">新建账本</view>
+      <view class="modal-body">
+        <input class="form-input" placeholder="账本名称" value="{{newLedgerName}}" bindinput="onNewLedgerNameInput" focus="{{showLedgerModal}}" />
+        <view class="type-select">
+          <view class="type-opt {{newLedgerType === 'personal' ? 'active' : ''}}" bindtap="switchLedgerType" data-type="personal">
+            📒 个人账本
+          </view>
+          <view class="type-opt {{newLedgerType === 'shared' ? 'active' : ''}}" bindtap="switchLedgerType" data-type="shared">
+            👥 共享账本
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelCreateLedger">取消</view>
+        <view class="btn-primary" bindtap="confirmCreateLedger">创建</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 邀请弹窗 -->
+  <view class="modal-mask" wx:if="{{showInviteModal}}" bindtap="cancelInvite">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">邀请成员</view>
+      <view class="modal-body">
+        <text class="invite-label">分享邀请码给需要加入的人</text>
+        <view class="invite-code-box" bindtap="copyInviteCode">
+          <text class="invite-code">{{inviteCode}}</text>
+          <text class="invite-copy">点击复制</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-primary" bindtap="cancelInvite">关闭</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加入弹窗 -->
+  <view class="modal-mask" wx:if="{{showJoinModal}}" bindtap="cancelJoin">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">加入共享账本</view>
+      <view class="modal-body">
+        <input class="form-input" placeholder="输入6位邀请码" type="number" maxlength="6" value="{{joinCode}}" bindinput="onJoinCodeInput" focus="{{showJoinModal}}" />
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelJoin">取消</view>
+        <view class="btn-primary" bindtap="confirmJoin">加入</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预算弹窗 -->
+  <view class="modal-mask" wx:if="{{showBudgetModal}}" bindtap="cancelBudget">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">设置月度预算</view>
+      <view class="modal-body">
+        <input class="form-input" type="digit" placeholder="输入预算金额" value="{{budgetInput}}" bindinput="onBudgetInput" focus="{{showBudgetModal}}" />
+        <text class="modal-hint">支出达到80%时会提醒</text>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelBudget">取消</view>
+        <view class="btn-primary" bindtap="saveBudget">确认</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 清除确认 -->
+  <view class="modal-mask" wx:if="{{showClearModal}}" bindtap="cancelClear">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header danger">⚠️ 清除所有数据</view>
+      <view class="modal-body">
+        <text class="modal-warn">此操作不可恢复！所有账单、账户、预算数据将被清除。</text>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelClear">取消</view>
+        <view class="btn-danger" bindtap="clearAllData">确认清除</view>
+      </view>
+    </view>
+  </view>
+
+</view>

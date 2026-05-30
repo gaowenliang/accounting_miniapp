@@ -1,0 +1,93 @@
+<!-- pages/record/record.wxml — 记账页（首页） -->
+<view class="container">
+
+  <!-- 顶部：当前账本 + 今日统计 -->
+  <view class="top-bar">
+    <view class="ledger-info" bindtap="goManage">
+      <text class="ledger-icon">{{currentLedger.icon || '📒'}}</text>
+      <text class="ledger-name">{{currentLedger.name || '我的账本'}}</text>
+      <text class="ledger-arrow">▼</text>
+    </view>
+    <view class="today-stats" wx:if="{{todayCount > 0}}">
+      <text class="today-text">今日 {{todayCount}}笔  支出 ¥{{(todayExpense/100).toFixed(2)}}</text>
+    </view>
+  </view>
+
+  <!-- 收入/支出切换 -->
+  <view class="type-switch">
+    <view class="type-btn {{billType === 'expense' ? 'active expense' : ''}}" bindtap="switchType" data-type="expense">
+      支出
+    </view>
+    <view class="type-btn {{billType === 'income' ? 'active income' : ''}}" bindtap="switchType" data-type="income">
+      收入
+    </view>
+  </view>
+
+  <!-- 金额输入 -->
+  <view class="amount-section">
+    <text class="amount-prefix">¥</text>
+    <input class="amount-input"
+           type="digit"
+           placeholder="0.00"
+           placeholder-style="color:#C0C4CC;font-size:60rpx"
+           value="{{amountStr}}"
+           bindinput="onAmountInput"
+           focus="{{true}}" />
+  </view>
+
+  <!-- 快捷分类（最近使用） -->
+  <view class="quick-section" wx:if="{{recentCategories.length > 0}}">
+    <text class="quick-label">最近使用</text>
+    <scroll-view class="quick-scroll" scroll-x enable-flex>
+      <view class="quick-item" wx:for="{{recentCategories}}" wx:key="key"
+            bindtap="quickSelect" data-key="{{item.key}}" data-type="{{item.type}}">
+        <text class="quick-icon">{{item.icon}}</text>
+        <text class="quick-name">{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 分类网格 -->
+  <view class="section">
+    <text class="section-label">选择分类</text>
+    <view class="category-grid">
+      <view class="category-item {{selectedCategory === item.key ? 'selected' : ''}}"
+            wx:for="{{categoryList}}" wx:key="key"
+            bindtap="selectCategory" data-key="{{item.key}}">
+        <text class="category-icon">{{item.icon}}</text>
+        <text class="category-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注行 -->
+  <view class="options-row">
+    <view class="option-item">
+      <input class="option-input" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200" />
+    </view>
+  </view>
+
+  <!-- 日期 + 账户行 -->
+  <view class="options-row">
+    <picker mode="date" bindchange="onDateChange">
+      <view class="option-item">
+        <text class="option-icon">📅</text>
+        <text class="option-text">{{dateText}}</text>
+      </view>
+    </picker>
+    <picker range="{{accounts}}" range-key="name" bindchange="selectAccount">
+      <view class="option-item">
+        <text class="option-icon">💳</text>
+        <text class="option-text">{{selectedAccountName}}</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-area">
+    <view class="btn-submit {{billType === 'income' ? 'income' : ''}}" bindtap="submitBill">
+      确认记账
+    </view>
+  </view>
+
+</view>

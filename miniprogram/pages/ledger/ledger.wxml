@@ -1,0 +1,55 @@
+<!-- pages/ledger/ledger.wxml -->
+<view class="container" wx:if="{{ledger}}">
+
+  <view class="card info-card">
+    <text class="info-icon">{{ledger.icon}}</text>
+    <text class="info-name">{{ledger.name}}</text>
+    <text class="info-meta">{{ledger.type === 'shared' ? '共享账本 · ' + ledger.memberCount + '人' : '个人账本'}}</text>
+    <text class="info-time">创建于 {{new Date(ledger.createdAt).toLocaleDateString()}}</text>
+  </view>
+
+  <!-- 操作列表 -->
+  <view class="section">
+    <view class="card">
+      <view class="action-item" bindtap="showRenameModal">
+        <text class="action-icon">✏️</text>
+        <text class="action-label">重命名</text>
+        <text class="action-arrow">›</text>
+      </view>
+      <view class="action-item" wx:if="{{ledger.type === 'shared'}}" bindtap="goMembers">
+        <text class="action-icon">👥</text>
+        <text class="action-label">成员管理</text>
+        <text class="action-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 危险操作 -->
+  <view class="section">
+    <view class="card">
+      <view class="action-item" wx:if="{{ledger.type === 'shared' && ledger.role === 'member'}}" bindtap="leaveLedger">
+        <text class="action-icon">🚪</text>
+        <text class="action-label danger">退出共享账本</text>
+      </view>
+      <view class="action-item" wx:if="{{ledger.role === 'owner'}}" bindtap="deleteLedger">
+        <text class="action-icon">🗑️</text>
+        <text class="action-label danger">删除账本</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 重命名弹窗 -->
+  <view class="modal-mask" wx:if="{{showRename}}" bindtap="cancelRename">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">重命名</view>
+      <view class="modal-body">
+        <input class="form-input" placeholder="账本名称" value="{{newName}}" bindinput="onNewNameInput" focus="{{showRename}}" />
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelRename">取消</view>
+        <view class="btn-primary" bindtap="confirmRename">确认</view>
+      </view>
+    </view>
+  </view>
+
+</view>

@@ -1,0 +1,8 @@
+<!-- pages/ledger-members/ledger-members.wxml -->
+<view class="container">
+  <view class="empty-state">
+    <text class="emoji">👥</text>
+    <text class="title">成员管理</text>
+    <text class="desc">共享账本成员功能开发中</text>
+  </view>
+</view>
