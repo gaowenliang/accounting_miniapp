@@ -30,7 +30,11 @@ Page({
     showBudgetModal: false,
     budgetInput: '',
     // 清除
-    showClearModal: false
+    showClearModal: false,
+    // 人员
+    members: [],
+    showMemberModal: false,
+    newMemberName: ''
   },
 
   onShow() {
@@ -44,6 +48,7 @@ Page({
     const accounts = storage.getAccounts()
     const totalAssets = accounts.reduce((s, a) => s + (a.balance || 0), 0)
     const budget = storage.getBudget()
+    const members = storage.getMembers()
 
     this.setData({
       ledgerList: list,
@@ -54,7 +59,8 @@ Page({
       totalAssets,
       budgetEnabled: budget.enabled,
       budgetAmount: budget.amount,
-      budgetAmountText: budget.amount > 0 ? (budget.amount / 100).toFixed(0) : '0'
+      budgetAmountText: budget.amount > 0 ? (budget.amount / 100).toFixed(0) : '0',
+      members
     })
   },
 
@@ -213,6 +219,34 @@ Page({
   },
 
   cancelBudget() { this.setData({ showBudgetModal: false }) },
+
+  // ========== 人员管理 ==========
+
+  showAddMemberModal() {
+    this.setData({ showMemberModal: true, newMemberName: '' })
+  },
+  cancelAddMember() { this.setData({ showMemberModal: false }) },
+  onMemberNameInput(e) { this.setData({ newMemberName: e.detail.value }) },
+  confirmAddMember() {
+    const name = this.data.newMemberName.trim()
+    if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return }
+    const members = storage.addMember(name)
+    this.setData({ members, showMemberModal: false })
+    wx.showToast({ title: '已添加', icon: 'success' })
+  },
+  removeMember(e) {
+    const id = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '删除人员',
+      content: '删除后历史记录仍会保留',
+      success: (res) => {
+        if (res.confirm) {
+          storage.removeMember(id)
+          this.setData({ members: storage.getMembers() })
+        }
+      }
+    })
+  },
 
   // ========== 导出 ==========
 

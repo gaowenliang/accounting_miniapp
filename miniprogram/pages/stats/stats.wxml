@@ -3,98 +3,234 @@
 
   <!-- 模式切换 -->
   <view class="mode-switch">
-    <view class="mode-btn {{mode === 'month' ? 'active' : ''}}" bindtap="switchMode" data-mode="month">月度</view>
-    <view class="mode-btn {{mode === 'year' ? 'active' : ''}}" bindtap="switchMode" data-mode="year">年度</view>
+    <view class="mode-btn {{mode === 'monthly' ? 'active' : ''}}" bindtap="switchMode" data-mode="monthly">月度</view>
+    <view class="mode-btn {{mode === 'yearly' ? 'active' : ''}}" bindtap="switchMode" data-mode="yearly">年度</view>
+    <view class="mode-btn {{mode === 'person' ? 'active' : ''}}" bindtap="switchMode" data-mode="person">👤 按人</view>
+    <view class="mode-btn {{mode === 'aa' ? 'active aa-active' : ''}}" bindtap="switchMode" data-mode="aa">AA结算</view>
   </view>
 
-  <!-- 月份/年份导航 -->
-  <view class="period-nav">
-    <view class="nav-btn" bindtap="prevPeriod">◀</view>
-    <text class="period-label">{{periodLabel}}</text>
-    <view class="nav-btn" bindtap="nextPeriod">▶</view>
-  </view>
+  <!-- ===== 月度 ===== -->
+  <block wx:if="{{mode === 'monthly'}}">
+    <view class="period-nav">
+      <view class="nav-arrow" bindtap="prevMonth">◀</view>
+      <text class="period-label">{{currentYear}}年{{currentMonth}}月</text>
+      <view class="nav-arrow" bindtap="nextMonth">▶</view>
+    </view>
 
-  <!-- 收支对比 -->
-  <view class="card summary-card">
-    <view class="summary-row">
-      <text class="summary-label">收入</text>
-      <view class="summary-bar-wrap">
-        <view class="summary-bar income" style="width: {{totalIncome > 0 ? (totalIncome / (totalIncome + totalExpense) * 100) : 0}}%"></view>
+    <view class="card summary-card">
+      <view class="summary-row">
+        <text class="summary-label">收入</text>
+        <view class="summary-bar-wrap">
+          <view class="summary-bar income-bar" style="width:{{monthIncome/(monthIncome+monthExpense||1)*100}}%"></view>
+        </view>
+        <text class="summary-amount text-income">¥{{(monthIncome/100).toFixed(2)}}</text>
       </view>
-      <text class="summary-amount text-income">¥{{(totalIncome/100).toFixed(2)}}</text>
-    </view>
-    <view class="summary-row">
-      <text class="summary-label">支出</text>
-      <view class="summary-bar-wrap">
-        <view class="summary-bar expense" style="width: {{totalExpense > 0 ? (totalExpense / (totalIncome + totalExpense) * 100) : 0}}%"></view>
+      <view class="summary-row">
+        <text class="summary-label">支出</text>
+        <view class="summary-bar-wrap">
+          <view class="summary-bar expense-bar" style="width:{{monthExpense/(monthIncome+monthExpense||1)*100}}%"></view>
+        </view>
+        <text class="summary-amount text-expense">¥{{(monthExpense/100).toFixed(2)}}</text>
       </view>
-      <text class="summary-amount text-expense">¥{{(totalExpense/100).toFixed(2)}}</text>
+      <view class="summary-divider"></view>
+      <view class="balance-row">
+        <text class="summary-label">结余</text>
+        <text class="balance-amount {{monthBalance >= 0 ? 'text-income' : 'text-expense'}}">
+          ¥{{(Math.abs(monthBalance)/100).toFixed(2)}}
+        </text>
+      </view>
     </view>
-    <view class="summary-divider"></view>
-    <view class="summary-row">
-      <text class="summary-label">结余</text>
-      <text class="summary-balance {{balance >= 0 ? 'positive' : 'negative'}}">
-        ¥{{(Math.abs(balance)/100).toFixed(2)}}
-      </text>
-    </view>
-  </view>
 
-  <!-- 支出分类占比（月度模式） -->
-  <view class="section" wx:if="{{mode === 'month' && categoryRank.length > 0}}">
-    <text class="section-title">支出分类</text>
+    <view class="section-title">支出排行</view>
     <view class="card">
-      <view class="rank-item" wx:for="{{categoryRank}}" wx:key="key">
+      <view class="rank-item" wx:for="{{categoryRanking}}" wx:key="key">
         <view class="rank-left">
           <text class="rank-icon">{{item.icon}}</text>
           <text class="rank-name">{{item.name}}</text>
         </view>
         <view class="rank-center">
-          <view class="rank-bar" style="width: {{item.percent}}%; background: {{item.color}};"></view>
+          <view class="rank-bar" style="width:{{item.percent}}%;background:{{item.color}}"></view>
         </view>
         <view class="rank-right">
-          <text class="rank-amount">¥{{(item.amount/100).toFixed(2)}}</text>
+          <text class="rank-amount">¥{{(item.amount/100).toFixed(0)}}</text>
           <text class="rank-percent">{{item.percent}}%</text>
         </view>
       </view>
+      <view class="empty-hint" wx:if="{{categoryRanking.length === 0}}">暂无数据</view>
     </view>
-  </view>
 
-  <!-- 每日趋势（月度） -->
-  <view class="section" wx:if="{{mode === 'month' && dailyTrend.length > 0}}">
-    <text class="section-title">每日支出趋势</text>
-    <view class="card chart-card">
+    <view class="section-title" wx:if="{{dailyTrend.length > 0}}">每日趋势</view>
+    <view class="card" wx:if="{{dailyTrend.length > 0}}">
       <view class="trend-chart">
-        <view class="trend-bar-wrap" wx:for="{{dailyTrend}}" wx:key="date">
-          <view class="trend-bar" style="height: {{item.expense > 0 ? (item.expense / (dailyTrend.reduce((max, d) => Math.max(max, d.expense), 1)) * 100) : 0}}%"></view>
-          <text class="trend-label" wx:if="{{index % 5 === 0}}">{{item.date}}</text>
+        <view class="trend-bar-wrap" wx:for="{{dailyTrend}}" wx:key="day">
+          <view class="trend-bar" style="height:{{item.height}}%"></view>
+          <text class="trend-label">{{item.day}}</text>
         </view>
       </view>
     </view>
-  </view>
+  </block>
 
-  <!-- 月度趋势（年度模式） -->
-  <view class="section" wx:if="{{mode === 'year' && monthlyTrend.length > 0}}">
-    <text class="section-title">月度收支趋势</text>
+  <!-- ===== 年度 ===== -->
+  <block wx:if="{{mode === 'yearly'}}">
+    <view class="period-nav">
+      <view class="nav-arrow" bindtap="prevYear">◀</view>
+      <text class="period-label">{{currentYear}}年</text>
+      <view class="nav-arrow" bindtap="nextYear">▶</view>
+    </view>
+
+    <view class="card summary-card">
+      <view class="summary-row">
+        <text class="summary-label">收入</text>
+        <text class="summary-amount text-income">¥{{(yearlyIncome/100).toFixed(2)}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">支出</text>
+        <text class="summary-amount text-expense">¥{{(yearlyExpense/100).toFixed(2)}}</text>
+      </view>
+      <view class="summary-divider"></view>
+      <view class="balance-row">
+        <text class="summary-label">结余</text>
+        <text class="balance-amount {{yearlyIncome-yearlyExpense >= 0 ? 'text-income' : 'text-expense'}}">
+          ¥{{(Math.abs(yearlyIncome-yearlyExpense)/100).toFixed(2)}}
+        </text>
+      </view>
+    </view>
+
+    <view class="section-title">月度趋势</view>
     <view class="card">
-      <view class="monthly-row" wx:for="{{monthlyTrend}}" wx:key="month">
-        <text class="monthly-label">{{item.label}}</text>
-        <view class="monthly-bars">
-          <view class="monthly-bar income" style="width: {{item.income > 0 ? 40 : 0}}%"></view>
-          <view class="monthly-bar expense" style="width: {{item.expense > 0 ? 30 : 0}}%"></view>
+      <view class="yearly-row" wx:for="{{monthlyData}}" wx:key="month">
+        <text class="yearly-month">{{item.month}}月</text>
+        <view class="yearly-bar-wrap">
+          <view class="yearly-bar expense" style="width:{{item.expense/(yearlyExpense||1)*100}}%"></view>
         </view>
-        <view class="monthly-amounts">
-          <text class="text-income">+{{(item.income/100).toFixed(0)}}</text>
-          <text class="text-expense">-{{(item.expense/100).toFixed(0)}}</text>
+        <text class="yearly-amount text-expense">¥{{(item.expense/100).toFixed(0)}}</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- ===== 按人统计 ===== -->
+  <block wx:if="{{mode === 'person'}}">
+    <view class="period-nav">
+      <view class="nav-arrow" bindtap="prevMonth">◀</view>
+      <text class="period-label">{{currentYear}}年{{currentMonth}}月</text>
+      <view class="nav-arrow" bindtap="nextMonth">▶</view>
+    </view>
+
+    <view class="person-card" wx:for="{{personStats}}" wx:key="id">
+      <view class="person-header">
+        <text class="person-avatar">{{item.avatar}}</text>
+        <text class="person-name">{{item.name}}</text>
+        <text class="person-count">{{item.billCount}}笔</text>
+      </view>
+      <view class="person-stats-row">
+        <view class="person-stat">
+          <text class="person-stat-label">支出</text>
+          <text class="person-stat-value text-expense">¥{{(item.totalExpense/100).toFixed(2)}}</text>
+        </view>
+        <view class="person-stat">
+          <text class="person-stat-label">收入</text>
+          <text class="person-stat-value text-income">¥{{(item.totalIncome/100).toFixed(2)}}</text>
+        </view>
+      </view>
+      <!-- 该人的分类明细 -->
+      <view class="person-cats" wx:if="{{item.categories}}">
+        <view class="person-cat-item" wx:for="{{item.catList}}" wx:for-item="cat" wx:key="name">
+          <text class="person-cat-name">{{cat.name}}</text>
+          <view class="person-cat-bar-wrap">
+            <view class="person-cat-bar" style="width:{{cat.percent}}%"></view>
+          </view>
+          <text class="person-cat-amount">¥{{(cat.amount/100).toFixed(0)}}</text>
         </view>
       </view>
     </view>
-  </view>
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{totalIncome === 0 && totalExpense === 0 && !loading}}">
-    <text class="emoji">📊</text>
-    <text class="title">暂无数据</text>
-    <text class="desc">{{periodLabel}}还没有记录</text>
-  </view>
+    <view class="empty-hint" wx:if="{{personStats.length === 0}}">暂无数据，先记几笔吧</view>
+  </block>
+
+  <!-- ===== AA结算 ===== -->
+  <block wx:if="{{mode === 'aa'}}">
+    <view class="period-nav">
+      <view class="nav-arrow" bindtap="prevMonth">◀</view>
+      <text class="period-label">{{currentYear}}年{{currentMonth}}月</text>
+      <view class="nav-arrow" bindtap="nextMonth">▶</view>
+    </view>
+
+    <!-- 参与人选择 -->
+    <view class="card">
+      <view class="aa-select-header">
+        <text class="section-title-inline">选择参与AA的人</text>
+        <view class="aa-toggle-all" bindtap="toggleAAAll">
+          <text class="aa-toggle-text">{{aaAllSelected ? '取消全选' : '全选'}}</text>
+        </view>
+      </view>
+      <view class="aa-participants">
+        <view class="aa-person {{item.selected ? 'selected' : ''}}"
+              wx:for="{{aaParticipants}}" wx:key="id"
+              bindtap="toggleAAParticipant" data-id="{{item.id}}">
+          <text class="aa-person-avatar">{{item.avatar}}</text>
+          <text class="aa-person-name">{{item.name}}</text>
+          <text class="aa-person-check" wx:if="{{item.selected}}">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- AA总览 -->
+    <view class="card aa-summary" wx:if="{{aaResult}}">
+      <view class="aa-summary-row">
+        <text class="aa-summary-label">总支出</text>
+        <text class="aa-summary-value">¥{{(aaResult.totalExpense/100).toFixed(2)}}</text>
+      </view>
+      <view class="aa-summary-row">
+        <text class="aa-summary-label">人均应出</text>
+        <text class="aa-summary-value">¥{{(aaResult.perPerson/100).toFixed(2)}}</text>
+      </view>
+      <view class="aa-summary-row">
+        <text class="aa-summary-label">参与人数</text>
+        <text class="aa-summary-value">{{aaResult.personCount || 0}}人</text>
+      </view>
+    </view>
+
+    <!-- 每人已付/差额 -->
+    <view class="card" wx:if="{{aaResult && aaParticipants.length > 0}}">
+      <view class="section-title-inline">每人详情</view>
+      <view class="aa-detail-item" wx:for="{{aaParticipants}}" wx:key="id" wx:if="{{item.selected}}">
+        <view class="aa-detail-left">
+          <text class="aa-detail-avatar">{{item.avatar}}</text>
+          <text class="aa-detail-name">{{item.name}}</text>
+        </view>
+        <view class="aa-detail-right">
+          <text class="aa-detail-paid">已付 ¥{{(item.paid/100).toFixed(2)}}</text>
+          <text class="aa-detail-balance {{item.balance > 0 ? 'text-income' : item.balance < 0 ? 'text-expense' : ''}}">
+            {{item.balance > 0 ? '应收' : item.balance < 0 ? '应付' : '平'}} ¥{{(Math.abs(item.balance)/100).toFixed(2)}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 结算明细 -->
+    <view class="card" wx:if="{{aaResult && aaResult.details && aaResult.details.length > 0}}">
+      <view class="section-title-inline">💰 结算方案</view>
+      <view class="aa-settle-item" wx:for="{{aaResult.details}}" wx:key="index">
+        <view class="aa-settle-flow">
+          <view class="aa-settle-person">
+            <text class="aa-settle-avatar">{{item.fromAvatar || '😊'}}</text>
+            <text class="aa-settle-name">{{item.fromName}}</text>
+          </view>
+          <view class="aa-settle-arrow">
+            <text class="aa-settle-amount">¥{{(item.amount/100).toFixed(2)}}</text>
+            <text class="aa-settle-label">付给</text>
+          </view>
+          <view class="aa-settle-person">
+            <text class="aa-settle-avatar">{{item.toAvatar || '😊'}}</text>
+            <text class="aa-settle-name">{{item.toName}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-hint" wx:if="{{aaResult && (!aaResult.details || aaResult.details.length === 0)}}">
+      刚好平了，不用结算 🎉
+    </view>
+  </block>
 
 </view>

@@ -78,6 +78,24 @@
     </view>
   </view>
 
+  <!-- 人员管理 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">👥 人员</text>
+      <text class="action-btn primary" bindtap="showAddMemberModal">+ 添加</text>
+    </view>
+    <view class="card">
+      <view class="member-row" wx:for="{{members}}" wx:key="id">
+        <text class="member-avatar">{{item.avatar}}</text>
+        <text class="member-name">{{item.name}}</text>
+        <text class="member-default" wx:if="{{item.isDefault}}">默认</text>
+        <view class="member-actions" wx:if="{{!item.isDefault}}">
+          <text class="member-remove" bindtap="removeMember" data-id="{{item.id}}">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 预算 -->
   <view class="section">
     <view class="card">
@@ -184,6 +202,20 @@
       <view class="modal-footer">
         <view class="btn-cancel" bindtap="cancelBudget">取消</view>
         <view class="btn-primary" bindtap="saveBudget">确认</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加人员弹窗 -->
+  <view class="modal-mask" wx:if="{{showMemberModal}}" bindtap="cancelAddMember">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">添加人员</view>
+      <view class="modal-body">
+        <input class="form-input" placeholder="输入姓名" value="{{newMemberName}}" bindinput="onMemberNameInput" focus="{{showMemberModal}}" />
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelAddMember">取消</view>
+        <view class="btn-primary" bindtap="confirmAddMember">添加</view>
       </view>
     </view>
   </view>

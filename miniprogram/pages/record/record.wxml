@@ -67,6 +67,23 @@
     </view>
   </view>
 
+  <!-- 谁花的钱 -->
+  <view class="payer-section">
+    <text class="section-label">谁花的钱</text>
+    <scroll-view class="payer-scroll" scroll-x enable-flex>
+      <view class="payer-item {{selectedPayer === item.id ? 'selected' : ''}}"
+            wx:for="{{members}}" wx:key="id"
+            bindtap="selectPayer" data-id="{{item.id}}">
+        <text class="payer-avatar">{{item.avatar}}</text>
+        <text class="payer-name">{{item.name}}</text>
+      </view>
+      <view class="payer-item add" bindtap="showAddMember">
+        <text class="payer-avatar">＋</text>
+        <text class="payer-name">添加</text>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 日期 + 账户行 -->
   <view class="options-row">
     <picker mode="date" bindchange="onDateChange">
@@ -83,10 +100,17 @@
     </picker>
   </view>
 
-  <!-- 提交 -->
-  <view class="submit-area">
-    <view class="btn-submit {{billType === 'income' ? 'income' : ''}}" bindtap="submitBill">
-      确认记账
+  <!-- 添加人员弹窗 -->
+  <view class="modal-mask" wx:if="{{showAddMemberModal}}" bindtap="cancelAddMember">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">添加人员</view>
+      <view class="modal-body">
+        <input class="form-input" placeholder="输入姓名" value="{{newMemberName}}" bindinput="onNewMemberNameInput" focus="{{showAddMemberModal}}" />
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelAddMember">取消</view>
+        <view class="btn-primary" bindtap="confirmAddMember">添加</view>
+      </view>
     </view>
   </view>
 

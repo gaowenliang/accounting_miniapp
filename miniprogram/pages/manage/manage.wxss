@@ -76,6 +76,18 @@
 .setting-value { font-size: 24rpx; color: #90A4AE; margin-right: 8rpx; }
 .setting-arrow { font-size: 28rpx; color: #C0C4CC; }
 
+/* 人员管理 */
+.member-row {
+  display: flex; align-items: center; padding: 14rpx 0;
+  border-bottom: 1rpx solid #F0F2F5;
+}
+.member-row:last-child { border-bottom: none; }
+.member-avatar { font-size: 28rpx; margin-right: 10rpx; }
+.member-name { font-size: 26rpx; color: #2D3436; flex: 1; }
+.member-default { font-size: 20rpx; color: #1A73E8; background: #E3F2FD; padding: 2rpx 10rpx; border-radius: 8rpx; }
+.member-actions { display: flex; gap: 12rpx; }
+.member-remove { font-size: 22rpx; color: #FF5252; }
+
 /* 弹窗 */
 .modal-mask {
   position: fixed; top:0;left:0;right:0;bottom:0;

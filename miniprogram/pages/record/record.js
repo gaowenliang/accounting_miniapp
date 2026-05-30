@@ -29,6 +29,11 @@ Page({
     selectedAccountName: '微信支付',
     // 快捷标签
     recentCategories: [],
+    // 人员
+    members: [],
+    selectedPayer: 'self',
+    showAddMemberModal: false,
+    newMemberName: '',
     // 今日已记
     todayCount: 0,
     todayExpense: 0,
@@ -43,7 +48,7 @@ Page({
   onShow() {
     this.refreshLedgerInfo()
     this.loadTodayStats()
-    this.setData({ accounts: storage.getAccounts() })
+    this.setData({ accounts: storage.getAccounts(), members: storage.getMembers() })
   },
 
   refreshLedgerInfo() {
@@ -175,13 +180,16 @@ Page({
       wx.showToast({ title: noteResult.msg, icon: 'none' }); return
     }
 
+    // 提交
+
     const bill = {
       amount: util.yuanToFen(amountResult.value),
       type: this.data.billType,
       category: this.data.selectedCategory,
       note: noteResult.value,
       account: this.data.selectedAccount,
-      date: this.data.billDate || Date.now()
+      date: this.data.billDate || Date.now(),
+      payer: this.data.selectedPayer || 'self'
     }
 
     const isInLedger = ledger.isInLedger()
@@ -214,6 +222,29 @@ Page({
 
     this.loadTodayStats()
     this.loadRecentCategories()
+  },
+
+  // ========== 人员 ==========
+
+  selectPayer(e) {
+    this.setData({ selectedPayer: e.currentTarget.dataset.id })
+  },
+
+  showAddMember() {
+    this.setData({ showAddMemberModal: true, newMemberName: '' })
+  },
+
+  cancelAddMember() { this.setData({ showAddMemberModal: false }) },
+
+  onNewMemberNameInput(e) { this.setData({ newMemberName: e.detail.value }) },
+
+  confirmAddMember() {
+    const name = this.data.newMemberName.trim()
+    if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return }
+    const members = storage.addMember(name)
+    const newMember = members[members.length - 1]
+    this.setData({ members, selectedPayer: newMember.id, showAddMemberModal: false })
+    wx.showToast({ title: '已添加', icon: 'success' })
   },
 
   // ========== 导航 ==========

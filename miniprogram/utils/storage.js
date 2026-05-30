@@ -9,7 +9,8 @@ const StorageManager = {
     ACCOUNTS: 'accounts',
     BUDGET: 'budget',
     SETTINGS: 'settings',
-    CATEGORIES_CACHE: 'categoriesCache'
+    CATEGORIES_CACHE: 'categoriesCache',
+    MEMBERS: 'members'
   },
 
   // ========== 账单 ==========
@@ -266,6 +267,152 @@ const StorageManager = {
 
   saveSettings(settings) {
     wx.setStorageSync(this.KEYS.SETTINGS, settings)
+  },
+
+  // ========== 人员管理 ==========
+
+  /**
+   * 获取人员列表（本地）
+   */
+  getMembers() {
+    try {
+      return wx.getStorageSync(this.KEYS.MEMBERS) || [
+        { id: 'self', name: '我', avatar: '😊', isDefault: true }
+      ]
+    } catch (e) {
+      return [{ id: 'self', name: '我', avatar: '😊', isDefault: true }]
+    }
+  },
+
+  saveMembers(members) {
+    try { wx.setStorageSync(this.KEYS.MEMBERS, members) } catch (e) {}
+  },
+
+  addMember(name, avatar = '😊') {
+    const members = this.getMembers()
+    if (members.find(m => m.name === name)) return members
+    members.push({ id: 'm_' + Date.now(), name, avatar, isDefault: false })
+    this.saveMembers(members)
+    return members
+  },
+
+  removeMember(memberId) {
+    let members = this.getMembers()
+    members = members.filter(m => m.id !== memberId)
+    this.saveMembers(members)
+  },
+
+  // ========== 按人统计 ==========
+
+  /**
+   * 获取某月按人统计
+   * @returns {Array} [{ memberId, name, avatar, totalExpense, totalIncome, billCount, categories }]
+   */
+  getPersonStats(year, month) {
+    const bills = this.getBillsByMonth(year, month)
+    const members = this.getMembers()
+    const memberMap = {}
+    members.forEach(m => { memberMap[m.id] = { ...m, totalExpense: 0, totalIncome: 0, billCount: 0, categories: {} } })
+
+    bills.forEach(b => {
+      const payerId = b.payer || 'self'
+      if (!memberMap[payerId]) {
+        // 如果人员不在列表里（比如被删了），归到「未知」
+        memberMap[payerId] = { id: payerId, name: '未知', avatar: '❓', totalExpense: 0, totalIncome: 0, billCount: 0, categories: {} }
+      }
+      const stat = memberMap[payerId]
+      stat.billCount++
+      if (b.type === 'expense') {
+        stat.totalExpense += b.amount
+        const cat = b.category || 'other'
+        stat.categories[cat] = (stat.categories[cat] || 0) + b.amount
+      } else {
+        stat.totalIncome += b.amount
+      }
+    })
+
+    return Object.values(memberMap).filter(s => s.billCount > 0).sort((a, b) => b.totalExpense - a.totalExpense)
+  },
+
+  /**
+   * AA结算计算
+   * @param {number} year
+   * @param {number} month
+   * @param {Array} participantIds 参与AA的人员ID列表，不传则用全部人员
+   * @returns {{ totalExpense, perPerson, details: [{ from, fromName, to, toName, amount }] }}
+   */
+  getAAResult(year, month, participantIds) {
+    const bills = this.getBillsByMonth(year, month)
+    const members = this.getMembers()
+    const memberMap = {}
+    members.forEach(m => { memberMap[m.id] = m })
+
+    // 只算支出，只算指定人员的（或全部）
+    const expenseBills = bills.filter(b => b.type === 'expense')
+    const applicableBills = participantIds
+      ? expenseBills.filter(b => participantIds.includes(b.payer || 'self'))
+      : expenseBills
+
+    const totalExpense = applicableBills.reduce((s, b) => s + b.amount, 0)
+
+    // 参与AA的人
+    const participants = participantIds || members.map(m => m.id)
+    const personCount = participants.length
+    if (personCount === 0) return { totalExpense, perPerson: 0, details: [] }
+
+    const perPerson = Math.round(totalExpense / personCount)  // 分，取整
+
+    // 每人已付
+    const paid = {}
+    participants.forEach(id => { paid[id] = 0 })
+    applicableBills.forEach(b => {
+      const payerId = b.payer || 'self'
+      if (paid[payerId] !== undefined) paid[payerId] += b.amount
+    })
+
+    // 计算差额：正数=多付了（应收），负数=少付了（应付）
+    const balance = {}
+    participants.forEach(id => { balance[id] = paid[id] - perPerson })
+
+    // 贪心算法算谁给谁
+    const details = []
+    const debtors = []   // 欠钱的 [{ id, amount }]  amount>0
+    const creditors = [] // 多付的 [{ id, amount }]  amount>0
+    participants.forEach(id => {
+      if (balance[id] > 0) creditors.push({ id, amount: balance[id] })
+      else if (balance[id] < 0) debtors.push({ id, amount: -balance[id] })
+    })
+
+    debtors.sort((a, b) => b.amount - a.amount)
+    creditors.sort((a, b) => b.amount - a.amount)
+
+    let di = 0, ci = 0
+    while (di < debtors.length && ci < creditors.length) {
+      const d = debtors[di], c = creditors[ci]
+      const settle = Math.min(d.amount, c.amount)
+      if (settle > 0) {
+        details.push({
+          from: d.id,
+          fromName: (memberMap[d.id] || {}).name || '未知',
+          to: c.id,
+          toName: (memberMap[c.id] || {}).name || '未知',
+          amount: settle
+        })
+      }
+      d.amount -= settle
+      c.amount -= settle
+      if (d.amount <= 0) di++
+      if (c.amount <= 0) ci++
+    }
+
+    return {
+      totalExpense,
+      perPerson,
+      personCount,
+      paid,           // 每人已付 { id: amount }
+      balance,        // 每人差额 { id: amount } 正=应收 负=应付
+      details         // 结算明细
+    }
   },
 
   // ========== 全局统计 ==========

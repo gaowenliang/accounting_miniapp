@@ -80,6 +80,40 @@
 .option-text { font-size: 24rpx; color: #607D8B; }
 .option-input { font-size: 24rpx; color: #2D3436; width: 100%; }
 
+/* 人员选择 */
+.payer-section { margin-bottom: 16rpx; }
+.payer-scroll { white-space: nowrap; }
+.payer-item {
+  display: inline-flex; flex-direction: column; align-items: center;
+  margin-right: 16rpx; padding: 8rpx 16rpx; border-radius: 16rpx;
+  background: #FFFFFF; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+  transition: all 0.15s;
+}
+.payer-item.selected { background: #E3F2FD; border: 2rpx solid #1A73E8; }
+.payer-item.add { border: 2rpx dashed #C0C4CC; background: transparent; box-shadow: none; }
+.payer-avatar { font-size: 32rpx; margin-bottom: 2rpx; }
+.payer-name { font-size: 18rpx; color: #607D8B; }
+.payer-item.selected .payer-name { color: #1A73E8; font-weight: 600; }
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed; top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.45); display:flex;
+  align-items:center; justify-content:center; z-index:999;
+}
+.modal-content {
+  width: 80%; background: #FFF; border-radius: 28rpx; overflow: hidden;
+}
+.modal-header { text-align: center; font-size: 30rpx; font-weight: 600; padding: 32rpx 28rpx 12rpx; }
+.modal-body { padding: 12rpx 36rpx 24rpx; }
+.form-input {
+  border: 2rpx solid #E3F2FD; border-radius: 16rpx;
+  padding: 18rpx; font-size: 26rpx; background: #F5F6FA;
+}
+.modal-footer { display: flex; border-top: 1rpx solid #F0F2F5; }
+.modal-footer view { flex: 1; text-align: center; padding: 26rpx; font-size: 28rpx; }
+.btn-cancel { color: #90A4AE; }
+
 /* 提交 */
 .submit-area { margin-top: 32rpx; padding: 0 20rpx; }
 .btn-submit {
