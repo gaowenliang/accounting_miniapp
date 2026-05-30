@@ -34,8 +34,9 @@ function toCNY(amount, currency, customRate) {
   if (currency === 'CNY' || !currency) return amount
   const info = getCurrency(currency)
   const rate = customRate || info.rate
-  // 原始金额(分) / 100 → 元 × 汇率 → 人民币元 × 100 → 分
-  return Math.round(amount / 100 * rate * 100)
+  // amount 是分，rate 是「1单位外币=rate元人民币」
+  // → 分 * rate / 100 = 元 * 100 = 人民币分（整数）
+  return Math.round(amount * rate)
 }
 
 /**

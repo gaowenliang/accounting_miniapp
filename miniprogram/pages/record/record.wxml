@@ -8,7 +8,7 @@
       <view class="type-btn {{billType === 'income' ? 'active income' : ''}}" bindtap="switchType" data-type="income">收入</view>
     </view>
     <view class="amount-display">
-      <text class="amount-symbol">¥</text>
+      <text class="amount-symbol">{{currencySymbol}}</text>
       <text class="amount-value">{{amountStr || '0'}}</text>
       <view class="cursor" wx:if="{{!amountStr}}"></view>
     </view>
@@ -25,23 +25,22 @@
         <text class="currency-code">{{item.code}}</text>
       </view>
     </scroll-view>
-    <!-- 非CNY时显示汇率换算 -->
     <view class="exchange-info" wx:if="{{selectedCurrency !== 'CNY'}}">
       <text class="exchange-text">汇率 {{exchangeRate}} → ≈¥{{amountCNYText}}</text>
     </view>
   </view>
 
-  <!-- 分类：直接平铺 -->
+  <!-- 分类：4列网格 -->
   <view class="section-flat">
     <text class="flat-label">分类</text>
-    <scroll-view class="category-scroll" scroll-x enable-flex>
+    <view class="category-grid">
       <view class="cat-item {{selectedCategory === item.key ? 'selected' : ''}}"
             wx:for="{{categoryList}}" wx:key="key"
             bindtap="selectCategory" data-key="{{item.key}}">
         <text class="cat-icon">{{item.icon}}</text>
         <text class="cat-name">{{item.name}}</text>
       </view>
-    </scroll-view>
+    </view>
   </view>
 
   <!-- 花费人：直接平铺 -->
@@ -61,7 +60,7 @@
     </scroll-view>
   </view>
 
-  <!-- 分摊方式：直接平铺（仅支出且多人时显示） -->
+  <!-- 分摊方式（仅支出且多人时显示） -->
   <view class="section-flat" wx:if="{{billType === 'expense' && members.length > 1}}">
     <text class="flat-label">分摊</text>
     <view class="split-bar">
@@ -70,38 +69,47 @@
       <view class="split-opt {{splitMode === 'ratio' ? 'active' : ''}}" bindtap="setSplitRatio">按比例</view>
       <view class="split-opt {{splitMode === 'custom' ? 'active' : ''}}" bindtap="setSplitCustom">自定义</view>
     </view>
-    <!-- AA均摊预览 -->
     <view class="split-preview-area" wx:if="{{splitMode === 'equal'}}">
-      <text class="split-preview-text">每人 ¥{{splitPerPerson}}</text>
+      <text class="split-preview-text">每人 {{currencySymbol}}{{splitPerPerson}}</text>
     </view>
-    <!-- 按比例分摊 -->
     <view class="custom-splits" wx:if="{{splitMode === 'ratio' || splitMode === 'custom'}}">
       <view class="split-input-row" wx:for="{{splitItems}}" wx:key="memberId">
         <text class="split-input-avatar">{{item.avatar}}</text>
         <text class="split-input-name">{{item.name}}</text>
         <text class="split-input-unit" wx:if="{{splitMode === 'ratio'}}">占比</text>
-        <text class="split-input-unit" wx:if="{{splitMode === 'custom'}}">¥</text>
+        <text class="split-input-unit" wx:if="{{splitMode === 'custom'}}">{{currencySymbol}}</text>
         <input class="split-input" type="digit" placeholder="{{splitMode === 'ratio' ? '比例' : '0'}}"
                value="{{item.inputStr}}" bindinput="onSplitAmountInput" data-idx="{{index}}" />
       </view>
       <text class="split-remain" wx:if="{{splitRemainder !== 0}}">
-        {{splitRemainder > 0 ? '还差' : '多了'}} ¥{{(Math.abs(splitRemainder)/100).toFixed(2)}}
+        {{splitRemainder > 0 ? '还差' : '多了'}} {{currencySymbol}}{{(Math.abs(splitRemainder)/100).toFixed(2)}}
       </text>
       <text class="split-preview-text" wx:if="{{splitMode === 'ratio' && ratioTotal > 0}}">
         <block wx:for="{{splitItems}}" wx:key="memberId">
-          {{item.name}} {{(item.amount / ratioTotal * 100).toFixed(1)}}% → ¥{{(item.amount / ratioTotal * totalAmountFen / 100).toFixed(2)}}　
+          {{item.name}} {{(item.amount / ratioTotal * 100).toFixed(1)}}% → {{currencySymbol}}{{(item.amount / ratioTotal * totalAmountFen / 100).toFixed(2)}}　
         </block>
       </text>
     </view>
   </view>
 
-  <!-- 备注 -->
-  <view class="note-section">
-    <input class="note-input" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200" />
-  </view>
-
   <!-- 自定义数字键盘 -->
   <view class="keyboard {{billType === 'expense' ? 'kb-expense' : 'kb-income'}}">
+    <!-- 日期 + 备注 + 账户 快捷栏 -->
+    <view class="kb-toolbar">
+      <view class="kb-toolbar-item" bindtap="pickDate">
+        <text class="kb-toolbar-icon">📅</text>
+        <text class="kb-toolbar-text">{{dateText}}</text>
+      </view>
+      <view class="kb-toolbar-item" bindtap="focusNote">
+        <text class="kb-toolbar-icon">📝</text>
+        <text class="kb-toolbar-text">{{note || '备注'}}</text>
+      </view>
+      <view class="kb-toolbar-item" bindtap="pickAccount">
+        <text class="kb-toolbar-icon">💳</text>
+        <text class="kb-toolbar-text">{{accountName}}</text>
+      </view>
+    </view>
+    <!-- 键盘 4×4: ⌫ / + / - / 完成 -->
     <view class="keypad">
       <view class="key" bindtap="pressKey" data-val="1" hover-class="key-hover">1</view>
       <view class="key" bindtap="pressKey" data-val="2" hover-class="key-hover">2</view>
@@ -110,15 +118,53 @@
       <view class="key" bindtap="pressKey" data-val="4" hover-class="key-hover">4</view>
       <view class="key" bindtap="pressKey" data-val="5" hover-class="key-hover">5</view>
       <view class="key" bindtap="pressKey" data-val="6" hover-class="key-hover">6</view>
-      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">确认</view>
+      <view class="key key-func" bindtap="pressKey" data-val="+" hover-class="key-hover">+</view>
       <view class="key" bindtap="pressKey" data-val="7" hover-class="key-hover">7</view>
       <view class="key" bindtap="pressKey" data-val="8" hover-class="key-hover">8</view>
       <view class="key" bindtap="pressKey" data-val="9" hover-class="key-hover">9</view>
-      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">确认</view>
+      <view class="key key-func" bindtap="pressKey" data-val="-" hover-class="key-hover">−</view>
       <view class="key" bindtap="pressKey" data-val="." hover-class="key-hover">.</view>
       <view class="key" bindtap="pressKey" data-val="0" hover-class="key-hover">0</view>
       <view class="key" bindtap="pressKey" data-val="00" hover-class="key-hover">00</view>
-      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">确认</view>
+      <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">完成</view>
+    </view>
+  </view>
+
+  <!-- 隐藏的日期picker -->
+  <picker mode="date" value="{{billDateStr}}" bindchange="onDateChange" hidden>
+    <view id="datePicker"></view>
+  </picker>
+
+  <!-- 备注弹窗 -->
+  <view class="modal-mask" wx:if="{{showNoteModal}}" bindtap="closeNote">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">备注</view>
+      <view class="modal-body">
+        <input class="form-input" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" focus="{{showNoteModal}}" maxlength="200" />
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="closeNote">取消</view>
+        <view class="btn-primary" bindtap="closeNote">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 账户选择弹窗 -->
+  <view class="modal-mask" wx:if="{{showAccountPicker}}" bindtap="closeAccountPicker">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">付款账户</view>
+      <view class="modal-body account-list">
+        <view class="account-item {{selectedAccount === item.key ? 'selected' : ''}}"
+              wx:for="{{accounts}}" wx:key="key"
+              bindtap="selectAccount" data-key="{{item.key}}">
+          <text class="account-icon">{{item.icon}}</text>
+          <text class="account-name">{{item.name}}</text>
+          <text class="account-check" wx:if="{{selectedAccount === item.key}}">✓</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-primary" bindtap="closeAccountPicker" style="width:100%">确定</view>
+      </view>
     </view>
   </view>
 

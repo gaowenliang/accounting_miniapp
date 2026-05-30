@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 记账助手 — 最新UI</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif; background:#E8EAF0; display:flex; justify-content:center; gap:24px; padding:20px; flex-wrap:wrap; }
+.phone { width:375px; height:812px; background:#F7F7FA; border-radius:40px; overflow:hidden; box-shadow:0 12px 48px rgba(0,0,0,0.15), inset 0 0 0 2px #DDD; display:flex; flex-direction:column; position:relative; }
+.phone-label { text-align:center; font-size:12px; color:#6B7280; font-weight:600; margin-top:6px; }
+.status-bar { height:44px; background:#FFF; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:#333; flex-shrink:0; }
+.content { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+
+/* 收支+金额 */
+.type-amount { padding:12px 14px 8px; background:#FFF; }
+.type-switch { display:flex; background:#F3F4F6; border-radius:22px; padding:2px; margin-bottom:10px; }
+.type-btn { flex:1; text-align:center; padding:7px 0; border-radius:22px; font-size:13px; font-weight:600; color:#9CA3AF; }
+.type-btn.expense { background:linear-gradient(135deg,#EF4444,#F87171); color:#FFF; }
+.amount-display { display:flex; align-items:baseline; justify-content:center; padding:4px 0 8px; }
+.amount-symbol { font-size:20px; font-weight:700; color:#1F2937; margin-right:4px; }
+.amount-value { font-size:38px; font-weight:700; color:#1F2937; font-variant-numeric:tabular-nums; }
+.cursor { width:2px; height:28px; background:#4F46E5; animation:blink 1s infinite; margin-left:1px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* 平铺区块 */
+.section-flat { padding:8px 14px; background:#FFF; margin-top:4px; }
+.flat-label { font-size:11px; font-weight:600; color:#9CA3AF; margin-bottom:6px; display:block; }
+
+/* 币种 */
+.currency-scroll { display:flex; gap:6px; overflow-x:auto; white-space:nowrap; padding-bottom:2px; }
+.currency-item { display:inline-flex; align-items:center; gap:3px; padding:4px 12px; border-radius:14px; background:#F9FAFB; flex-shrink:0; }
+.currency-item.selected { background:#EEF2FF; border:1.5px solid #4F46E5; }
+.currency-flag { font-size:14px; }
+.currency-code { font-size:10px; color:#6B7280; font-weight:500; }
+.currency-item.selected .currency-code { color:#4F46E5; font-weight:600; }
+.exchange-info { margin-top:4px; }
+.exchange-text { font-size:10px; color:#F59E0B; font-weight:500; }
+
+/* 分类 */
+.category-scroll { display:flex; gap:10px; overflow-x:auto; white-space:nowrap; padding-bottom:2px; }
+.cat-item { display:inline-flex; flex-direction:column; align-items:center; min-width:40px; position:relative; flex-shrink:0; }
+.cat-icon { font-size:20px; margin-bottom:1px; }
+.cat-name { font-size:8px; color:#6B7280; }
+.cat-item.selected .cat-name { color:#4F46E5; font-weight:600; }
+.cat-item.selected::after { content:''; display:block; width:14px; height:2px; background:#4F46E5; border-radius:1px; margin-top:2px; }
+
+/* 花费人 */
+.payer-scroll { display:flex; gap:6px; overflow-x:auto; white-space:nowrap; }
+.person-item { display:inline-flex; flex-direction:column; align-items:center; padding:4px 10px; border-radius:10px; background:#F9FAFB; flex-shrink:0; }
+.person-item.selected { background:#EEF2FF; border:1.5px solid #4F46E5; }
+.person-item.add { border:1.5px dashed #D1D5DB; background:transparent; }
+.person-avatar { font-size:16px; margin-bottom:1px; }
+.person-name { font-size:8px; color:#6B7280; }
+.person-item.selected .person-name { color:#4F46E5; font-weight:600; }
+
+/* 分摊 */
+.split-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.split-opt { padding:4px 14px; border-radius:14px; background:#F3F4F6; font-size:11px; color:#6B7280; }
+.split-opt.active { background:#4F46E5; color:#FFF; font-weight:600; }
+.split-preview-text { font-size:11px; color:#4F46E5; font-weight:500; margin-top:4px; display:block; }
+
+/* 备注 */
+.note-section { padding:8px 14px; background:#FFF; margin-top:4px; }
+.note-input { font-size:13px; color:#374151; border:none; outline:none; width:100%; }
+
+/* 键盘 */
+.keyboard { margin-top:auto; background:#E5E7EB; border-top:2px solid #EF4444; padding-bottom:20px; flex-shrink:0; }
+.keypad { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; padding:6px; }
+.key { display:flex; align-items:center; justify-content:center; background:#FFF; border-radius:10px; height:48px; font-size:20px; font-weight:500; color:#1F2937; box-shadow:0 1px 2px rgba(0,0,0,0.05); }
+.key-del { font-size:16px; color:#6B7280; }
+.key-ok { background:linear-gradient(135deg,#EF4444,#F87171); color:#FFF; font-size:14px; font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- 记账页 -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>15:25</span><span>⚡️ 87%</span></div>
+  <div class="content">
+    <div class="type-amount">
+      <div class="type-switch"><div class="type-btn expense">支出</div><div class="type-btn">收入</div></div>
+      <div class="amount-display"><span class="amount-symbol">¥</span><span class="amount-value">128</span><span class="cursor"></span></div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">币种</span>
+      <div class="currency-scroll">
+        <div class="currency-item selected"><span class="currency-flag">🇨🇳</span><span class="currency-code">CNY</span></div>
+        <div class="currency-item"><span class="currency-flag">🇺🇸</span><span class="currency-code">USD</span></div>
+        <div class="currency-item"><span class="currency-flag">🇪🇺</span><span class="currency-code">EUR</span></div>
+        <div class="currency-item"><span class="currency-flag">🇯🇵</span><span class="currency-code">JPY</span></div>
+        <div class="currency-item"><span class="currency-flag">🇬🇧</span><span class="currency-code">GBP</span></div>
+        <div class="currency-item"><span class="currency-flag">🇭🇰</span><span class="currency-code">HKD</span></div>
+        <div class="currency-item"><span class="currency-flag">🇰🇷</span><span class="currency-code">KRW</span></div>
+        <div class="currency-item"><span class="currency-flag">🇹🇭</span><span class="currency-code">THB</span></div>
+        <div class="currency-item"><span class="currency-flag">🇳🇿</span><span class="currency-code">NZD</span></div>
+      </div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">分类</span>
+      <div class="category-scroll">
+        <div class="cat-item selected"><span class="cat-icon">🍜</span><span class="cat-name">餐饮</span></div>
+        <div class="cat-item"><span class="cat-icon">🚇</span><span class="cat-name">交通</span></div>
+        <div class="cat-item"><span class="cat-icon">🛒</span><span class="cat-name">购物</span></div>
+        <div class="cat-item"><span class="cat-icon">🏠</span><span class="cat-name">住房</span></div>
+        <div class="cat-item"><span class="cat-icon">🎮</span><span class="cat-name">娱乐</span></div>
+        <div class="cat-item"><span class="cat-icon">📱</span><span class="cat-name">通讯</span></div>
+        <div class="cat-item"><span class="cat-icon">💊</span><span class="cat-name">医疗</span></div>
+        <div class="cat-item"><span class="cat-icon">🎓</span><span class="cat-name">教育</span></div>
+        <div class="cat-item"><span class="cat-icon">👕</span><span class="cat-name">服饰</span></div>
+        <div class="cat-item"><span class="cat-icon">✈️</span><span class="cat-name">旅行</span></div>
+        <div class="cat-item"><span class="cat-icon">🎁</span><span class="cat-name">人情</span></div>
+        <div class="cat-item"><span class="cat-icon">📦</span><span class="cat-name">其他</span></div>
+      </div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">花费人</span>
+      <div class="payer-scroll">
+        <div class="person-item selected"><span class="person-avatar">😊</span><span class="person-name">我</span></div>
+        <div class="person-item"><span class="person-avatar">👩</span><span class="person-name">小红</span></div>
+        <div class="person-item"><span class="person-avatar">👨</span><span class="person-name">大伟</span></div>
+        <div class="person-item"><span class="person-avatar">🧑</span><span class="person-name">小李</span></div>
+        <div class="person-item add"><span class="person-avatar">＋</span><span class="person-name">添加</span></div>
+      </div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">分摊</span>
+      <div class="split-bar">
+        <div class="split-opt">不分摊</div>
+        <div class="split-opt active">AA均摊</div>
+        <div class="split-opt">按比例</div>
+        <div class="split-opt">自定义</div>
+      </div>
+      <span class="split-preview-text">每人 ¥32.00（4人）</span>
+    </div>
+
+    <div class="note-section">
+      <input class="note-input" placeholder="添加备注..." value="火锅聚餐" />
+    </div>
+
+    <div class="keyboard">
+      <div class="keypad">
+        <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key key-del">⌫</div>
+        <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key key-ok">确认</div>
+        <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key key-ok">确认</div>
+        <div class="key">.</div><div class="key">0</div><div class="key">00</div><div class="key key-ok">确认</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">📝 记账页（首页）</div>
+</div>
+
+<!-- 外币记账场景 -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>15:25</span><span>⚡️ 87%</span></div>
+  <div class="content">
+    <div class="type-amount">
+      <div class="type-switch"><div class="type-btn expense">支出</div><div class="type-btn">收入</div></div>
+      <div class="amount-display"><span class="amount-symbol">$</span><span class="amount-value">45.90</span><span class="cursor"></span></div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">币种</span>
+      <div class="currency-scroll">
+        <div class="currency-item"><span class="currency-flag">🇨🇳</span><span class="currency-code">CNY</span></div>
+        <div class="currency-item selected"><span class="currency-flag">🇺🇸</span><span class="currency-code">USD</span></div>
+        <div class="currency-item"><span class="currency-flag">🇪🇺</span><span class="currency-code">EUR</span></div>
+        <div class="currency-item"><span class="currency-flag">🇯🇵</span><span class="currency-code">JPY</span></div>
+        <div class="currency-item"><span class="currency-flag">🇬🇧</span><span class="currency-code">GBP</span></div>
+        <div class="currency-item"><span class="currency-flag">🇳🇿</span><span class="currency-code">NZD</span></div>
+      </div>
+      <div class="exchange-info"><span class="exchange-text">汇率 7.25 → ≈¥332.78</span></div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">分类</span>
+      <div class="category-scroll">
+        <div class="cat-item"><span class="cat-icon">🍜</span><span class="cat-name">餐饮</span></div>
+        <div class="cat-item selected"><span class="cat-icon">✈️</span><span class="cat-name">旅行</span></div>
+        <div class="cat-item"><span class="cat-icon">🛒</span><span class="cat-name">购物</span></div>
+        <div class="cat-item"><span class="cat-icon">🏠</span><span class="cat-name">住房</span></div>
+        <div class="cat-item"><span class="cat-icon">🎮</span><span class="cat-name">娱乐</span></div>
+        <div class="cat-item"><span class="cat-icon">📦</span><span class="cat-name">其他</span></div>
+      </div>
+    </div>
+
+    <div class="section-flat">
+      <span class="flat-label">花费人</span>
+      <div class="payer-scroll">
+        <div class="person-item selected"><span class="person-avatar">😊</span><span class="person-name">我</span></div>
+        <div class="person-item add"><span class="person-avatar">＋</span><span class="person-name">添加</span></div>
+      </div>
+    </div>
+
+    <div class="note-section">
+      <input class="note-input" placeholder="添加备注..." value="NYC Steakhouse dinner" />
+    </div>
+
+    <div class="keyboard">
+      <div class="keypad">
+        <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key key-del">⌫</div>
+        <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key key-ok">确认</div>
+        <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key key-ok">确认</div>
+        <div class="key">.</div><div class="key">0</div><div class="key">00</div><div class="key key-ok">确认</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phone-label">🌍 外币记账（USD）</div>
+</div>
+
+</body>
+</html>

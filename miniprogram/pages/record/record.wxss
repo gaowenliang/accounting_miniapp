@@ -31,13 +31,8 @@
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
 /* ===== 平铺区块 ===== */
-.section-flat {
-  padding: 12rpx 28rpx; background: #FFF; margin-top: 8rpx;
-}
-.flat-label {
-  font-size: 22rpx; font-weight: 600; color: #9CA3AF;
-  margin-bottom: 8rpx; display: block;
-}
+.section-flat { padding: 12rpx 28rpx; background: #FFF; margin-top: 8rpx; }
+.flat-label { font-size: 22rpx; font-weight: 600; color: #9CA3AF; margin-bottom: 8rpx; display: block; }
 
 /* 币种 */
 .currency-scroll { white-space: nowrap; }
@@ -53,20 +48,19 @@
 .exchange-info { margin-top: 6rpx; }
 .exchange-text { font-size: 22rpx; color: #F59E0B; font-weight: 500; }
 
-/* 分类横向滚动 */
-.category-scroll { white-space: nowrap; }
-.cat-item {
-  display: inline-flex; flex-direction: column; align-items: center;
-  margin-right: 20rpx; padding: 6rpx 4rpx; min-width: 72rpx;
+/* 分类 4列网格 */
+.category-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8rpx 4rpx;
 }
+.cat-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8rpx 4rpx; border-radius: 12rpx; transition: background 0.15s;
+}
+.cat-item.selected { background: #EEF2FF; }
 .cat-icon { font-size: 32rpx; margin-bottom: 2rpx; }
 .cat-name { font-size: 18rpx; color: #6B7280; }
-.cat-item.selected .cat-icon { transform: scale(1.15); }
+.cat-item.selected .cat-icon { transform: scale(1.1); }
 .cat-item.selected .cat-name { color: #4F46E5; font-weight: 600; }
-.cat-item.selected::after {
-  content: ''; display: block; width: 24rpx; height: 4rpx;
-  background: #4F46E5; border-radius: 2rpx; margin-top: 2rpx;
-}
 
 /* 花费人横向滚动 */
 .payer-scroll { white-space: nowrap; }
@@ -82,32 +76,23 @@
 .person-item.selected .person-name { color: #4F46E5; font-weight: 600; }
 
 /* 分摊方式 */
-.split-bar { display:flex; align-items:center; gap:8rpx; flex-wrap:wrap; }
-.split-opt { padding:8rpx 20rpx; border-radius:20rpx; background:#F3F4F6; font-size:24rpx; color:#6B7280; }
-.split-opt.active { background:#4F46E5; color:#FFF; font-weight:600; }
-.split-preview-area { margin-top:8rpx; }
-.split-preview-text { font-size:24rpx; color:#4F46E5; font-weight:500; display:block; line-height:1.5; }
+.split-bar { display: flex; align-items: center; gap: 8rpx; flex-wrap: wrap; }
+.split-opt { padding: 8rpx 20rpx; border-radius: 20rpx; background: #F3F4F6; font-size: 24rpx; color: #6B7280; }
+.split-opt.active { background: #4F46E5; color: #FFF; font-weight: 600; }
+.split-preview-area { margin-top: 8rpx; }
+.split-preview-text { font-size: 24rpx; color: #4F46E5; font-weight: 500; display: block; line-height: 1.5; }
 
-.custom-splits { margin-top:10rpx; }
-.split-input-row {
-  display:flex; align-items:center; padding:6rpx 0;
-  border-bottom:1rpx solid #F3F4F6;
-}
-.split-input-avatar { font-size:24rpx; margin-right:6rpx; }
-.split-input-name { font-size:22rpx; color:#374151; width:50rpx; }
-.split-input-unit { font-size:20rpx; color:#9CA3AF; margin-right:4rpx; }
+.custom-splits { margin-top: 10rpx; }
+.split-input-row { display: flex; align-items: center; padding: 6rpx 0; border-bottom: 1rpx solid #F3F4F6; }
+.split-input-avatar { font-size: 24rpx; margin-right: 6rpx; }
+.split-input-name { font-size: 22rpx; color: #374151; width: 50rpx; }
+.split-input-unit { font-size: 20rpx; color: #9CA3AF; margin-right: 4rpx; }
 .split-input {
-  flex:1; font-size:22rpx; text-align:right;
-  border:1rpx solid #E5E7EB; border-radius:10rpx;
-  padding:6rpx 12rpx; background:#F9FAFB;
+  flex: 1; font-size: 22rpx; text-align: right;
+  border: 1rpx solid #E5E7EB; border-radius: 10rpx;
+  padding: 6rpx 12rpx; background: #F9FAFB;
 }
-.split-remain { font-size:20rpx; color:#EF4444; text-align:center; display:block; margin-top:4rpx; }
-
-/* 备注 */
-.note-section {
-  padding: 12rpx 28rpx; background: #FFF; margin-top: 8rpx;
-}
-.note-input { font-size: 26rpx; color: #374151; width: 100%; }
+.split-remain { font-size: 20rpx; color: #EF4444; text-align: center; display: block; margin-top: 4rpx; }
 
 /* ===== 键盘 ===== */
 .keyboard {
@@ -117,9 +102,21 @@
 .kb-expense { border-top: 3rpx solid #EF4444; }
 .kb-income { border-top: 3rpx solid #10B981; }
 
+/* 工具栏：日期/备注/账户 */
+.kb-toolbar {
+  display: flex; gap: 2rpx; padding: 8rpx 8rpx 4rpx;
+  background: #D1D5DB;
+}
+.kb-toolbar-item {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 4rpx;
+  background: #FFF; border-radius: 10rpx; padding: 10rpx 8rpx;
+}
+.kb-toolbar-icon { font-size: 20rpx; }
+.kb-toolbar-text { font-size: 18rpx; color: #6B7280; max-width: 120rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .keypad {
   display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 4rpx; padding: 8rpx 8rpx 8rpx;
+  gap: 4rpx; padding: 4rpx 8rpx 8rpx;
 }
 .key {
   display: flex; align-items: center; justify-content: center;
@@ -129,6 +126,7 @@
 }
 .key-hover { background: #D1D5DB; }
 .key-del { font-size: 28rpx; color: #6B7280; }
+.key-func { font-size: 32rpx; color: #4F46E5; font-weight: 600; }
 .key-ok {
   background: linear-gradient(135deg, #4F46E5, #6366F1);
   color: #FFF; font-size: 28rpx; font-weight: 700;
@@ -136,7 +134,7 @@
 .kb-expense .key-ok { background: linear-gradient(135deg, #EF4444, #F87171); }
 .kb-income .key-ok { background: linear-gradient(135deg, #10B981, #34D399); }
 
-/* 弹窗 */
+/* ===== 弹窗 ===== */
 .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:999; }
 .modal-content { width:80%; background:#FFF; border-radius:28rpx; overflow:hidden; }
 .modal-header { text-align:center; font-size:32rpx; font-weight:700; color:#1F2937; padding:36rpx 28rpx 12rpx; }
@@ -146,3 +144,14 @@
 .modal-footer view { flex:1; text-align:center; padding:28rpx; font-size:30rpx; }
 .btn-cancel { color:#6B7280; }
 .btn-primary { color:#4F46E5; font-weight:700; }
+
+/* 账户列表 */
+.account-list { padding:8rpx 0; }
+.account-item {
+  display:flex; align-items:center; padding:20rpx 16rpx;
+  border-bottom:1rpx solid #F3F4F6; transition:background 0.1s;
+}
+.account-item.selected { background:#EEF2FF; }
+.account-icon { font-size:28rpx; margin-right:12rpx; }
+.account-name { flex:1; font-size:28rpx; color:#374151; }
+.account-check { font-size:28rpx; color:#4F46E5; font-weight:700; }

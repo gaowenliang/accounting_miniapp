@@ -12,29 +12,39 @@ Page({
     currentLedger: null,
     billType: 'expense',
     amountStr: '',
+    // 币种
+    currencies: currencies.getAllCurrencies(),
+    selectedCurrency: 'CNY',
+    currencySymbol: '¥',
+    exchangeRate: 1,
+    amountCNYText: '0.00',
+    // 分类
     categoryList: [],
     selectedCategory: '',
-    note: '',
+    // 人员
     members: [],
     selectedPayer: 'self',
     showAddMemberModal: false,
     newMemberName: '',
     // 分摊
-    splitMode: 'equal',      // 'no_split' | 'equal' | 'ratio' | 'custom'
+    splitMode: 'equal',
     splitItems: [],
     splitPerPerson: '0.00',
     splitRemainder: 0,
     ratioTotal: 0,
     totalAmountFen: 0,
-    // 币种
-    currencies: currencies.getAllCurrencies(),
-    selectedCurrency: 'CNY',
-    exchangeRate: 1,
-    amountCNYText: '0.00',
-    // 日期/账户
+    // 备注
+    note: '',
+    showNoteModal: false,
+    // 日期
     billDate: 0,
+    billDateStr: '',
+    dateText: '今天',
+    // 账户
     accounts: [],
     selectedAccount: 'wechat',
+    accountName: '微信支付',
+    showAccountPicker: false,
   },
 
   onLoad() {
@@ -42,38 +52,20 @@ Page({
     const now = new Date()
     this.setData({
       billDate: now.getTime(),
+      billDateStr: util.formatDate(now),
+      dateText: '今天',
       categoryList: categories.getCategories('expense'),
       accounts: storage.getAccounts(),
-      selectedAccount: storage.getSettings().defaultAccount || 'wechat'
+      selectedAccount: storage.getSettings().defaultAccount || 'wechat',
     })
+    this.updateAccountName()
   },
 
   onShow() {
     const members = storage.getMembers()
     const current = ledger.getCurrentLedger()
-    this.setData({
-      members,
-      currentLedger: current,
-      accounts: storage.getAccounts()
-    })
+    this.setData({ members, currentLedger: current, accounts: storage.getAccounts() })
     this.initSplitItems(members)
-  },
-
-  // ========== 币种 ==========
-  selectCurrency(e) {
-    const code = e.currentTarget.dataset.code
-    const info = currencies.getCurrency(code)
-    this.setData({
-      selectedCurrency: code,
-      exchangeRate: info.rate
-    })
-    this.updateAmountCNY()
-  },
-
-  updateAmountCNY() {
-    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
-    const amountCNY = currencies.toCNY(amountFen, this.data.selectedCurrency, this.data.exchangeRate)
-    this.setData({ amountCNYText: (amountCNY / 100).toFixed(2) })
   },
 
   // ========== 收支切换 ==========
@@ -86,6 +78,25 @@ Page({
     })
   },
 
+  // ========== 币种 ==========
+  selectCurrency(e) {
+    const code = e.currentTarget.dataset.code
+    const info = currencies.getCurrency(code)
+    this.setData({
+      selectedCurrency: code,
+      currencySymbol: info.symbol,
+      exchangeRate: info.rate
+    })
+    this.updateAmountCNY()
+    if (this.data.splitMode === 'equal') this.calcEqualSplit()
+  },
+
+  updateAmountCNY() {
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    const amountCNY = currencies.toCNY(amountFen, this.data.selectedCurrency, this.data.exchangeRate)
+    this.setData({ amountCNYText: (amountCNY / 100).toFixed(2), totalAmountFen: amountCNY })
+  },
+
   // ========== 分类 ==========
   selectCategory(e) {
     this.setData({ selectedCategory: e.currentTarget.dataset.key })
@@ -93,8 +104,7 @@ Page({
 
   // ========== 花费人 ==========
   pickPayer(e) {
-    const id = e.currentTarget.dataset.id
-    this.setData({ selectedPayer: id })
+    this.setData({ selectedPayer: e.currentTarget.dataset.id })
   },
 
   // ========== 分摊 ==========
@@ -106,17 +116,10 @@ Page({
   },
 
   setSplitNoSplit() { this.setData({ splitMode: 'no_split' }) },
-
-  setSplitEqual() {
-    this.setData({ splitMode: 'equal' })
-    this.calcEqualSplit()
-  },
-
+  setSplitEqual() { this.setData({ splitMode: 'equal' }); this.calcEqualSplit() },
   setSplitRatio() { this.setData({ splitMode: 'ratio' }) },
-
   setSplitCustom() { this.setData({ splitMode: 'custom' }) },
 
-  // 计算AA均摊
   calcEqualSplit() {
     const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
     const count = this.data.splitItems.length || 1
@@ -128,17 +131,14 @@ Page({
     })
   },
 
-  // 按比例或自定义输入
   onSplitAmountInput(e) {
     const idx = e.currentTarget.dataset.idx
     const val = e.detail.value
     const items = [...this.data.splitItems]
     items[idx].inputStr = val
     items[idx].amount = util.yuanToFen(parseFloat(val) || 0)
-
     const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
     const totalInput = items.reduce((s, i) => s + i.amount, 0)
-
     this.setData({
       splitItems: items,
       ratioTotal: totalInput,
@@ -148,26 +148,102 @@ Page({
   },
 
   // ========== 备注 ==========
+  focusNote() { this.setData({ showNoteModal: true }) },
+  closeNote() { this.setData({ showNoteModal: false }) },
   onNoteInput(e) { this.setData({ note: e.detail.value }) },
+
+  // ========== 日期 ==========
+  pickDate() {
+    // 触发隐藏的 date picker
+    this.setData({ showDatePicker: true })
+    // 使用 wx 内置
+    const that = this
+    wx.showModal({ // fallback: 用简单的日期选择
+      title: '选择日期',
+      editable: true,
+      placeholderText: 'YYYY-MM-DD',
+      content: that.data.billDateStr,
+      success(res) {
+        if (res.confirm && res.content) {
+          const d = new Date(res.content)
+          if (!isNaN(d.getTime())) {
+            const today = new Date()
+            const isToday = d.toDateString() === today.toDateString()
+            that.setData({
+              billDate: d.getTime(),
+              billDateStr: res.content,
+              dateText: isToday ? '今天' : res.content
+            })
+          }
+        }
+      }
+    })
+  },
+  onDateChange(e) {
+    const val = e.detail.value
+    const d = new Date(val)
+    const today = new Date()
+    const isToday = d.toDateString() === today.toDateString()
+    this.setData({
+      billDate: d.getTime(),
+      billDateStr: val,
+      dateText: isToday ? '今天' : val
+    })
+  },
+
+  // ========== 账户 ==========
+  pickAccount() { this.setData({ showAccountPicker: true }) },
+  closeAccountPicker() { this.setData({ showAccountPicker: false }) },
+  selectAccount(e) {
+    const key = e.currentTarget.dataset.key
+    this.setData({ selectedAccount: key, showAccountPicker: false })
+    this.updateAccountName()
+  },
+  updateAccountName() {
+    const acc = this.data.accounts.find(a => a.key === this.data.selectedAccount)
+    this.setData({ accountName: acc ? acc.name : '未知' })
+  },
 
   // ========== 键盘 ==========
   pressKey(e) {
     const val = e.currentTarget.dataset.val
+
     if (val === 'del') {
       let str = this.data.amountStr
       this.setData({ amountStr: str ? str.slice(0, -1) : '' })
-      this.updateSplit()
+      this.afterAmountChange()
       return
     }
+
     if (val === 'ok') return this.submitBill()
+
     let str = this.data.amountStr
+
+    // 00 保护：小数点后已有数字时不追加00，且总长度检查
+    if (val === '00') {
+      if (str.includes('.') && str.split('.')[1].length > 0) return
+      if (str.length >= 9) return  // 00 后可能超 10 位
+    }
+
+    // 小数点保护
     if (val === '.' && str.includes('.')) return
-    if (str.includes('.') && str.split('.')[1].length >= 2) return
+
+    // 小数位数保护（不包含 +- 运算符场景）
+    if (str.includes('.') && !['+', '-'].some(op => str.includes(op))) {
+      if (str.split('.')[1].length >= 2) return
+    }
+
+    // 总长度保护
     if (str.length >= 10) return
+
     str += val
     this.setData({ amountStr: str })
-    if (this.data.splitMode === 'equal') this.calcEqualSplit()
+    this.afterAmountChange()
+  },
+
+  afterAmountChange() {
     this.updateAmountCNY()
+    if (this.data.splitMode === 'equal') this.calcEqualSplit()
   },
 
   // ========== 提交 ==========
@@ -207,19 +283,18 @@ Page({
       ledger.optimisticAddBill(current.id, bill)
     } else {
       storage.addBill(bill)
-      const delta = bill.type === 'income' ? bill.amount : -bill.amount
+      const delta = bill.type === 'income' ? amountCNY : -amountCNY
       storage.updateAccountBalance(bill.account, delta)
     }
 
     this.setData({ amountStr: '', selectedCategory: '', note: '' })
-    const label = bill.type === 'income' ? '收入' : '支出'
-    wx.showToast({ title: `${label} ¥${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
+    const sym = this.data.currencySymbol
+    wx.showToast({ title: `${bill.type === 'income' ? '收入' : '支出'} ${sym}${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
   },
 
   buildSplits() {
     if (this.data.billType !== 'expense' || this.data.members.length <= 1) return null
     if (this.data.splitMode === 'no_split' || this.data.splitMode === 'equal') return null
-    // 按比例或自定义
     const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
     const ratioTotal = this.data.ratioTotal
     if (ratioTotal <= 0) return null
@@ -228,8 +303,8 @@ Page({
       .map(i => ({
         memberId: i.memberId,
         amount: this.data.splitMode === 'ratio'
-          ? Math.round(i.amount / ratioTotal * amountFen)  // 按比例算实际金额
-          : i.amount  // 自定义直接用输入金额
+          ? Math.round(i.amount / ratioTotal * amountFen)
+          : i.amount
       }))
   },
 
