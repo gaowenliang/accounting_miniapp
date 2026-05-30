@@ -78,6 +78,25 @@
     </view>
   </view>
 
+  <!-- 币种排序 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">🌍 币种排序</text>
+      <text class="action-btn" bindtap="resetCurrencyOrder">恢复默认</text>
+    </view>
+    <view class="card">
+      <view class="currency-sort-item" wx:for="{{currencyList}}" wx:key="code">
+        <text class="cs-flag">{{item.flag}}</text>
+        <text class="cs-code">{{item.code}}</text>
+        <text class="cs-name">{{item.name}}</text>
+        <view class="cs-arrows">
+          <text class="cs-arrow" bindtap="moveCurrencyUp" data-idx="{{index}}" wx:if="{{index > 0}}">↑</text>
+          <text class="cs-arrow" bindtap="moveCurrencyDown" data-idx="{{index}}" wx:if="{{index < currencyList.length - 1}}">↓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 人员管理 -->
   <view class="section">
     <view class="section-header">

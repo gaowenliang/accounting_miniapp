@@ -73,7 +73,25 @@ function getRateDisplay(currencyCode) {
   }
 }
 
-function getAllCurrencies() { return CURRENCIES }
+function getAllCurrencies() {
+  // 读取用户自定义排序
+  let customOrder = null
+  try { customOrder = wx.getStorageSync('currency_order') } catch (e) {}
+  if (!customOrder || !Array.isArray(customOrder)) return CURRENCIES
+  // 按自定义顺序排列，新币种追加到末尾
+  const ordered = []
+  const seen = new Set()
+  customOrder.forEach(code => {
+    const c = CURRENCIES.find(item => item.code === code)
+    if (c) { ordered.push(c); seen.add(code) }
+  })
+  CURRENCIES.forEach(c => { if (!seen.has(c.code)) ordered.push(c) })
+  return ordered
+}
+
+function saveCurrencyOrder(codes) {
+  try { wx.setStorageSync('currency_order', codes) } catch (e) {}
+}
 
 function saveRates(rates) {
   try { wx.setStorageSync('exchange_rates', { rates, updatedAt: Date.now() }) } catch (e) {}
@@ -85,5 +103,5 @@ function loadRates() {
 
 module.exports = {
   CURRENCIES, getCurrency, toCNY, getAllCurrencies,
-  getRateDisplay, saveRates, loadRates
+  getRateDisplay, saveRates, loadRates, saveCurrencyOrder
 }

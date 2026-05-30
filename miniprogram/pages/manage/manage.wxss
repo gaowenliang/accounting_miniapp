@@ -122,3 +122,17 @@
 .invite-code-box { text-align: center; padding: 32rpx; background: #F9FAFB; border-radius: 16rpx; }
 .invite-code { font-size: 48rpx; font-weight: 700; color: #4F46E5; letter-spacing: 12rpx; display: block; }
 .invite-copy { font-size: 22rpx; color: #9CA3AF; margin-top: 8rpx; display: block; }
+
+/* 币种排序 */
+.currency-sort-item {
+  display: flex; align-items: center; padding: 16rpx 20rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+.cs-flag { font-size: 28rpx; margin-right: 10rpx; }
+.cs-code { font-size: 26rpx; font-weight: 600; color: #1F2937; width: 60rpx; }
+.cs-name { flex: 1; font-size: 24rpx; color: #6B7280; }
+.cs-arrows { display: flex; gap: 16rpx; }
+.cs-arrow {
+  font-size: 28rpx; color: #4F46E5; padding: 8rpx 16rpx;
+  background: #EEF2FF; border-radius: 12rpx; font-weight: 600;
+}

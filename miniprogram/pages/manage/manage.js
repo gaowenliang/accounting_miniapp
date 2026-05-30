@@ -4,6 +4,7 @@ const util = require('../../utils/util')
 const storage = require('../../utils/storage')
 const validator = require('../../utils/validator')
 const ledger = require('../../utils/ledger')
+const currencies = require('../../data/currencies')
 
 Page({
   data: {
@@ -27,6 +28,8 @@ Page({
     budgetEnabled: false,
     budgetAmount: 0,
     budgetAmountText: '',
+    // 币种排序
+    currencyList: [],
     showBudgetModal: false,
     budgetInput: '',
     // 清除
@@ -60,7 +63,8 @@ Page({
       budgetEnabled: budget.enabled,
       budgetAmount: budget.amount,
       budgetAmountText: budget.amount > 0 ? (budget.amount / 100).toFixed(0) : '0',
-      members
+      members,
+      currencyList: currencies.getAllCurrencies()
     })
   },
 
@@ -281,5 +285,30 @@ Page({
     this.setData({ showClearModal: false })
     this.loadData()
     wx.showToast({ title: '数据已清除', icon: 'success' })
-  }
+  },
+
+  // ===== 币种排序 =====
+  moveCurrencyUp(e) {
+    const idx = e.currentTarget.dataset.idx
+    if (idx <= 0) return
+    const list = [...this.data.currencyList]
+    ;[list[idx - 1], list[idx]] = [list[idx], list[idx - 1]]
+    this.setData({ currencyList: list })
+    currencies.saveCurrencyOrder(list.map(c => c.code))
+  },
+
+  moveCurrencyDown(e) {
+    const idx = e.currentTarget.dataset.idx
+    const list = [...this.data.currencyList]
+    if (idx >= list.length - 1) return
+    ;[list[idx], list[idx + 1]] = [list[idx + 1], list[idx]]
+    this.setData({ currencyList: list })
+    currencies.saveCurrencyOrder(list.map(c => c.code))
+  },
+
+  resetCurrencyOrder() {
+    try { wx.removeStorageSync('currency_order') } catch (e) {}
+    this.setData({ currencyList: currencies.getAllCurrencies() })
+    wx.showToast({ title: '已恢复默认', icon: 'success' })
+  },
 })
