@@ -145,3 +145,13 @@
 .aa-settle-label { font-size: 20rpx; color: #9CA3AF; margin-top: 2rpx; }
 
 .empty-hint { text-align: center; padding: 32rpx; font-size: 24rpx; color: #D1D5DB; }
+/* 人员明细展开 */
+.person-expand { font-size: 20rpx; color: #9CA3AF; margin-left: 8rpx; }
+.person-detail { margin-top: 12rpx; padding-top: 10rpx; border-top: 1rpx solid #F3F4F6; }
+.pd-bill { display: flex; align-items: center; padding: 8rpx 0; border-bottom: 1rpx solid #F9FAFB; }
+.pd-bill-icon { font-size: 22rpx; margin-right: 8rpx; }
+.pd-bill-info { flex: 1; }
+.pd-bill-cat { font-size: 22rpx; font-weight: 600; color: #374151; display: block; }
+.pd-bill-note { font-size: 18rpx; color: #9CA3AF; }
+.pd-bill-amount { font-size: 24rpx; font-weight: 700; margin-right: 8rpx; }
+.pd-bill-date { font-size: 18rpx; color: #9CA3AF; }

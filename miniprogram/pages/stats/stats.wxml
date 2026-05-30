@@ -116,11 +116,12 @@
       <view class="nav-arrow" bindtap="nextMonth">▶</view>
     </view>
 
-    <view class="person-card" wx:for="{{personStats}}" wx:key="id">
+    <view class="person-card" wx:for="{{personStats}}" wx:key="id" bindtap="togglePersonDetail" data-id="{{item.id}}">
       <view class="person-header">
         <text class="person-avatar">{{item.avatar}}</text>
         <text class="person-name">{{item.name}}</text>
         <text class="person-count">{{item.billCount}}笔</text>
+        <text class="person-expand">{{expandedPerson === item.id ? '▲' : '▼'}}</text>
       </view>
       <view class="person-stats-row">
         <view class="person-stat">
@@ -132,7 +133,7 @@
           <text class="person-stat-value text-income">¥{{(item.totalIncome/100).toFixed(2)}}</text>
         </view>
       </view>
-      <!-- 该人的分类明细 -->
+      <!-- 分类明细 -->
       <view class="person-cats" wx:if="{{item.categories}}">
         <view class="person-cat-item" wx:for="{{item.catList}}" wx:for-item="cat" wx:key="name">
           <text class="person-cat-name">{{cat.name}}</text>
@@ -140,6 +141,20 @@
             <view class="person-cat-bar" style="width:{{cat.percent}}%"></view>
           </view>
           <text class="person-cat-amount">¥{{(cat.amount/100).toFixed(0)}}</text>
+        </view>
+      </view>
+      <!-- 展开的账单明细 -->
+      <view class="person-detail" wx:if="{{expandedPerson === item.id}}">
+        <view class="pd-bill" wx:for="{{item.bills}}" wx:for-item="bill" wx:key="id">
+          <text class="pd-bill-icon">{{bill.icon}}</text>
+          <view class="pd-bill-info">
+            <text class="pd-bill-cat">{{bill.catName}}</text>
+            <text class="pd-bill-note">{{bill.note || ''}}</text>
+          </view>
+          <text class="pd-bill-amount {{bill.type === 'income' ? 'text-income' : 'text-expense'}}">
+            {{bill.type === 'income' ? '+' : '-'}}¥{{(bill.amountDisplay/100).toFixed(2)}}
+          </text>
+          <text class="pd-bill-date">{{bill.dateStr}}</text>
         </view>
       </view>
     </view>

@@ -22,6 +22,7 @@ Page({
     monthlyData: [],
     // 按人数据
     personStats: [],
+    expandedPerson: null,
     // AA结算
     aaResult: null,
     aaParticipants: [],
@@ -132,7 +133,34 @@ Page({
   loadPersonStats() {
     const { currentYear, currentMonth } = this.data
     const stats = storage.getPersonStats(currentYear, currentMonth)
-    this.setData({ personStats: stats })
+    // 给每人加账单明细
+    const bills = storage.getBillsByMonth(currentYear, currentMonth)
+    const categories = require('../../data/categories')
+    stats.forEach(person => {
+      const personBills = bills
+        .filter(b => (b.payer || 'self') === person.id)
+        .sort((a, b) => (b.date || b.createdAt || 0) - (a.date || a.createdAt || 0))
+        .slice(0, 20) // 最多显示20条
+        .map(b => {
+          const cat = categories.getCategoryBy(b.category, b.type)
+          return {
+            id: b.id || Math.random(),
+            icon: cat.icon,
+            catName: cat.name,
+            note: b.note,
+            type: b.type,
+            amountDisplay: b.amountCNY || b.amount,
+            dateStr: (b.date ? new Date(b.date) : new Date()).getDate() + '日'
+          }
+        })
+      person.bills = personBills
+    })
+    this.setData({ personStats: stats, expandedPerson: null })
+  },
+
+  togglePersonDetail(e) {
+    const id = e.currentTarget.dataset.id
+    this.setData({ expandedPerson: this.data.expandedPerson === id ? null : id })
   },
 
   // ========== AA结算 ==========
