@@ -55,7 +55,9 @@ function billsToCSV(bills) {
     const type = b.type === 'income' ? '收入' : '支出'
     const cat = CATEGORIES[b.category] || b.category
     const amount = (b.amount / 100).toFixed(2)
-    const note = (b.note || '').replace(/,/g, '，').replace(/\n/g, ' ')
+    let note = (b.note || '').replace(/,/g, '，').replace(/\n/g, ' ')
+    // 防CSV公式注入
+    if (/^[=+@-]/.test(note)) note = '\'' + note
     const account = b.account || ''
     const payer = b.payer || ''
     return `${dateStr},${type},${cat},${amount},${note},${account},${payer}`

@@ -182,7 +182,7 @@
     <view class="modal-content" catchtap="">
       <view class="modal-header">加入共享账本</view>
       <view class="modal-body">
-        <input class="form-input" placeholder="输入6位邀请码" type="number" maxlength="6" value="{{joinCode}}" bindinput="onJoinCodeInput" focus="{{showJoinModal}}" />
+        <input class="form-input" placeholder="输入6位邀请码" type="text" maxlength="6" value="{{joinCode}}" bindinput="onJoinCodeInput" focus="{{showJoinModal}}" />
       </view>
       <view class="modal-footer">
         <view class="btn-cancel" bindtap="cancelJoin">取消</view>

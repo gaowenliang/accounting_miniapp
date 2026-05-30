@@ -142,7 +142,7 @@ Page({
   },
 
   async confirmJoin() {
-    const code = this.data.joinCode.trim()
+    const code = this.data.joinCode.trim().toUpperCase()
     if (code.length !== 6) {
       wx.showToast({ title: '邀请码为6位数字', icon: 'none' }); return
     }
@@ -271,7 +271,13 @@ Page({
   showClearConfirm() { this.setData({ showClearModal: true }) },
   cancelClear() { this.setData({ showClearModal: false }) },
   clearAllData() {
-    wx.clearStorageSync()
+    // 只清业务数据，保留用户设置
+    const keysToClear = ['bills', 'accounts', 'budget', 'members', 'categories_expense', 'categories_income']
+    keysToClear.forEach(key => {
+      try { wx.removeStorageSync(key) } catch (e) {}
+    })
+    // 重新初始化默认数据
+    ledger.initDefaultLedger()
     this.setData({ showClearModal: false })
     this.loadData()
     wx.showToast({ title: '数据已清除', icon: 'success' })

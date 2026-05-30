@@ -187,7 +187,9 @@ async function deleteBill(openid, billId, ledgerId) {
 
 async function createLedger(openid, data) {
   if (!data || !data.name) return { success: false, error: '缺少名称' }
-  const inviteCode = String(Math.floor(100000 + Math.random() * 900000))
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // 去掉易混淆的 I/O/0/1
+  let inviteCode = ''
+  for (let i = 0; i < 6; i++) inviteCode += chars[Math.floor(Math.random() * chars.length)]
   try {
     const result = await db.collection('ledgers').add({
       data: {
