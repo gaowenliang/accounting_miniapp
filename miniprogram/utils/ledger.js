@@ -246,11 +246,24 @@ const LedgerManager = {
     // 云端退出
     if (wx.cloud) {
       try {
-        await wx.cloud.callFunction({
+        const res = await wx.cloud.callFunction({
           name: 'billData',
           data: { action: 'leaveLedger', ledgerId }
         })
-      } catch (e) {}
+        const result = res.result || {}
+        if (result.reason) {
+          return { success: false, reason: result.reason }
+        }
+        if (result.dissolved) {
+          // 账本已解散，清理本地所有相关缓存
+          const types = ['bills', 'members']
+          types.forEach(t => {
+            try { wx.removeStorageSync(this._cacheKey(ledgerId, t)) } catch(e){}
+          })
+        }
+      } catch (e) {
+        return { success: false, reason: '网络错误，请重试' }
+      }
     }
 
     // 本地移除
@@ -360,7 +373,10 @@ const LedgerManager = {
   // ========== 工具 ==========
 
   _genInviteCode() {
-    return String(Math.floor(100000 + Math.random() * 900000))
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let code = ''
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    return code
   },
 
   _getLedgerIcon(type) {

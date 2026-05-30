@@ -239,6 +239,9 @@ async function joinLedger(openid, inviteCode) {
     if (memberRes.data.length > 0) {
       return { success: false, reason: '你已经在这个账本里了' }
     }
+    if ((target.memberCount || 1) >= 20) {
+      return { success: false, reason: '该账本已满（最多20人）' }
+    }
     await db.collection('ledger_members').add({
       data: {
         ledgerId: target._id,
@@ -271,12 +274,27 @@ async function leaveLedger(openid, ledgerId) {
     const memberRes = await db.collection('ledger_members')
       .where({ ledgerId, _openid: openid })
       .limit(1).get()
-    if (memberRes.data.length > 0) {
-      await db.collection('ledger_members').doc(memberRes.data[0]._id).remove()
-      await db.collection('ledgers').doc(ledgerId).update({
-        data: { memberCount: _.inc(-1) }
-      })
+    if (memberRes.data.length === 0) {
+      return { success: false, reason: '你不在这个账本中' }
     }
+    const member = memberRes.data[0]
+    if (member.role === 'owner') {
+      // owner 不能直接退出，需先转让或解散
+      const countRes = await db.collection('ledger_members')
+        .where({ ledgerId }).count()
+      if (countRes.total > 1) {
+        return { success: false, reason: '请先转让管理员或解散账本' }
+      }
+      // 最后一人且是 owner → 解散账本
+      await db.collection('ledgers').doc(ledgerId).remove()
+      await db.collection('ledger_bills').where({ ledgerId }).remove()
+      await db.collection('ledger_members').where({ ledgerId }).remove()
+      return { success: true, dissolved: true }
+    }
+    await db.collection('ledger_members').doc(member._id).remove()
+    await db.collection('ledgers').doc(ledgerId).update({
+      data: { memberCount: _.inc(-1) }
+    })
     return { success: true }
   } catch (e) {
     return { success: false, error: e.message }
