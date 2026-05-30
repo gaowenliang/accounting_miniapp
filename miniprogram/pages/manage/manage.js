@@ -30,6 +30,9 @@ Page({
     budgetAmountText: '',
     // 币种排序
     currencyList: [],
+    // 分类排序
+    catSortType: 'expense',
+    catSortList: [],
     showBudgetModal: false,
     budgetInput: '',
     // 清除
@@ -64,7 +67,8 @@ Page({
       budgetAmount: budget.amount,
       budgetAmountText: budget.amount > 0 ? (budget.amount / 100).toFixed(0) : '0',
       members,
-      currencyList: currencies.getAllCurrencies()
+      currencyList: currencies.getAllCurrencies(),
+      catSortList: categories.getCategories(this.data.catSortType)
     })
   },
 
@@ -309,6 +313,36 @@ Page({
   resetCurrencyOrder() {
     try { wx.removeStorageSync('currency_order') } catch (e) {}
     this.setData({ currencyList: currencies.getAllCurrencies() })
+    wx.showToast({ title: '已恢复默认', icon: 'success' })
+  },
+
+  // ===== 分类排序 =====
+  switchCatSort(e) {
+    const type = e.currentTarget.dataset.type
+    this.setData({ catSortType: type, catSortList: categories.getCategories(type) })
+  },
+
+  moveCatUp(e) {
+    const idx = e.currentTarget.dataset.idx
+    if (idx <= 0) return
+    const list = [...this.data.catSortList]
+    ;[list[idx - 1], list[idx]] = [list[idx], list[idx - 1]]
+    this.setData({ catSortList: list })
+    categories.saveCategories(this.data.catSortType, list)
+  },
+
+  moveCatDown(e) {
+    const idx = e.currentTarget.dataset.idx
+    const list = [...this.data.catSortList]
+    if (idx >= list.length - 1) return
+    ;[list[idx], list[idx + 1]] = [list[idx + 1], list[idx]]
+    this.setData({ catSortList: list })
+    categories.saveCategories(this.data.catSortType, list)
+  },
+
+  resetCatOrder() {
+    categories.resetCategories()
+    this.setData({ catSortList: categories.getCategories(this.data.catSortType) })
     wx.showToast({ title: '已恢复默认', icon: 'success' })
   },
 })

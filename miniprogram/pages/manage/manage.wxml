@@ -97,6 +97,28 @@
     </view>
   </view>
 
+  <!-- 分类排序 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">📂 分类排序</text>
+      <view class="header-actions">
+        <text class="action-btn {{catSortType === 'expense' ? 'active' : ''}}" bindtap="switchCatSort" data-type="expense">支出</text>
+        <text class="action-btn {{catSortType === 'income' ? 'active' : ''}}" bindtap="switchCatSort" data-type="income">收入</text>
+        <text class="action-btn" bindtap="resetCatOrder">恢复默认</text>
+      </view>
+    </view>
+    <view class="card">
+      <view class="currency-sort-item" wx:for="{{catSortList}}" wx:key="key">
+        <text class="cs-flag">{{item.icon}}</text>
+        <text class="cs-name">{{item.name}}</text>
+        <view class="cs-arrows">
+          <text class="cs-arrow" bindtap="moveCatUp" data-idx="{{index}}" wx:if="{{index > 0}}">↑</text>
+          <text class="cs-arrow" bindtap="moveCatDown" data-idx="{{index}}" wx:if="{{index < catSortList.length - 1}}">↓</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 人员管理 -->
   <view class="section">
     <view class="section-header">

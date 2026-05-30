@@ -25,6 +25,7 @@
 .header-actions { display: flex; gap: 16rpx; }
 .action-btn { font-size: 24rpx; color: #6B7280; padding: 4rpx 8rpx; }
 .action-btn.primary { color: #4F46E5; font-weight: 600; }
+.action-btn.active { color: #4F46E5; font-weight: 600; background: #EEF2FF; border-radius: 8rpx; }
 
 /* 账本 */
 .card {
