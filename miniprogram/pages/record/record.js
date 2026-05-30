@@ -19,10 +19,12 @@ Page({
     showAddMemberModal: false,
     newMemberName: '',
     // 分摊
-    splitMode: 'equal',
+    splitMode: 'equal',      // 'no_split' | 'equal' | 'ratio' | 'custom'
     splitItems: [],
     splitPerPerson: '0.00',
     splitRemainder: 0,
+    ratioTotal: 0,
+    totalAmountFen: 0,
     // 日期/账户
     billDate: 0,
     accounts: [],
@@ -75,42 +77,51 @@ Page({
   // ========== 分摊 ==========
   initSplitItems(members) {
     const items = (members || []).map(m => ({
-      memberId: m.id, name: m.name, avatar: m.avatar, amount: 0, amountStr: ''
+      memberId: m.id, name: m.name, avatar: m.avatar, amount: 0, inputStr: ''
     }))
     this.setData({ splitItems: items })
   },
 
+  setSplitNoSplit() { this.setData({ splitMode: 'no_split' }) },
+
   setSplitEqual() {
     this.setData({ splitMode: 'equal' })
-    this.updateSplit()
+    this.calcEqualSplit()
   },
 
-  setSplitCustom() {
-    this.setData({ splitMode: 'custom' })
-  },
+  setSplitRatio() { this.setData({ splitMode: 'ratio' }) },
 
-  updateSplit() {
+  setSplitCustom() { this.setData({ splitMode: 'custom' }) },
+
+  // 计算AA均摊
+  calcEqualSplit() {
     const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
     const count = this.data.splitItems.length || 1
     const perPerson = Math.floor(amountFen / count)
-    this.setData({ splitPerPerson: (perPerson / 100).toFixed(2) })
-    if (this.data.splitMode === 'equal') {
-      const items = this.data.splitItems.map(item => ({
-        ...item, amount: perPerson, amountStr: (perPerson / 100).toFixed(2)
-      }))
-      this.setData({ splitItems: items, splitRemainder: amountFen - perPerson * count })
-    }
+    this.setData({
+      splitPerPerson: (perPerson / 100).toFixed(2),
+      splitRemainder: amountFen - perPerson * count,
+      totalAmountFen: amountFen
+    })
   },
 
+  // 按比例或自定义输入
   onSplitAmountInput(e) {
     const idx = e.currentTarget.dataset.idx
     const val = e.detail.value
     const items = [...this.data.splitItems]
-    items[idx].amountStr = val
+    items[idx].inputStr = val
     items[idx].amount = util.yuanToFen(parseFloat(val) || 0)
-    const totalSplit = items.reduce((s, i) => s + i.amount, 0)
+
     const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
-    this.setData({ splitItems: items, splitRemainder: amountFen - totalSplit })
+    const totalInput = items.reduce((s, i) => s + i.amount, 0)
+
+    this.setData({
+      splitItems: items,
+      ratioTotal: totalInput,
+      totalAmountFen: amountFen,
+      splitRemainder: this.data.splitMode === 'custom' ? amountFen - totalInput : 0
+    })
   },
 
   // ========== 备注 ==========
@@ -132,7 +143,7 @@ Page({
     if (str.length >= 10) return
     str += val
     this.setData({ amountStr: str })
-    this.updateSplit()
+    if (this.data.splitMode === 'equal') this.calcEqualSplit()
   },
 
   // ========== 提交 ==========
@@ -177,8 +188,19 @@ Page({
 
   buildSplits() {
     if (this.data.billType !== 'expense' || this.data.members.length <= 1) return null
-    if (this.data.splitMode === 'equal') return null
-    return this.data.splitItems.filter(i => i.amount > 0).map(i => ({ memberId: i.memberId, amount: i.amount }))
+    if (this.data.splitMode === 'no_split' || this.data.splitMode === 'equal') return null
+    // 按比例或自定义
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    const ratioTotal = this.data.ratioTotal
+    if (ratioTotal <= 0) return null
+    return this.data.splitItems
+      .filter(i => i.amount > 0)
+      .map(i => ({
+        memberId: i.memberId,
+        amount: this.data.splitMode === 'ratio'
+          ? Math.round(i.amount / ratioTotal * amountFen)  // 按比例算实际金额
+          : i.amount  // 自定义直接用输入金额
+      }))
   },
 
   // ========== 添加人员 ==========
@@ -190,8 +212,8 @@ Page({
     if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return }
     const members = storage.addMember(name)
     const newM = members[members.length - 1]
-    const splitItems = [...this.data.splitItems, { memberId: newM.id, name: newM.name, avatar: newM.avatar, amount: 0, amountStr: '' }]
+    const splitItems = [...this.data.splitItems, { memberId: newM.id, name: newM.name, avatar: newM.avatar, amount: 0, inputStr: '' }]
     this.setData({ members, showAddMemberModal: false, splitItems })
-    this.updateSplit()
+    if (this.data.splitMode === 'equal') this.calcEqualSplit()
   },
 })

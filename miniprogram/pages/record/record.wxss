@@ -68,29 +68,26 @@
 .person-item.selected .person-name { color: #4F46E5; font-weight: 600; }
 
 /* 分摊方式 */
-.split-bar {
-  display: flex; align-items: center; gap: 12rpx;
-}
-.split-opt {
-  padding: 8rpx 24rpx; border-radius: 20rpx;
-  background: #F3F4F6; font-size: 24rpx; color: #6B7280;
-}
-.split-opt.active { background: #4F46E5; color: #FFF; font-weight: 600; }
-.split-preview { font-size: 24rpx; color: #4F46E5; font-weight: 500; }
+.split-bar { display:flex; align-items:center; gap:8rpx; flex-wrap:wrap; }
+.split-opt { padding:8rpx 20rpx; border-radius:20rpx; background:#F3F4F6; font-size:24rpx; color:#6B7280; }
+.split-opt.active { background:#4F46E5; color:#FFF; font-weight:600; }
+.split-preview-area { margin-top:8rpx; }
+.split-preview-text { font-size:24rpx; color:#4F46E5; font-weight:500; display:block; line-height:1.5; }
 
-.custom-splits { margin-top: 10rpx; }
+.custom-splits { margin-top:10rpx; }
 .split-input-row {
-  display: flex; align-items: center; padding: 6rpx 0;
-  border-bottom: 1rpx solid #F3F4F6;
+  display:flex; align-items:center; padding:6rpx 0;
+  border-bottom:1rpx solid #F3F4F6;
 }
-.split-input-avatar { font-size: 24rpx; margin-right: 6rpx; }
-.split-input-name { font-size: 22rpx; color: #374151; width: 50rpx; }
+.split-input-avatar { font-size:24rpx; margin-right:6rpx; }
+.split-input-name { font-size:22rpx; color:#374151; width:50rpx; }
+.split-input-unit { font-size:20rpx; color:#9CA3AF; margin-right:4rpx; }
 .split-input {
-  flex: 1; font-size: 22rpx; text-align: right;
-  border: 1rpx solid #E5E7EB; border-radius: 10rpx;
-  padding: 6rpx 12rpx; background: #F9FAFB;
+  flex:1; font-size:22rpx; text-align:right;
+  border:1rpx solid #E5E7EB; border-radius:10rpx;
+  padding:6rpx 12rpx; background:#F9FAFB;
 }
-.split-remain { font-size: 20rpx; color: #EF4444; text-align: center; display: block; margin-top: 4rpx; }
+.split-remain { font-size:20rpx; color:#EF4444; text-align:center; display:block; margin-top:4rpx; }
 
 /* 备注 */
 .note-section {
