@@ -13,6 +13,7 @@ const CURRENCIES = [
   { code: 'AUD', symbol: 'A$', name: '澳元',         flag: '🇦🇺', rate: 4.70 },
   { code: 'CAD', symbol: 'C$', name: '加元',         flag: '🇨🇦', rate: 5.30 },
   { code: 'TWD', symbol: 'NT$', name: '新台币',       flag: '🇹🇼', rate: 0.23 },
+  { code: 'NZD', symbol: 'NZ$', name: '新西兰元',      flag: '🇳🇿', rate: 4.35 },
 ]
 
 /**
