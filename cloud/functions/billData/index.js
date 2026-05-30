@@ -86,6 +86,12 @@ async function addBill(openid, data, ledgerId) {
     if (data.targetAccount) doc.targetAccount = data.targetAccount
     if (data.tags && data.tags.length > 0) doc.tags = data.tags
     if (ledgerId) doc.ledgerId = ledgerId
+    // 外币
+    if (data.currency && data.currency !== 'CNY') {
+      doc.currency = data.currency
+      doc.exchangeRate = data.exchangeRate || 1
+      doc.amountCNY = data.amountCNY || data.amount
+    }
 
     const result = await db.collection(collection).add({ data: doc })
     return { success: true, _id: result._id }

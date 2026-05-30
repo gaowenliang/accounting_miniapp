@@ -52,6 +52,9 @@ const StorageManager = {
       targetAccount: bill.targetAccount || null, // 转账目标账户
       tags: bill.tags || [],       // 标签
       createdBy: 'local',          // 本地创建标识
+      currency: bill.currency || 'CNY',  // 币种
+      exchangeRate: bill.exchangeRate || 1, // 汇率（非CNY时）
+      amountCNY: bill.amountCNY || bill.amount, // 人民币等值（分）
       createdAt: Date.now()
     }
     bills.unshift(record)
@@ -211,9 +214,9 @@ const StorageManager = {
 
     bills.forEach(b => {
       if (b.type === 'income') {
-        totalIncome += b.amount
+        totalIncome += (b.amountCNY || b.amount)
       } else {
-        totalExpense += b.amount
+        totalExpense += (b.amountCNY || b.amount)
         if (!categoryStats[b.category]) {
           categoryStats[b.category] = { amount: 0, count: 0 }
         }
@@ -327,11 +330,11 @@ const StorageManager = {
       const stat = memberMap[payerId]
       stat.billCount++
       if (b.type === 'expense') {
-        stat.totalExpense += b.amount
+        stat.totalExpense += (b.amountCNY || b.amount)
         const cat = b.category || 'other'
-        stat.categories[cat] = (stat.categories[cat] || 0) + b.amount
+        stat.categories[cat] = (stat.categories[cat] || 0) + (b.amountCNY || b.amount)
       } else {
-        stat.totalIncome += b.amount
+        stat.totalIncome += (b.amountCNY || b.amount)
       }
     })
 

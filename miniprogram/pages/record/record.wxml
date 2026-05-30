@@ -14,6 +14,23 @@
     </view>
   </view>
 
+  <!-- 币种选择 -->
+  <view class="section-flat">
+    <text class="flat-label">币种</text>
+    <scroll-view class="currency-scroll" scroll-x enable-flex>
+      <view class="currency-item {{selectedCurrency === item.code ? 'selected' : ''}}"
+            wx:for="{{currencies}}" wx:key="code"
+            bindtap="selectCurrency" data-code="{{item.code}}">
+        <text class="currency-flag">{{item.flag}}</text>
+        <text class="currency-code">{{item.code}}</text>
+      </view>
+    </scroll-view>
+    <!-- 非CNY时显示汇率换算 -->
+    <view class="exchange-info" wx:if="{{selectedCurrency !== 'CNY'}}">
+      <text class="exchange-text">汇率 {{exchangeRate}} → ≈¥{{amountCNYText}}</text>
+    </view>
+  </view>
+
   <!-- 分类：直接平铺 -->
   <view class="section-flat">
     <text class="flat-label">分类</text>

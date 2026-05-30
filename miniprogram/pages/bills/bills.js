@@ -83,6 +83,7 @@ Page({
         categoryName: cat.name,
         categoryIcon: cat.icon,
         amountText: util.formatMoney(b.amount),
+        amountCNYText: b.amountCNY ? ((b.amountCNY / 100).toFixed(2)) : '',
         payerName: payer ? payer.name : '我'
       })
       if (b.type === 'income') groups[dateStr].dayIncome += b.amount

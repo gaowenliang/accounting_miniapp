@@ -58,6 +58,7 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .bill-payer { font-size: 20rpx; color: #4F46E5; margin-top: 2rpx; opacity: 0.75; }
+.bill-currency { font-size: 18rpx; color: #F59E0B; margin-top: 2rpx; }
 .bill-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
 

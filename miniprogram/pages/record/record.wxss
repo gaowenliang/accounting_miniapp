@@ -39,6 +39,20 @@
   margin-bottom: 8rpx; display: block;
 }
 
+/* 币种 */
+.currency-scroll { white-space: nowrap; }
+.currency-item {
+  display: inline-flex; align-items: center; gap: 4rpx;
+  padding: 6rpx 14rpx; border-radius: 16rpx; background: #F9FAFB;
+  margin-right: 8rpx; transition: all 0.15s;
+}
+.currency-item.selected { background: #EEF2FF; border: 2rpx solid #4F46E5; }
+.currency-flag { font-size: 20rpx; }
+.currency-code { font-size: 20rpx; color: #6B7280; font-weight: 500; }
+.currency-item.selected .currency-code { color: #4F46E5; font-weight: 600; }
+.exchange-info { margin-top: 6rpx; }
+.exchange-text { font-size: 22rpx; color: #F59E0B; font-weight: 500; }
+
 /* 分类横向滚动 */
 .category-scroll { white-space: nowrap; }
 .cat-item {

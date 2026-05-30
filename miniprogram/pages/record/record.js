@@ -4,6 +4,7 @@ const util = require('../../utils/util')
 const storage = require('../../utils/storage')
 const validator = require('../../utils/validator')
 const categories = require('../../data/categories')
+const currencies = require('../../data/currencies')
 const ledger = require('../../utils/ledger')
 
 Page({
@@ -25,6 +26,11 @@ Page({
     splitRemainder: 0,
     ratioTotal: 0,
     totalAmountFen: 0,
+    // 币种
+    currencies: currencies.getAllCurrencies(),
+    selectedCurrency: 'CNY',
+    exchangeRate: 1,
+    amountCNYText: '0.00',
     // 日期/账户
     billDate: 0,
     accounts: [],
@@ -51,6 +57,23 @@ Page({
       accounts: storage.getAccounts()
     })
     this.initSplitItems(members)
+  },
+
+  // ========== 币种 ==========
+  selectCurrency(e) {
+    const code = e.currentTarget.dataset.code
+    const info = currencies.getCurrency(code)
+    this.setData({
+      selectedCurrency: code,
+      exchangeRate: info.rate
+    })
+    this.updateAmountCNY()
+  },
+
+  updateAmountCNY() {
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    const amountCNY = currencies.toCNY(amountFen, this.data.selectedCurrency, this.data.exchangeRate)
+    this.setData({ amountCNYText: (amountCNY / 100).toFixed(2) })
   },
 
   // ========== 收支切换 ==========
@@ -144,6 +167,7 @@ Page({
     str += val
     this.setData({ amountStr: str })
     if (this.data.splitMode === 'equal') this.calcEqualSplit()
+    this.updateAmountCNY()
   },
 
   // ========== 提交 ==========
@@ -159,8 +183,14 @@ Page({
     const amountResult = validator.validateAmount(amountStr)
     if (!amountResult.valid) { wx.showToast({ title: amountResult.msg, icon: 'none' }); return }
 
+    const amountFen = util.yuanToFen(amountResult.value)
+    const amountCNY = currencies.toCNY(amountFen, this.data.selectedCurrency, this.data.exchangeRate)
+
     const bill = {
-      amount: util.yuanToFen(amountResult.value),
+      amount: amountFen,
+      amountCNY: amountCNY,
+      currency: this.data.selectedCurrency,
+      exchangeRate: this.data.exchangeRate,
       type: this.data.billType,
       category: this.data.selectedCategory,
       note: this.data.note,

@@ -53,6 +53,7 @@
             <text class="bill-category">{{bill.categoryName}}</text>
             <text class="bill-note" wx:if="{{bill.note}}">{{bill.note}}</text>
             <text class="bill-payer" wx:if="{{bill.payerName && bill.payerName !== '我'}}">{{bill.payerName}} 付款</text>
+            <text class="bill-currency" wx:if="{{bill.currency && bill.currency !== 'CNY'}}">{{bill.currency}} → ≈¥{{bill.amountCNYText}}</text>
           </view>
         </view>
         <view class="bill-right">
