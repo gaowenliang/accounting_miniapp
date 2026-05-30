@@ -1,0 +1,51 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/add-bill/add-bill",
+    "pages/bills/bills",
+    "pages/stats/stats",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F6FA"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#1A73E8",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "概览",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/add-bill/add-bill",
+        "text": "记账",
+        "iconPath": "images/tab-add.png",
+        "selectedIconPath": "images/tab-add-active.png"
+      },
+      {
+        "pagePath": "pages/bills/bills",
+        "text": "账单",
+        "iconPath": "images/tab-bills.png",
+        "selectedIconPath": "images/tab-bills-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab-profile.png",
+        "selectedIconPath": "images/tab-profile-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "cloud": true,
+  "style": "v2"
+}

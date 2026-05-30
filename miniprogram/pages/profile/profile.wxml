@@ -1,0 +1,123 @@
+<!-- pages/profile/profile.wxml — 我的 -->
+<view class="container">
+
+  <!-- 用户卡片 -->
+  <view class="user-card">
+    <view class="user-avatar">💰</view>
+    <text class="user-name">记账达人</text>
+    <view class="user-stats">
+      <view class="user-stat">
+        <text class="stat-num">{{totalBills}}</text>
+        <text class="stat-label">总记录</text>
+      </view>
+      <view class="user-stat-divider"></view>
+      <view class="user-stat">
+        <text class="stat-num">{{totalDays}}</text>
+        <text class="stat-label">记账天数</text>
+      </view>
+      <view class="user-stat-divider"></view>
+      <view class="user-stat">
+        <text class="stat-num">¥{{(totalAssets/100).toFixed(0)}}</text>
+        <text class="stat-label">总资产</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 账户管理 -->
+  <view class="section">
+    <view class="section-title">
+      <text>账户管理</text>
+    </view>
+    <view class="card">
+      <view class="account-item" wx:for="{{accounts}}" wx:key="id">
+        <view class="account-left">
+          <text class="account-icon">{{item.icon}}</text>
+          <text class="account-name">{{item.name}}</text>
+        </view>
+        <view class="account-right">
+          <text class="account-balance {{item.balance >= 0 ? 'text-income' : 'text-expense'}}">
+            ¥{{((item.balance || 0)/100).toFixed(2)}}
+          </text>
+          <text class="account-delete" wx:if="{{!item.isDefault}}" bindtap="deleteAccount" data-id="{{item.id}}">删除</text>
+        </view>
+      </view>
+      <view class="add-account-btn" bindtap="addAccount">
+        <text>＋ 添加账户</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预算设置 -->
+  <view class="section">
+    <view class="card">
+      <view class="setting-item" bindtap="showBudgetSetting">
+        <view class="setting-left">
+          <text class="setting-icon">📊</text>
+          <text class="setting-label">月度预算</text>
+        </view>
+        <view class="setting-right">
+          <text class="setting-value" wx:if="{{budgetEnabled}}">¥{{budgetAmountText}}</text>
+          <text class="setting-value" wx:else>未设置</text>
+          <text class="setting-arrow">›</text>
+        </view>
+      </view>
+      <view class="setting-item" wx:if="{{budgetEnabled}}" bindtap="disableBudget">
+        <view class="setting-left">
+          <text class="setting-icon">🔕</text>
+          <text class="setting-label">关闭预算</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 其他设置 -->
+  <view class="section">
+    <view class="card">
+      <view class="setting-item" bindtap="exportData">
+        <view class="setting-left">
+          <text class="setting-icon">📤</text>
+          <text class="setting-label">导出数据</text>
+        </view>
+        <text class="setting-arrow">›</text>
+      </view>
+      <view class="setting-item" bindtap="showClearConfirm">
+        <view class="setting-left">
+          <text class="setting-icon">🗑️</text>
+          <text class="setting-label danger">清除所有数据</text>
+        </view>
+        <text class="setting-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预算设置弹窗 -->
+  <view class="modal-mask" wx:if="{{showBudgetModal}}" bindtap="cancelBudget">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">设置月度预算</view>
+      <view class="modal-body">
+        <input class="form-input" type="digit" placeholder="输入月度预算金额"
+               value="{{budgetInput}}" bindinput="onBudgetInput" focus="{{showBudgetModal}}" />
+        <text class="modal-hint">当支出达到预算的80%时会提醒你</text>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelBudget">取消</view>
+        <view class="btn-primary" bindtap="saveBudget">确认</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 清除确认弹窗 -->
+  <view class="modal-mask" wx:if="{{showClearModal}}" bindtap="cancelClear">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header danger">⚠️ 清除所有数据</view>
+      <view class="modal-body">
+        <text class="modal-warn">此操作不可恢复！所有账单、账户、预算数据将被清除。</text>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelClear">取消</view>
+        <view class="btn-danger" bindtap="clearAllData">确认清除</view>
+      </view>
+    </view>
+  </view>
+
+</view>

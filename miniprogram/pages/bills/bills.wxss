@@ -1,0 +1,59 @@
+/* pages/bills/bills.wxss */
+
+.month-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16rpx 8rpx; margin-bottom: 16rpx;
+}
+.nav-btn {
+  font-size: 28rpx; color: #1A73E8; padding: 12rpx 20rpx;
+  font-weight: 600;
+}
+.nav-info { display: flex; flex-direction: column; align-items: center; }
+.nav-month { font-size: 32rpx; font-weight: 700; color: #2D3436; }
+.nav-summary { display: flex; gap: 16rpx; margin-top: 4rpx; font-size: 22rpx; }
+.nav-divider { color: #E0E0E0; }
+
+/* 筛选 */
+.filter-bar { display: flex; align-items: center; gap: 12rpx; margin-bottom: 20rpx; }
+.filter-tabs { display: flex; background: #F0F2F5; border-radius: 44rpx; padding: 4rpx; }
+.filter-tab {
+  padding: 10rpx 24rpx; border-radius: 44rpx; font-size: 24rpx; color: #90A4AE; font-weight: 500;
+}
+.filter-tab.active { background: #1A73E8; color: #FFFFFF; }
+.filter-tab.active.expense { background: #FF5252; }
+.filter-tab.active.income { background: #4CAF50; }
+
+.search-wrap {
+  flex: 1; display: flex; align-items: center; background: #FFFFFF;
+  border-radius: 44rpx; padding: 10rpx 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+.search-icon { font-size: 24rpx; margin-right: 8rpx; }
+.search-input { flex: 1; font-size: 24rpx; }
+.search-clear { font-size: 24rpx; color: #90A4AE; padding: 4rpx; }
+
+/* 分组 */
+.bill-group { margin-bottom: 20rpx; }
+.group-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12rpx 8rpx;
+}
+.group-date { font-size: 26rpx; font-weight: 600; color: #607D8B; }
+.group-summary { display: flex; gap: 16rpx; font-size: 22rpx; }
+
+/* 账单条目 */
+.bill-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20rpx 0; border-bottom: 1rpx solid #F0F2F5;
+}
+.bill-item:last-child { border-bottom: none; }
+.bill-left { display: flex; align-items: center; flex: 1; min-width: 0; }
+.bill-icon { font-size: 40rpx; margin-right: 16rpx; flex-shrink: 0; }
+.bill-info { display: flex; flex-direction: column; min-width: 0; }
+.bill-category { font-size: 28rpx; font-weight: 500; color: #2D3436; }
+.bill-note {
+  font-size: 22rpx; color: #90A4AE; margin-top: 4rpx;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bill-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+.bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }

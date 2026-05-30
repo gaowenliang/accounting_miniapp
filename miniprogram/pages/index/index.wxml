@@ -1,0 +1,92 @@
+<!-- pages/index/index.wxml — 首页：本月概览 -->
+<view class="container">
+
+  <!-- 骨架屏 -->
+  <view class="skeleton" wx:if="{{loading}}">
+    <view class="sk-overview"></view>
+    <view class="sk-row" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="sk-line"></view>
+    </view>
+  </view>
+
+  <!-- 真实内容 -->
+  <view wx:if="{{!loading}}" class="content-fade">
+
+    <!-- 本月概览卡片 -->
+    <view class="overview-card">
+      <view class="overview-month">{{currentMonth}} 结余</view>
+      <view class="overview-balance {{balance >= 0 ? 'positive' : 'negative'}}">
+        {{balance >= 0 ? '' : '-'}}¥{{balance >= 0 ? (balance/100).toFixed(2) : (-balance/100).toFixed(2)}}
+      </view>
+      <view class="overview-row">
+        <view class="overview-item">
+          <text class="overview-label">收入</text>
+          <text class="overview-amount text-income">¥{{(totalIncome/100).toFixed(2)}}</text>
+          <text class="overview-change {{incomeChange[0] === '+' ? 'text-income' : 'text-expense'}}">{{incomeChange}}</text>
+        </view>
+        <view class="overview-divider"></view>
+        <view class="overview-item">
+          <text class="overview-label">支出</text>
+          <text class="overview-amount text-expense">¥{{(totalExpense/100).toFixed(2)}}</text>
+          <text class="overview-change text-expense">{{expenseChange}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 预算进度 -->
+    <view class="card budget-card" wx:if="{{budgetEnabled}}">
+      <view class="budget-header">
+        <text class="budget-title">月预算</text>
+        <text class="budget-amount">¥{{(budgetAmount/100).toFixed(0)}}</text>
+      </view>
+      <view class="budget-bar">
+        <view class="budget-fill {{budgetPercent > 80 ? 'warning' : ''}}" style="width: {{budgetPercent}}%"></view>
+      </view>
+      <view class="budget-info">
+        <text>已花 ¥{{(budgetUsed/100).toFixed(2)}}</text>
+        <text>剩余 ¥{{((budgetAmount - budgetUsed)/100).toFixed(2)}}</text>
+      </view>
+    </view>
+
+    <!-- 最近账单 -->
+    <view class="section">
+      <view class="section-title">
+        <text>最近账单</text>
+        <text class="section-more" bindtap="goBills">查看全部 ›</text>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{!hasBills}}">
+        <text class="emoji">💰</text>
+        <text class="title">还没有记账</text>
+        <text class="desc">记下第一笔，开始理财之旅</text>
+        <view class="btn-primary" bindtap="goAddBill">＋ 记一笔</view>
+      </view>
+
+      <!-- 账单列表 -->
+      <view class="card" wx:if="{{hasBills}}">
+        <view class="bill-item" wx:for="{{recentBills}}" wx:key="id">
+          <view class="bill-left">
+            <text class="bill-icon">{{item.categoryIcon}}</text>
+            <view class="bill-info">
+              <text class="bill-category">{{item.categoryName}}</text>
+              <text class="bill-note" wx:if="{{item.note}}">{{item.note}}</text>
+            </view>
+          </view>
+          <view class="bill-right">
+            <text class="bill-amount {{item.type === 'income' ? 'text-income' : 'text-expense'}}">
+              {{item.type === 'income' ? '+' : '-'}}{{item.amountText}}
+            </text>
+            <text class="bill-date">{{item.dateText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 浮动记账按钮 -->
+    <view class="fab" bindtap="goAddBill" wx:if="{{hasBills}}">
+      <text class="fab-icon">＋</text>
+    </view>
+
+  </view>
+</view>

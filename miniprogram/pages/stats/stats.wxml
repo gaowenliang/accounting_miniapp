@@ -1,0 +1,100 @@
+<!-- pages/stats/stats.wxml — 统计分析 -->
+<view class="container">
+
+  <!-- 模式切换 -->
+  <view class="mode-switch">
+    <view class="mode-btn {{mode === 'month' ? 'active' : ''}}" bindtap="switchMode" data-mode="month">月度</view>
+    <view class="mode-btn {{mode === 'year' ? 'active' : ''}}" bindtap="switchMode" data-mode="year">年度</view>
+  </view>
+
+  <!-- 月份/年份导航 -->
+  <view class="period-nav">
+    <view class="nav-btn" bindtap="prevPeriod">◀</view>
+    <text class="period-label">{{periodLabel}}</text>
+    <view class="nav-btn" bindtap="nextPeriod">▶</view>
+  </view>
+
+  <!-- 收支对比 -->
+  <view class="card summary-card">
+    <view class="summary-row">
+      <text class="summary-label">收入</text>
+      <view class="summary-bar-wrap">
+        <view class="summary-bar income" style="width: {{totalIncome > 0 ? (totalIncome / (totalIncome + totalExpense) * 100) : 0}}%"></view>
+      </view>
+      <text class="summary-amount text-income">¥{{(totalIncome/100).toFixed(2)}}</text>
+    </view>
+    <view class="summary-row">
+      <text class="summary-label">支出</text>
+      <view class="summary-bar-wrap">
+        <view class="summary-bar expense" style="width: {{totalExpense > 0 ? (totalExpense / (totalIncome + totalExpense) * 100) : 0}}%"></view>
+      </view>
+      <text class="summary-amount text-expense">¥{{(totalExpense/100).toFixed(2)}}</text>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-row">
+      <text class="summary-label">结余</text>
+      <text class="summary-balance {{balance >= 0 ? 'positive' : 'negative'}}">
+        ¥{{(Math.abs(balance)/100).toFixed(2)}}
+      </text>
+    </view>
+  </view>
+
+  <!-- 支出分类占比（月度模式） -->
+  <view class="section" wx:if="{{mode === 'month' && categoryRank.length > 0}}">
+    <text class="section-title">支出分类</text>
+    <view class="card">
+      <view class="rank-item" wx:for="{{categoryRank}}" wx:key="key">
+        <view class="rank-left">
+          <text class="rank-icon">{{item.icon}}</text>
+          <text class="rank-name">{{item.name}}</text>
+        </view>
+        <view class="rank-center">
+          <view class="rank-bar" style="width: {{item.percent}}%; background: {{item.color}};"></view>
+        </view>
+        <view class="rank-right">
+          <text class="rank-amount">¥{{(item.amount/100).toFixed(2)}}</text>
+          <text class="rank-percent">{{item.percent}}%</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 每日趋势（月度） -->
+  <view class="section" wx:if="{{mode === 'month' && dailyTrend.length > 0}}">
+    <text class="section-title">每日支出趋势</text>
+    <view class="card chart-card">
+      <view class="trend-chart">
+        <view class="trend-bar-wrap" wx:for="{{dailyTrend}}" wx:key="date">
+          <view class="trend-bar" style="height: {{item.expense > 0 ? (item.expense / (dailyTrend.reduce((max, d) => Math.max(max, d.expense), 1)) * 100) : 0}}%"></view>
+          <text class="trend-label" wx:if="{{index % 5 === 0}}">{{item.date}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 月度趋势（年度模式） -->
+  <view class="section" wx:if="{{mode === 'year' && monthlyTrend.length > 0}}">
+    <text class="section-title">月度收支趋势</text>
+    <view class="card">
+      <view class="monthly-row" wx:for="{{monthlyTrend}}" wx:key="month">
+        <text class="monthly-label">{{item.label}}</text>
+        <view class="monthly-bars">
+          <view class="monthly-bar income" style="width: {{item.income > 0 ? 40 : 0}}%"></view>
+          <view class="monthly-bar expense" style="width: {{item.expense > 0 ? 30 : 0}}%"></view>
+        </view>
+        <view class="monthly-amounts">
+          <text class="text-income">+{{(item.income/100).toFixed(0)}}</text>
+          <text class="text-expense">-{{(item.expense/100).toFixed(0)}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{totalIncome === 0 && totalExpense === 0 && !loading}}">
+    <text class="emoji">📊</text>
+    <text class="title">暂无数据</text>
+    <text class="desc">{{periodLabel}}还没有记录</text>
+  </view>
+
+</view>

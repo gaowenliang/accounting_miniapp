@@ -1,0 +1,78 @@
+/* pages/profile/profile.wxss */
+
+/* 用户卡片 */
+.user-card {
+  background: linear-gradient(135deg, #1A73E8, #4285F4);
+  border-radius: 24rpx; padding: 40rpx 32rpx; margin-bottom: 24rpx;
+  display: flex; flex-direction: column; align-items: center;
+  color: #FFFFFF;
+  box-shadow: 0 8rpx 32rpx rgba(26, 115, 232, 0.3);
+}
+.user-avatar { font-size: 80rpx; margin-bottom: 12rpx; }
+.user-name { font-size: 32rpx; font-weight: 700; margin-bottom: 24rpx; }
+.user-stats { display: flex; align-items: center; width: 100%; }
+.user-stat { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.stat-num { font-size: 32rpx; font-weight: 700; }
+.stat-label { font-size: 22rpx; opacity: 0.75; margin-top: 4rpx; }
+.user-stat-divider { width: 1rpx; height: 40rpx; background: rgba(255,255,255,0.2); }
+
+.section { margin-bottom: 24rpx; }
+.section-title { font-size: 30rpx; font-weight: 600; color: #2D3436; margin-bottom: 12rpx; padding: 0 4rpx; }
+
+/* 账户 */
+.account-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20rpx 0; border-bottom: 1rpx solid #F0F2F5;
+}
+.account-item:last-of-type { border-bottom: none; }
+.account-left { display: flex; align-items: center; }
+.account-icon { font-size: 32rpx; margin-right: 12rpx; }
+.account-name { font-size: 28rpx; color: #2D3436; }
+.account-right { display: flex; align-items: center; gap: 16rpx; }
+.account-balance { font-size: 26rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
+.account-delete { font-size: 22rpx; color: #FF5252; }
+.add-account-btn {
+  text-align: center; padding: 20rpx; color: #1A73E8;
+  font-size: 26rpx; font-weight: 500; margin-top: 4rpx;
+}
+
+/* 设置 */
+.setting-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24rpx 0; border-bottom: 1rpx solid #F0F2F5;
+}
+.setting-item:last-child { border-bottom: none; }
+.setting-left { display: flex; align-items: center; }
+.setting-icon { font-size: 32rpx; margin-right: 12rpx; }
+.setting-label { font-size: 28rpx; color: #2D3436; }
+.setting-label.danger { color: #FF5252; }
+.setting-right { display: flex; align-items: center; }
+.setting-value { font-size: 26rpx; color: #90A4AE; margin-right: 8rpx; }
+.setting-arrow { font-size: 32rpx; color: #C0C4CC; }
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed; top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.45); display:flex;
+  align-items:center; justify-content:center; z-index:999;
+}
+.modal-content {
+  width: 80%; background: #FFFFFF; border-radius: 28rpx;
+  overflow: hidden;
+}
+.modal-header {
+  text-align: center; font-size: 32rpx; font-weight: 600;
+  color: #2D3436; padding: 36rpx 30rpx 12rpx;
+}
+.modal-header.danger { color: #FF5252; }
+.modal-body { padding: 16rpx 40rpx 28rpx; }
+.form-input {
+  border: 2rpx solid #E3F2FD; border-radius: 16rpx;
+  padding: 20rpx; font-size: 28rpx; background: #F5F6FA;
+}
+.modal-hint { font-size: 22rpx; color: #90A4AE; margin-top: 12rpx; display: block; }
+.modal-warn { font-size: 26rpx; color: #FF5252; line-height: 1.5; }
+.modal-footer { display: flex; border-top: 1rpx solid #F0F2F5; }
+.modal-footer view { flex: 1; text-align: center; padding: 30rpx; font-size: 30rpx; }
+.btn-cancel { color: #90A4AE; }
+.btn-danger { color: #FF5252; font-weight: 600; }
