@@ -455,6 +455,10 @@ const StorageManager = {
 
   // ========== 全局统计 ==========
 
+  clearBills() {
+    try { wx.setStorageSync('bills', []) } catch (e) {}
+  },
+
   getOverallStats() {
     const bills = this.getBills()
     if (bills.length === 0) {

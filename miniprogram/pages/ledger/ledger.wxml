@@ -1,14 +1,107 @@
-<!-- pages/ledger/ledger.wxml -->
+<!-- pages/ledger/ledger.wxml — 账本详情+统计 -->
 <view class="container" wx:if="{{ledger}}">
 
-  <view class="card info-card">
+  <!-- 头部 -->
+  <view class="info-card">
     <text class="info-icon">{{ledger.icon}}</text>
-    <text class="info-name">{{ledger.name}}</text>
-    <text class="info-meta">{{ledger.type === 'shared' ? '共享账本 · ' + ledger.memberCount + '人' : '个人账本'}}</text>
-    <text class="info-time">创建于 {{new Date(ledger.createdAt).toLocaleDateString()}}</text>
+    <view class="info-main">
+      <text class="info-name">{{ledger.name}}</text>
+      <text class="info-meta">{{ledger.type === 'shared' ? '共享 · ' + ledger.memberCount + '人' : '个人'}}</text>
+    </view>
+    <text class="info-time">{{ledger.createdAtText}}</text>
   </view>
 
-  <!-- 操作列表 -->
+  <!-- 快速统计 -->
+  <view class="stats-row">
+    <view class="stat-chip">
+      <text class="stat-chip-val text-expense">¥{{(stats.totalExpense/100).toFixed(0)}}</text>
+      <text class="stat-chip-lbl">总支出</text>
+    </view>
+    <view class="stat-chip">
+      <text class="stat-chip-val text-income">¥{{(stats.totalIncome/100).toFixed(0)}}</text>
+      <text class="stat-chip-lbl">总收入</text>
+    </view>
+    <view class="stat-chip">
+      <text class="stat-chip-val primary">{{stats.billCount}}</text>
+      <text class="stat-chip-lbl">笔数</text>
+    </view>
+    <view class="stat-chip">
+      <text class="stat-chip-val">{{stats.dayCount}}</text>
+      <text class="stat-chip-lbl">天数</text>
+    </view>
+  </view>
+
+  <!-- 统计区块 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">📊 账本统计</text>
+      <view class="header-tabs">
+        <text class="htab {{statPeriod === 'month' ? 'active' : ''}}" bindtap="setStatPeriod" data-p="month">本月</text>
+        <text class="htab {{statPeriod === 'year' ? 'active' : ''}}" bindtap="setStatPeriod" data-p="year">今年</text>
+        <text class="htab {{statPeriod === 'all' ? 'active' : ''}}" bindtap="setStatPeriod" data-p="all">全部</text>
+      </view>
+    </view>
+
+    <!-- 收支概览 -->
+    <view class="card" wx:if="{{periodStats}}">
+      <view class="ps-row">
+        <text class="ps-label">支出</text>
+        <view class="ps-bar-wrap"><view class="ps-bar expense" style="width:{{periodStats.expensePct}}%"></view></view>
+        <text class="ps-amt text-expense">¥{{(periodStats.totalExpense/100).toFixed(2)}}</text>
+      </view>
+      <view class="ps-row">
+        <text class="ps-label">收入</text>
+        <view class="ps-bar-wrap"><view class="ps-bar income" style="width:{{periodStats.incomePct}}%"></view></view>
+        <text class="ps-amt text-income">¥{{(periodStats.totalIncome/100).toFixed(2)}}</text>
+      </view>
+      <view class="ps-row">
+        <text class="ps-label">结余</text>
+        <text class="ps-amt {{periodStats.balance >= 0 ? 'text-income' : 'text-expense'}}">{{periodStats.balance >= 0 ? '+' : ''}}¥{{(Math.abs(periodStats.balance)/100).toFixed(2)}}</text>
+      </view>
+    </view>
+
+    <!-- 支出排行 -->
+    <view class="card" wx:if="{{periodStats.catRank.length > 0}}">
+      <text class="card-title">支出排行</text>
+      <view class="rank-item" wx:for="{{periodStats.catRank}}" wx:key="name">
+        <text class="rank-icon">{{item.icon}}</text>
+        <text class="rank-name">{{item.name}}</text>
+        <view class="rank-bar-wrap"><view class="rank-bar" style="width:{{item.pct}}%;background:{{item.color}}"></view></view>
+        <text class="rank-pct">{{item.pct}}%</text>
+        <text class="rank-amt">¥{{(item.amount/100).toFixed(0)}}</text>
+      </view>
+    </view>
+
+    <!-- 人员统计（多人时） -->
+    <view class="card" wx:if="{{periodStats.personRank.length > 1}}">
+      <text class="card-title">人员支出</text>
+      <view class="rank-item" wx:for="{{periodStats.personRank}}" wx:key="name">
+        <text class="rank-icon">{{item.avatar}}</text>
+        <text class="rank-name">{{item.name}}</text>
+        <view class="rank-bar-wrap"><view class="rank-bar" style="width:{{item.pct}}%;background:#4F46E5"></view></view>
+        <text class="rank-pct">{{item.pct}}%</text>
+        <text class="rank-amt">¥{{(item.amount/100).toFixed(0)}}</text>
+      </view>
+    </view>
+
+    <!-- 最近动态 -->
+    <view class="card" wx:if="{{recentBills.length > 0}}">
+      <text class="card-title">最近记录</text>
+      <view class="rb-item" wx:for="{{recentBills}}" wx:key="id">
+        <text class="rb-icon">{{item.icon}}</text>
+        <view class="rb-info">
+          <text class="rb-cat">{{item.catName}}</text>
+          <text class="rb-note">{{item.note}}</text>
+        </view>
+        <text class="rb-amt {{item.type === 'income' ? 'text-income' : 'text-expense'}}">
+          {{item.type === 'income' ? '+' : '-'}}¥{{(item.amountDisplay/100).toFixed(2)}}
+        </text>
+      </view>
+      <view class="rb-more" bindtap="goBills">查看全部明细 ›</view>
+    </view>
+  </view>
+
+  <!-- 操作 -->
   <view class="section">
     <view class="card">
       <view class="action-item" bindtap="showRenameModal">
@@ -21,15 +114,20 @@
         <text class="action-label">成员管理</text>
         <text class="action-arrow">›</text>
       </view>
+      <view class="action-item" bindtap="goExport">
+        <text class="action-icon">📤</text>
+        <text class="action-label">导出数据</text>
+        <text class="action-arrow">›</text>
+      </view>
     </view>
   </view>
 
   <!-- 危险操作 -->
   <view class="section">
     <view class="card">
-      <view class="action-item" wx:if="{{ledger.type === 'shared' && ledger.role === 'member'}}" bindtap="leaveLedger">
+      <view class="action-item" wx:if="{{ledger.type === 'shared' && ledger.role !== 'owner'}}" bindtap="leaveLedger">
         <text class="action-icon">🚪</text>
-        <text class="action-label danger">退出共享账本</text>
+        <text class="action-label danger">退出账本</text>
       </view>
       <view class="action-item" wx:if="{{ledger.role === 'owner'}}" bindtap="deleteLedger">
         <text class="action-icon">🗑️</text>
@@ -51,5 +149,4 @@
       </view>
     </view>
   </view>
-
 </view>
