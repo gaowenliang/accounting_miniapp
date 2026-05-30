@@ -1,13 +1,32 @@
-// cloud/functions/billData/index.js — 账单 CRUD + 统计
+// cloud/functions/billData/index.js — 账单 CRUD + 统计 + 账本
 
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
+// 防刷：每用户每分钟最多 30 次
+const rateLimiter = {}
+function checkRateLimit(openid) {
+  const now = Date.now()
+  if (!rateLimiter[openid]) rateLimiter[openid] = []
+  // 清理 60s 前的记录
+  rateLimiter[openid] = rateLimiter[openid].filter(t => now - t < 60000)
+  if (rateLimiter[openid].length >= 30) return false
+  rateLimiter[openid].push(now)
+  return true
+}
+
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
   const { action } = event
+
+  // 写操作加防刷
+  if (['addBill', 'deleteBill', 'createLedger', 'joinLedger', 'leaveLedger'].includes(action)) {
+    if (!checkRateLimit(OPENID)) {
+      return { success: false, error: '操作太频繁，请稍后再试' }
+    }
+  }
 
   switch (action) {
     case 'addBill':
@@ -19,7 +38,7 @@ exports.main = async (event, context) => {
     case 'getMonthStats':
       return getMonthStats(OPENID, event.year, event.month)
     case 'deleteBill':
-      return deleteBill(OPENID, event.billId)
+      return deleteBill(OPENID, event.billId, event.ledgerId)
     // 账本相关
     case 'createLedger':
       return createLedger(OPENID, event.data)
@@ -34,6 +53,8 @@ exports.main = async (event, context) => {
   }
 }
 
+// ========== 账单 CRUD ==========
+
 async function addBill(openid, data, ledgerId) {
   // 参数校验
   if (!data || !data.amount || !data.type || !data.category) {
@@ -42,7 +63,7 @@ async function addBill(openid, data, ledgerId) {
   if (data.amount <= 0 || data.amount > 99999999) {
     return { success: false, error: '金额不合法' }
   }
-  if (!['income', 'expense'].includes(data.type)) {
+  if (!['income', 'expense', 'transfer'].includes(data.type)) {
     return { success: false, error: '类型不合法' }
   }
 
@@ -51,14 +72,21 @@ async function addBill(openid, data, ledgerId) {
     const doc = {
       _openid: openid,
       amount: data.amount,
-        type: data.type,
-        category: data.category,
-        note: data.note || '',
-        account: data.account || 'wechat',
-        date: data.date || Date.now(),
-        createdAt: Date.now()
+      type: data.type,
+      category: data.category,
+      note: data.note || '',
+      account: data.account || 'wechat',
+      date: data.date || Date.now(),
+      payer: data.payer || 'self',
+      createdAt: Date.now(),
+      createdBy: openid
     }
+    // 可选字段
+    if (data.splits && data.splits.length > 0) doc.splits = data.splits
+    if (data.targetAccount) doc.targetAccount = data.targetAccount
+    if (data.tags && data.tags.length > 0) doc.tags = data.tags
     if (ledgerId) doc.ledgerId = ledgerId
+
     const result = await db.collection(collection).add({ data: doc })
     return { success: true, _id: result._id }
   } catch (e) {
@@ -79,20 +107,37 @@ async function getRecentBills(openid, limit) {
   }
 }
 
+/**
+ * getBillsByMonth — month 参数为 1-indexed (1-12)
+ * 微信云函数单次最多 100 条，需要循环拉取
+ */
 async function getBillsByMonth(openid, year, month) {
-  const start = new Date(year, month, 1).getTime()
-  const end = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime()
+  // month 是 1-indexed，JS Date 需要 0-indexed
+  const start = new Date(year, month - 1, 1).getTime()
+  const end = new Date(year, month, 0, 23, 59, 59, 999).getTime()
 
   try {
-    const result = await db.collection('bills')
-      .where({
-        _openid: openid,
-        date: _.gte(start).and(_.lte(end))
-      })
-      .orderBy('date', 'desc')
-      .limit(1000)
-      .get()
-    return { success: true, data: result.data }
+    const MAX = 5000
+    let allData = []
+    let batch
+    let skip = 0
+    const BATCH_SIZE = 100
+
+    do {
+      batch = await db.collection('bills')
+        .where({
+          _openid: openid,
+          date: _.gte(start).and(_.lte(end))
+        })
+        .orderBy('date', 'desc')
+        .skip(skip)
+        .limit(BATCH_SIZE)
+        .get()
+      allData = allData.concat(batch.data)
+      skip += BATCH_SIZE
+    } while (batch.data.length === BATCH_SIZE && allData.length < MAX)
+
+    return { success: true, data: allData }
   } catch (e) {
     return { success: false, error: e.message }
   }
@@ -119,9 +164,19 @@ async function getMonthStats(openid, year, month) {
   }
 }
 
-async function deleteBill(openid, billId) {
+/**
+ * P0-2 修复：删除前验证所有权
+ */
+async function deleteBill(openid, billId, ledgerId) {
+  if (!billId) return { success: false, error: '缺少 billId' }
   try {
-    await db.collection('bills').doc(billId).remove()
+    const collection = ledgerId ? 'ledger_bills' : 'bills'
+    // 先查再删，验证所有权
+    const doc = await db.collection(collection).doc(billId).get()
+    if (!doc.data || doc.data._openid !== openid) {
+      return { success: false, error: '无权删除' }
+    }
+    await db.collection(collection).doc(billId).remove()
     return { success: true }
   } catch (e) {
     return { success: false, error: e.message }
@@ -144,7 +199,6 @@ async function createLedger(openid, data) {
         createdAt: Date.now()
       }
     })
-    // 创建者自动加入成员表
     await db.collection('ledger_members').add({
       data: {
         ledgerId: result._id,
@@ -164,7 +218,6 @@ async function joinLedger(openid, inviteCode) {
     return { success: false, reason: '邀请码格式不对' }
   }
   try {
-    // 查找账本
     const ledgerRes = await db.collection('ledgers')
       .where({ inviteCode })
       .limit(1).get()
@@ -172,14 +225,12 @@ async function joinLedger(openid, inviteCode) {
       return { success: false, reason: '邀请码无效' }
     }
     const target = ledgerRes.data[0]
-    // 检查是否已加入
     const memberRes = await db.collection('ledger_members')
       .where({ ledgerId: target._id, _openid: openid })
       .limit(1).get()
     if (memberRes.data.length > 0) {
       return { success: false, reason: '你已经在这个账本里了' }
     }
-    // 加入
     await db.collection('ledger_members').add({
       data: {
         ledgerId: target._id,
@@ -188,7 +239,6 @@ async function joinLedger(openid, inviteCode) {
         joinedAt: Date.now()
       }
     })
-    // 更新成员数
     await db.collection('ledgers').doc(target._id).update({
       data: { memberCount: _.inc(1) }
     })
@@ -210,7 +260,6 @@ async function joinLedger(openid, inviteCode) {
 
 async function leaveLedger(openid, ledgerId) {
   try {
-    // 删除成员记录
     const memberRes = await db.collection('ledger_members')
       .where({ ledgerId, _openid: openid })
       .limit(1).get()
@@ -228,19 +277,31 @@ async function leaveLedger(openid, ledgerId) {
 
 async function getLedgerBills(openid, ledgerId, limit) {
   try {
-    // 先检查是否是成员
     const memberRes = await db.collection('ledger_members')
       .where({ ledgerId, _openid: openid })
       .limit(1).get()
     if (memberRes.data.length === 0) {
       return { success: false, error: '无权访问' }
     }
-    const result = await db.collection('ledger_bills')
-      .where({ ledgerId })
-      .orderBy('date', 'desc')
-      .limit(Math.min(limit, 500))
-      .get()
-    return { success: true, data: result.data }
+    // 循环拉取
+    let allData = []
+    let skip = 0
+    let batch
+    const BATCH_SIZE = 100
+    const MAX = Math.min(limit, 2000)
+
+    do {
+      batch = await db.collection('ledger_bills')
+        .where({ ledgerId })
+        .orderBy('date', 'desc')
+        .skip(skip)
+        .limit(BATCH_SIZE)
+        .get()
+      allData = allData.concat(batch.data)
+      skip += BATCH_SIZE
+    } while (batch.data.length === BATCH_SIZE && allData.length < MAX)
+
+    return { success: true, data: allData }
   } catch (e) {
     return { success: false, error: e.message }
   }

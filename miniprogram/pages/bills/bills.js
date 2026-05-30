@@ -26,7 +26,7 @@ Page({
     const now = new Date()
     this.setData({
       currentYear: now.getFullYear(),
-      currentMonth: now.getMonth()
+      currentMonth: now.getMonth() + 1  // 1-indexed
     })
   },
 
@@ -36,7 +36,7 @@ Page({
 
   loadBills() {
     const { currentYear, currentMonth, filterType, searchKeyword } = this.data
-    this.setData({ monthLabel: `${currentYear}年${currentMonth + 1}月` })
+    this.setData({ monthLabel: `${currentYear}年${currentMonth}月` })
 
     let bills = storage.getBillsByMonth(currentYear, currentMonth)
 
@@ -113,16 +113,16 @@ Page({
   prevMonth() {
     let { currentYear, currentMonth } = this.data
     currentMonth--
-    if (currentMonth < 0) { currentMonth = 11; currentYear-- }
+    if (currentMonth < 1) { currentMonth = 12; currentYear-- }
     this.setData({ currentYear, currentMonth }, () => this.loadBills())
   },
 
   nextMonth() {
     let { currentYear, currentMonth } = this.data
     const now = new Date()
-    if (currentYear === now.getFullYear() && currentMonth === now.getMonth()) return
+    if (currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1) return
     currentMonth++
-    if (currentMonth > 11) { currentMonth = 0; currentYear++ }
+    if (currentMonth > 12) { currentMonth = 1; currentYear++ }
     this.setData({ currentYear, currentMonth }, () => this.loadBills())
   },
 

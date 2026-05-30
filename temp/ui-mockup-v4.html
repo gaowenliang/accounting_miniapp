@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 记账助手 — 靛蓝主题</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif; background:#E8EAF0; display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
+.phone { width:375px; height:812px; background:#F7F7FA; border-radius:40px; overflow:hidden; position:relative; box-shadow:0 12px 48px rgba(0,0,0,0.15), inset 0 0 0 2px #DDD; }
+.phone-label { text-align:center; font-size:13px; color:#6B7280; font-weight:600; margin-top:6px; }
+.status-bar { height:44px; background:#FFF; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:#333; }
+.nav-bar { height:44px; background:#FFF; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:600; color:#1F2937; border-bottom:0.5px solid #F3F4F6; }
+.content { height:calc(812px - 44px - 44px - 83px); overflow-y:auto; padding:16px 14px; }
+.content::-webkit-scrollbar { width:0; }
+.tab-bar { height:83px; background:#FFF; border-top:0.5px solid #E5E7EB; display:flex; position:absolute; bottom:0; left:0; right:0; padding-bottom:20px; }
+.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:10px; color:#9CA3AF; }
+.tab-item.active { color:#4F46E5; }
+.tab-icon { font-size:22px; margin-bottom:2px; }
+.card { background:#FFF; border-radius:12px; padding:16px; box-shadow:0 1px 8px rgba(79,70,229,0.05); margin-bottom:12px; }
+.text-income { color:#10B981; }
+.text-expense { color:#EF4444; }
+
+/* 记账页 */
+.type-switch { display:flex; background:#F3F4F6; border-radius:22px; padding:2px; margin-bottom:12px; }
+.type-btn { flex:1; text-align:center; padding:9px 0; border-radius:22px; font-size:13px; font-weight:600; color:#9CA3AF; }
+.type-btn.active.expense { background:linear-gradient(135deg,#EF4444,#F87171); color:#FFF; }
+.amount-section { display:flex; align-items:baseline; justify-content:center; padding:8px 0 10px; }
+.amount-prefix { font-size:20px; font-weight:700; color:#1F2937; margin-right:4px; }
+.amount-input { font-size:38px; font-weight:700; color:#1F2937; }
+.section-label { font-size:12px; font-weight:600; color:#6B7280; margin-bottom:6px; display:block; }
+.category-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-bottom:10px; }
+.category-item { display:flex; flex-direction:column; align-items:center; padding:8px 2px; border-radius:10px; background:#FFF; box-shadow:0 1px 4px rgba(79,70,229,0.04); }
+.category-item.selected { background:#EEF2FF; border:1.5px solid #4F46E5; }
+.category-icon { font-size:18px; margin-bottom:1px; }
+.category-name { font-size:9px; color:#6B7280; }
+.category-item.selected .category-name { color:#4F46E5; font-weight:600; }
+.payer-scroll { display:flex; gap:6px; overflow-x:auto; padding:3px 0; white-space:nowrap; margin-bottom:10px; }
+.payer-item { display:inline-flex; flex-direction:column; align-items:center; padding:6px 12px; border-radius:10px; background:#FFF; box-shadow:0 1px 4px rgba(79,70,229,0.04); flex-shrink:0; }
+.payer-item.selected { background:#EEF2FF; border:1.5px solid #4F46E5; }
+.payer-item.add { border:1.5px dashed #D1D5DB; background:transparent; box-shadow:none; }
+.payer-avatar { font-size:20px; margin-bottom:1px; }
+.payer-name { font-size:9px; color:#6B7280; }
+.payer-item.selected .payer-name { color:#4F46E5; font-weight:600; }
+.options-row { display:flex; gap:6px; margin-bottom:6px; }
+.option-item { flex:1; display:flex; align-items:center; background:#FFF; padding:8px 10px; border-radius:8px; box-shadow:0 1px 4px rgba(79,70,229,0.04); }
+.option-icon { font-size:12px; margin-right:4px; }
+.option-text { font-size:11px; color:#6B7280; }
+.btn-submit { background:linear-gradient(135deg,#EF4444,#F87171); color:#FFF; text-align:center; padding:13px 0; border-radius:22px; font-size:14px; font-weight:700; margin-top:10px; box-shadow:0 4px 12px rgba(239,68,68,0.2); }
+
+/* 分摊 */
+.split-box { background:#FFF; border-radius:10px; padding:10px 12px; box-shadow:0 1px 4px rgba(79,70,229,0.04); margin-bottom:10px; }
+.split-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.split-mode { font-size:11px; color:#4F46E5; font-weight:500; }
+.split-mode-btns { display:flex; gap:4px; margin-bottom:6px; }
+.split-mode-btn { flex:1; text-align:center; padding:6px; border-radius:7px; background:#F3F4F6; font-size:11px; color:#6B7280; }
+.split-mode-btn.active { background:#4F46E5; color:#FFF; }
+.split-preview { text-align:center; padding:4px; }
+.split-hint { font-size:12px; color:#4F46E5; font-weight:600; }
+
+/* 管理页 */
+.overview-card { background:linear-gradient(135deg,#4F46E5,#7C3AED); border-radius:12px; padding:20px; display:flex; flex-direction:column; align-items:center; color:#FFF; margin-bottom:14px; box-shadow:0 4px 20px rgba(79,70,229,0.25); }
+.overview-emoji { font-size:36px; margin-bottom:4px; }
+.overview-name { font-size:14px; font-weight:700; margin-bottom:10px; }
+.overview-stats { display:flex; width:100%; }
+.overview-stat { flex:1; text-align:center; }
+.stat-num { font-size:14px; font-weight:700; }
+.stat-label { font-size:10px; opacity:0.7; margin-top:2px; }
+.stat-divider { width:1px; height:24px; background:rgba(255,255,255,0.15); }
+.section-header { display:flex; justify-content:space-between; align-items:center; padding:2px 0 6px; }
+.section-title { font-size:13px; font-weight:700; color:#1F2937; }
+.action-btn { font-size:11px; color:#4F46E5; font-weight:600; }
+.ledger-item { display:flex; align-items:center; padding:10px 0; border-bottom:0.5px solid #F3F4F6; }
+.ledger-item:last-child { border-bottom:none; }
+.ledger-item.current { background:#EEF2FF; border-radius:8px; padding:10px 8px; margin:0 -8px; }
+.ledger-icon { font-size:18px; margin-right:8px; }
+.ledger-name { font-size:13px; font-weight:600; color:#1F2937; }
+.ledger-meta { font-size:10px; color:#9CA3AF; margin-top:1px; }
+.ledger-check { margin-left:auto; color:#4F46E5; font-size:14px; font-weight:700; }
+.ledger-arrow { margin-left:auto; font-size:12px; color:#D1D5DB; }
+.setting-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:0.5px solid #F3F4F6; }
+.setting-row:last-child { border-bottom:none; }
+.setting-left { display:flex; align-items:center; gap:4px; font-size:12px; color:#374151; }
+.setting-left.danger { color:#EF4444; }
+.setting-value { font-size:11px; color:#9CA3AF; margin-right:4px; }
+.setting-arrow { font-size:12px; color:#D1D5DB; }
+.member-row { display:flex; align-items:center; padding:10px 0; border-bottom:0.5px solid #F3F4F6; }
+.member-row:last-child { border-bottom:none; }
+.member-avatar { font-size:16px; margin-right:6px; }
+.member-name { font-size:12px; color:#1F2937; flex:1; }
+.member-default { font-size:9px; color:#4F46E5; background:#EEF2FF; padding:1px 6px; border-radius:4px; }
+.member-remove { font-size:10px; color:#EF4444; }
+
+/* 明细页 */
+.month-nav { display:flex; align-items:center; justify-content:space-between; padding:4px 0 12px; }
+.nav-arrow2 { font-size:12px; color:#4F46E5; font-weight:600; }
+.nav-month { font-size:15px; font-weight:700; color:#1F2937; }
+.group-header { display:flex; justify-content:space-between; padding:3px 2px; }
+.group-date { font-size:11px; font-weight:600; color:#6B7280; }
+.group-summary { display:flex; gap:6px; font-size:10px; }
+.bill-item { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:0.5px solid #F3F4F6; }
+.bill-item:last-child { border-bottom:none; }
+.bill-left { display:flex; align-items:center; flex:1; }
+.bill-icon { font-size:20px; margin-right:8px; }
+.bill-info { display:flex; flex-direction:column; }
+.bill-category { font-size:12px; font-weight:500; color:#1F2937; }
+.bill-note { font-size:9px; color:#9CA3AF; margin-top:1px; }
+.bill-payer { font-size:8px; color:#4F46E5; margin-top:1px; opacity:0.75; }
+.bill-amount { font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+/* 统计页 */
+.mode-switch { display:flex; background:#F3F4F6; border-radius:22px; padding:2px; margin-bottom:12px; }
+.mode-btn { flex:1; text-align:center; padding:8px 0; border-radius:22px; font-size:11px; font-weight:600; color:#9CA3AF; }
+.mode-btn.active { background:#4F46E5; color:#FFF; }
+.period-nav { display:flex; align-items:center; justify-content:center; gap:16px; padding:2px 0 12px; }
+.period-label { font-size:16px; font-weight:700; color:#1F2937; }
+.summary-row { display:flex; align-items:center; margin-bottom:8px; }
+.summary-label { font-size:12px; color:#9CA3AF; width:36px; flex-shrink:0; }
+.summary-bar-wrap { flex:1; height:7px; background:#F3F4F6; border-radius:4px; overflow:hidden; margin:0 8px; }
+.summary-bar { height:100%; border-radius:4px; min-width:3px; }
+.summary-bar.income-bar { background:linear-gradient(90deg,#10B981,#34D399); }
+.summary-bar.expense-bar { background:linear-gradient(90deg,#EF4444,#F87171); }
+.summary-amount { font-size:12px; font-weight:600; min-width:70px; text-align:right; font-variant-numeric:tabular-nums; }
+.summary-divider { height:0.5px; background:#F3F4F6; margin:6px 0 8px; }
+.balance-amount { font-size:16px; font-weight:700; margin-left:8px; }
+.rank-item { display:flex; align-items:center; padding:8px 0; border-bottom:0.5px solid #F3F4F6; }
+.rank-item:last-child { border-bottom:none; }
+.rank-left { display:flex; align-items:center; width:80px; flex-shrink:0; }
+.rank-icon { font-size:16px; margin-right:4px; }
+.rank-name { font-size:12px; color:#374151; }
+.rank-center { flex:1; height:6px; background:#F3F4F6; border-radius:3px; overflow:hidden; margin:0 6px; }
+.rank-bar { height:100%; border-radius:3px; min-width:3px; }
+.rank-right { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; }
+.rank-amount { font-size:12px; font-weight:600; color:#1F2937; font-variant-numeric:tabular-nums; }
+.rank-percent { font-size:9px; color:#9CA3AF; margin-top:1px; }
+
+/* AA */
+.aa-section-title { font-size:13px; font-weight:700; color:#1F2937; }
+.aa-participants { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+.aa-person { display:flex; align-items:center; gap:3px; padding:5px 12px; border-radius:20px; background:#F3F4F6; }
+.aa-person.selected { background:#EEF2FF; border:1.5px solid #4F46E5; }
+.aa-person-avatar { font-size:14px; }
+.aa-person-name { font-size:11px; color:#374151; }
+.aa-person-check { font-size:10px; color:#4F46E5; font-weight:700; }
+.aa-summary-row { display:flex; justify-content:space-between; padding:5px 0; }
+.aa-summary-label { font-size:12px; color:#6B7280; }
+.aa-summary-value { font-size:12px; font-weight:600; color:#1F2937; font-variant-numeric:tabular-nums; }
+.aa-detail-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:0.5px solid #F3F4F6; }
+.aa-detail-item:last-child { border-bottom:none; }
+.aa-detail-left { display:flex; align-items:center; gap:5px; }
+.aa-detail-avatar { font-size:16px; }
+.aa-detail-name { font-size:12px; font-weight:500; color:#1F2937; }
+.aa-detail-right { display:flex; flex-direction:column; align-items:flex-end; }
+.aa-detail-paid { font-size:10px; color:#9CA3AF; }
+.aa-detail-balance { font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+.aa-settle-item { padding:12px 0; border-bottom:0.5px solid #F3F4F6; }
+.aa-settle-item:last-child { border-bottom:none; }
+.aa-settle-flow { display:flex; align-items:center; justify-content:space-between; }
+.aa-settle-person { display:flex; flex-direction:column; align-items:center; min-width:70px; }
+.aa-settle-avatar { font-size:24px; margin-bottom:2px; }
+.aa-settle-name { font-size:11px; font-weight:500; color:#1F2937; }
+.aa-settle-arrow { display:flex; flex-direction:column; align-items:center; flex:1; }
+.aa-settle-amount { font-size:18px; font-weight:700; color:#F59E0B; font-variant-numeric:tabular-nums; }
+.aa-settle-label { font-size:9px; color:#9CA3AF; }
+.empty-hint { text-align:center; padding:16px; font-size:11px; color:#D1D5DB; }
+</style>
+</head>
+<body>
+
+<!-- 1. 记账 -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>12:30</span><span>⚡️ 100%</span></div>
+  <div class="nav-bar">记账</div>
+  <div class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:5px;background:#FFF;padding:5px 12px;border-radius:18px;font-size:12px;font-weight:600;box-shadow:0 1px 4px rgba(79,70,229,0.06)">📒 我的账本 <span style="font-size:9px;color:#9CA3AF">▼</span></div>
+      <div style="font-size:10px;color:#9CA3AF">今日 3笔 支出 ¥149</div>
+    </div>
+    <div class="type-switch"><div class="type-btn active expense">支出</div><div class="type-btn">收入</div></div>
+    <div class="amount-section"><span class="amount-prefix">¥</span><span class="amount-input">356.<span style="color:#D1D5DB">00</span></span></div>
+    <div class="category-grid">
+      <div class="category-item selected"><span class="category-icon">🍜</span><span class="category-name">餐饮</span></div>
+      <div class="category-item"><span class="category-icon">🚇</span><span class="category-name">交通</span></div>
+      <div class="category-item"><span class="category-icon">🛒</span><span class="category-name">购物</span></div>
+      <div class="category-item"><span class="category-icon">🏠</span><span class="category-name">住房</span></div>
+      <div class="category-item"><span class="category-icon">🎮</span><span class="category-name">娱乐</span></div>
+      <div class="category-item"><span class="category-icon">📱</span><span class="category-name">通讯</span></div>
+      <div class="category-item"><span class="category-icon">💊</span><span class="category-name">医疗</span></div>
+      <div class="category-item"><span class="category-icon">🎓</span><span class="category-name">教育</span></div>
+      <div class="category-item"><span class="category-icon">👕</span><span class="category-name">服饰</span></div>
+      <div class="category-item"><span class="category-icon">✈️</span><span class="category-name">旅行</span></div>
+      <div class="category-item"><span class="category-icon">🎁</span><span class="category-name">人情</span></div>
+      <div class="category-item"><span class="category-icon">📦</span><span class="category-name">其他</span></div>
+    </div>
+    <span class="section-label">谁花的钱</span>
+    <div class="payer-scroll">
+      <div class="payer-item selected"><span class="payer-avatar">😊</span><span class="payer-name">我</span></div>
+      <div class="payer-item"><span class="payer-avatar">👩</span><span class="payer-name">小红</span></div>
+      <div class="payer-item"><span class="payer-avatar">👨</span><span class="payer-name">大伟</span></div>
+      <div class="payer-item add"><span class="payer-avatar">＋</span><span class="payer-name">添加</span></div>
+    </div>
+    <div class="split-box">
+      <div class="split-header"><span class="section-label" style="margin:0">分摊方式</span><span class="split-mode">均摊</span></div>
+      <div class="split-mode-btns"><div class="split-mode-btn active">均摊</div><div class="split-mode-btn">自定义</div></div>
+      <div class="split-preview"><span class="split-hint">每人 ¥118.67</span></div>
+    </div>
+    <div class="options-row"><div class="option-item" style="flex:2"><span class="option-icon">📝</span><span class="option-text" style="color:#1F2937">火锅聚餐</span></div></div>
+    <div class="options-row"><div class="option-item"><span class="option-icon">📅</span><span class="option-text">今天</span></div><div class="option-item"><span class="option-icon">💳</span><span class="option-text">微信支付</span></div></div>
+    <div class="btn-submit">确认记账</div>
+  </div>
+  <div class="tab-bar"><div class="tab-item active"><div class="tab-icon">📝</div>记账</div><div class="tab-item"><div class="tab-icon">📋</div>明细</div><div class="tab-item"><div class="tab-icon">📊</div>统计</div><div class="tab-item"><div class="tab-icon">⚙️</div>管理</div></div>
+</div>
+<div class="phone-label">📝 记账</div>
+</div>
+
+<!-- 2. 管理 -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>12:30</span><span>⚡️ 100%</span></div>
+  <div class="nav-bar">管理</div>
+  <div class="content">
+    <div class="overview-card">
+      <div class="overview-emoji">💰</div>
+      <div class="overview-name">记账达人</div>
+      <div class="overview-stats">
+        <div class="overview-stat"><div class="stat-num">286</div><div class="stat-label">总记录</div></div>
+        <div class="stat-divider"></div>
+        <div class="overview-stat"><div class="stat-num">152</div><div class="stat-label">记账天数</div></div>
+        <div class="stat-divider"></div>
+        <div class="overview-stat"><div class="stat-num">¥19.6k</div><div class="stat-label">总资产</div></div>
+      </div>
+    </div>
+    <div class="section-header"><span class="section-title">📚 账本</span><div><span class="action-btn">加入</span> <span class="action-btn">+ 新建</span></div></div>
+    <div class="card">
+      <div class="ledger-item current"><span class="ledger-icon">📒</span><div style="flex:1"><div class="ledger-name">我的账本</div><div class="ledger-meta">个人</div></div><span class="ledger-check">✓</span></div>
+      <div class="ledger-item"><span class="ledger-icon">📕</span><div style="flex:1"><div class="ledger-name">家庭账本</div><div class="ledger-meta">共享 · 3人</div></div><span class="ledger-arrow">›</span></div>
+      <div class="ledger-item"><span class="ledger-icon">📗</span><div style="flex:1"><div class="ledger-name">旅行基金</div><div class="ledger-meta">共享 · 2人</div></div><span class="ledger-arrow">›</span></div>
+    </div>
+    <div class="section-header"><span class="section-title">👥 人员</span><span class="action-btn">+ 添加</span></div>
+    <div class="card">
+      <div class="member-row"><span class="member-avatar">😊</span><span class="member-name">我</span><span class="member-default">默认</span></div>
+      <div class="member-row"><span class="member-avatar">👩</span><span class="member-name">小红</span><span class="member-remove">删除</span></div>
+      <div class="member-row"><span class="member-avatar">👨</span><span class="member-name">大伟</span><span class="member-remove">删除</span></div>
+    </div>
+    <div class="section-header"><span class="section-title">💳 账户</span></div>
+    <div class="card">
+      <div class="setting-row"><div class="setting-left">💚 微信支付</div><span class="setting-value" style="color:#10B981">¥2,350</span></div>
+      <div class="setting-row"><div class="setting-left">💙 支付宝</div><span class="setting-value" style="color:#10B981">¥1,800</span></div>
+      <div class="setting-row"><div class="setting-left">💵 现金</div><span class="setting-value" style="color:#10B981">¥500</span></div>
+      <div class="setting-row"><div class="setting-left">🏦 银行卡</div><span class="setting-value" style="color:#10B981">¥15,000</span></div>
+    </div>
+    <div class="card">
+      <div class="setting-row"><div class="setting-left">📊 月度预算</div><div><span class="setting-value">¥6,000</span><span class="setting-arrow">›</span></div></div>
+    </div>
+    <div class="card">
+      <div class="setting-row"><div class="setting-left">📤 导出数据</div><span class="setting-arrow">›</span></div>
+      <div class="setting-row"><div class="setting-left danger">🗑️ 清除所有数据</div><span class="setting-arrow">›</span></div>
+    </div>
+  </div>
+  <div class="tab-bar"><div class="tab-item"><div class="tab-icon">📝</div>记账</div><div class="tab-item"><div class="tab-icon">📋</div>明细</div><div class="tab-item"><div class="tab-icon">📊</div>统计</div><div class="tab-item active"><div class="tab-icon">⚙️</div>管理</div></div>
+</div>
+<div class="phone-label">⚙️ 管理</div>
+</div>
+
+<!-- 3. 明细 -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>12:30</span><span>⚡️ 100%</span></div>
+  <div class="nav-bar">账单明细</div>
+  <div class="content">
+    <div class="month-nav">
+      <span class="nav-arrow2">◀</span>
+      <div style="text-align:center"><span class="nav-month">2026年5月</span><div style="font-size:10px;color:#9CA3AF;margin-top:1px"><span class="text-income">收入 ¥8,500</span> | <span class="text-expense">支出 ¥5,219</span></div></div>
+      <span class="nav-arrow2">▶</span>
+    </div>
+    <div style="margin-bottom:10px">
+      <div class="group-header"><span class="group-date">今天</span><div class="group-summary"><span class="text-expense">-505.00</span></div></div>
+      <div class="card">
+        <div class="bill-item"><div class="bill-left"><span class="bill-icon">🍜</span><div class="bill-info"><span class="bill-category">餐饮 · 火锅聚餐</span><span class="bill-payer">大伟 付款</span></div></div><div style="display:flex;align-items:center"><span class="bill-amount text-expense">-¥356.00</span></div></div>
+        <div class="bill-item"><div class="bill-left"><span class="bill-icon">🚇</span><div class="bill-info"><span class="bill-category">交通 · 地铁</span></div></div><div style="display:flex;align-items:center"><span class="bill-amount text-expense">-¥6.00</span></div></div>
+        <div class="bill-item"><div class="bill-left"><span class="bill-icon">🛒</span><div class="bill-info"><span class="bill-category">购物 · 超市</span><span class="bill-payer">小红 付款</span></div></div><div style="display:flex;align-items:center"><span class="bill-amount text-expense">-¥143.00</span></div></div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div class="group-header"><span class="group-date">昨天</span><div class="group-summary"><span class="text-income">+8,500</span> <span class="text-expense">-128.50</span></div></div>
+      <div class="card">
+        <div class="bill-item"><div class="bill-left"><span class="bill-icon">💰</span><div class="bill-info"><span class="bill-category">工资</span></div></div><div style="display:flex;align-items:center"><span class="bill-amount text-income">+¥8,500.00</span></div></div>
+        <div class="bill-item"><div class="bill-left"><span class="bill-icon">🛒</span><div class="bill-info"><span class="bill-category">购物 · 超市</span></div></div><div style="display:flex;align-items:center"><span class="bill-amount text-expense">-¥128.50</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar"><div class="tab-item"><div class="tab-icon">📝</div>记账</div><div class="tab-item active"><div class="tab-icon">📋</div>明细</div><div class="tab-item"><div class="tab-icon">📊</div>统计</div><div class="tab-item"><div class="tab-icon">⚙️</div>管理</div></div>
+</div>
+<div class="phone-label">📋 明细</div>
+</div>
+
+<!-- 4. AA结算 -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>12:30</span><span>⚡️ 100%</span></div>
+  <div class="nav-bar">统计分析</div>
+  <div class="content">
+    <div class="mode-switch">
+      <div class="mode-btn">月度</div>
+      <div class="mode-btn">年度</div>
+      <div class="mode-btn">👤 按人</div>
+      <div class="mode-btn active" style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#FFF">AA结算</div>
+    </div>
+    <div class="period-nav"><span class="nav-arrow2">◀</span><span class="period-label">2026年5月</span><span class="nav-arrow2">▶</span></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span class="aa-section-title">选择参与AA的人</span><span style="font-size:11px;color:#4F46E5">全选</span></div>
+      <div class="aa-participants">
+        <div class="aa-person selected"><span class="aa-person-avatar">😊</span><span class="aa-person-name">我</span><span class="aa-person-check">✓</span></div>
+        <div class="aa-person selected"><span class="aa-person-avatar">👩</span><span class="aa-person-name">小红</span><span class="aa-person-check">✓</span></div>
+        <div class="aa-person selected"><span class="aa-person-avatar">👨</span><span class="aa-person-name">大伟</span><span class="aa-person-check">✓</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="aa-summary-row"><span class="aa-summary-label">总支出</span><span class="aa-summary-value">¥5,219.50</span></div>
+      <div class="aa-summary-row"><span class="aa-summary-label">人均应出</span><span class="aa-summary-value" style="color:#F59E0B;font-weight:700">¥1,739.83</span></div>
+      <div class="aa-summary-row"><span class="aa-summary-label">参与人数</span><span class="aa-summary-value">3人</span></div>
+    </div>
+    <div class="card">
+      <div class="aa-section-title" style="margin-bottom:6px">每人详情</div>
+      <div class="aa-detail-item"><div class="aa-detail-left"><span class="aa-detail-avatar">😊</span><span class="aa-detail-name">我</span></div><div class="aa-detail-right"><span class="aa-detail-paid">已付 ¥2,180</span><span class="aa-detail-balance text-income">应收 ¥440.17</span></div></div>
+      <div class="aa-detail-item"><div class="aa-detail-left"><span class="aa-detail-avatar">👩</span><span class="aa-detail-name">小红</span></div><div class="aa-detail-right"><span class="aa-detail-paid">已付 ¥1,520</span><span class="aa-detail-balance text-expense">应付 ¥219.83</span></div></div>
+      <div class="aa-detail-item"><div class="aa-detail-left"><span class="aa-detail-avatar">👨</span><span class="aa-detail-name">大伟</span></div><div class="aa-detail-right"><span class="aa-detail-paid">已付 ¥1,520</span><span class="aa-detail-balance text-expense">应付 ¥220.34</span></div></div>
+    </div>
+    <div class="card" style="background:#FFFBEB">
+      <div class="aa-section-title" style="margin-bottom:6px">💰 结算方案</div>
+      <div class="aa-settle-item"><div class="aa-settle-flow"><div class="aa-settle-person"><span class="aa-settle-avatar">👩</span><span class="aa-settle-name">小红</span></div><div class="aa-settle-arrow"><span class="aa-settle-amount">¥219.83</span><span class="aa-settle-label">付给 →</span></div><div class="aa-settle-person"><span class="aa-settle-avatar">😊</span><span class="aa-settle-name">我</span></div></div></div>
+      <div class="aa-settle-item"><div class="aa-settle-flow"><div class="aa-settle-person"><span class="aa-settle-avatar">👨</span><span class="aa-settle-name">大伟</span></div><div class="aa-settle-arrow"><span class="aa-settle-amount">¥220.34</span><span class="aa-settle-label">付给 →</span></div><div class="aa-settle-person"><span class="aa-settle-avatar">😊</span><span class="aa-settle-name">我</span></div></div></div>
+    </div>
+  </div>
+  <div class="tab-bar"><div class="tab-item"><div class="tab-icon">📝</div>记账</div><div class="tab-item"><div class="tab-icon">📋</div>明细</div><div class="tab-item active"><div class="tab-icon">📊</div>统计</div><div class="tab-item"><div class="tab-icon">⚙️</div>管理</div></div>
+</div>
+<div class="phone-label">AA 结算</div>
+</div>
+
+</body>
+</html>

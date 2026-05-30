@@ -73,16 +73,20 @@ function isSameMonth(d1, d2) {
 
 /**
  * 获取某月第一天 0点时间戳
+ * @param {number} year  年份
+ * @param {number} month 月份 1-12
  */
 function monthStart(year, month) {
-  return new Date(year, month, 1).getTime()
+  return new Date(year, month - 1, 1).getTime()
 }
 
 /**
  * 获取某月最后一天 23:59:59 时间戳
+ * @param {number} year  年份
+ * @param {number} month 月份 1-12
  */
 function monthEnd(year, month) {
-  return new Date(year, month + 1, 0, 23, 59, 59, 999).getTime()
+  return new Date(year, month, 0, 23, 59, 59, 999).getTime()
 }
 
 /**

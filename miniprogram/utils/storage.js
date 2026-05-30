@@ -50,6 +50,8 @@ const StorageManager = {
       payer: bill.payer || 'self',
       splits: bill.splits || null, // [{memberId, amount}] 分摊明细
       targetAccount: bill.targetAccount || null, // 转账目标账户
+      tags: bill.tags || [],       // 标签
+      createdBy: 'local',          // 本地创建标识
       createdAt: Date.now()
     }
     bills.unshift(record)
@@ -373,7 +375,8 @@ const StorageManager = {
     const personCount = participants.length
     if (personCount === 0) return { totalExpense, perPerson: 0, details: [] }
 
-    const perPerson = Math.round(totalExpense / personCount)  // 分，取整
+    const perPerson = Math.floor(totalExpense / personCount)  // 分，向下取整
+    const remainder = totalExpense - perPerson * personCount    // 余数
 
     // 每人已付
     const paid = {}
@@ -384,8 +387,12 @@ const StorageManager = {
     })
 
     // 计算差额：正数=多付了（应收），负数=少付了（应付）
+    // 余数（remainder）归到最后一个结算，保证总额守恒
     const balance = {}
-    participants.forEach(id => { balance[id] = paid[id] - perPerson })
+    participants.forEach((id, idx) => {
+      const base = perPerson + (idx === 0 ? remainder : 0)  // 余数归第一个人
+      balance[id] = paid[id] - base
+    })
 
     // 贪心算法算谁给谁
     const details = []
