@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记账助手 — 4页面UI</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif; background:#E8EAF0; display:flex; justify-content:center; gap:16px; padding:16px; flex-wrap:wrap; }
+.phone { width:280px; height:607px; background:#F7F7FA; border-radius:30px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.12), inset 0 0 0 1.5px #DDD; display:flex; flex-direction:column; position:relative; }
+.phone-label { text-align:center; font-size:11px; color:#6B7280; font-weight:600; margin-top:4px; }
+.status-bar { height:32px; background:#FFF; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-size:9px; color:#333; flex-shrink:0; }
+.content { flex:1; overflow-y:auto; display:flex; flex-direction:column; font-size:11px; }
+
+/* 通用 */
+.section { padding:5px 10px; background:#FFF; margin-top:3px; }
+.label { font-size:8px; font-weight:600; color:#9CA3AF; margin-bottom:3px; display:block; text-transform:uppercase; }
+.primary { color:#4F46E5; }
+.expense-color { color:#EF4444; }
+.income-color { color:#10B981; }
+
+/* TabBar */
+.tabbar { height:42px; background:#FFF; border-top:1px solid #E5E7EB; display:flex; flex-shrink:0; }
+.tab { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:7px; color:#9CA3AF; }
+.tab.active { color:#4F46E5; font-weight:600; }
+.tab-icon { font-size:14px; margin-bottom:1px; }
+
+/* === 记账页 === */
+.type-switch { display:flex; background:#F3F4F6; border-radius:16px; padding:1.5px; margin:5px 10px; }
+.type-btn { flex:1; text-align:center; padding:5px; border-radius:16px; font-size:10px; font-weight:600; color:#9CA3AF; }
+.type-btn.active { background:linear-gradient(135deg,#EF4444,#F87171); color:#FFF; }
+.amount-area { text-align:center; padding:3px 0 6px; background:#FFF; }
+.amount-num { font-size:30px; font-weight:700; color:#1F2937; }
+.amount-sym { font-size:16px; font-weight:700; }
+.category-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
+.cat-item { display:flex; flex-direction:column; align-items:center; padding:4px 2px; border-radius:6px; }
+.cat-item.sel { background:#EEF2FF; }
+.cat-icon { font-size:14px; }
+.cat-name { font-size:7px; color:#6B7280; }
+.cat-item.sel .cat-name { color:#4F46E5; font-weight:600; }
+.note-input { width:100%; font-size:10px; padding:4px 0; color:#374151; border:none; }
+.payer-row { display:flex; gap:4px; }
+.person { display:flex; flex-direction:column; align-items:center; padding:3px 6px; border-radius:8px; background:#F9FAFB; }
+.person.sel { background:#EEF2FF; border:1px solid #4F46E5; }
+.person-av { font-size:12px; }
+.person-nm { font-size:7px; color:#6B7280; }
+.split-row { display:flex; gap:4px; }
+.sp-opt { padding:3px 8px; border-radius:10px; background:#F3F4F6; font-size:9px; color:#6B7280; }
+.sp-opt.active { background:#4F46E5; color:#FFF; }
+.kb-toolbar { display:flex; gap:1px; padding:3px 4px; background:#D1D5DB; }
+.kb-item { flex:1; display:flex; align-items:center; justify-content:center; gap:2px; background:#FFF; border-radius:5px; padding:4px; font-size:8px; color:#6B7280; }
+.keypad { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px 4px 4px; background:#E5E7EB; }
+.key { display:flex; align-items:center; justify-content:center; background:#FFF; border-radius:6px; height:34px; font-size:15px; color:#1F2937; }
+.key-del { font-size:12px; color:#6B7280; }
+.key-func { color:#4F46E5; font-weight:600; }
+.key-ok { background:linear-gradient(135deg,#EF4444,#F87171); color:#FFF; font-size:11px; font-weight:700; }
+
+/* === 明细页 === */
+.page-header { padding:8px 10px 4px; background:#FFF; }
+.page-title { font-size:14px; font-weight:700; color:#1F2937; }
+.month-bar { display:flex; align-items:center; justify-content:space-between; padding:4px 10px; background:#FFF; margin-top:2px; }
+.month-text { font-size:11px; font-weight:600; color:#374151; }
+.summary { display:flex; gap:4px; padding:6px 10px; background:#FFF; margin-top:2px; }
+.summary-item { flex:1; text-align:center; padding:4px; border-radius:8px; background:#F9FAFB; }
+.summary-val { font-size:12px; font-weight:700; display:block; }
+.summary-lbl { font-size:7px; color:#9CA3AF; }
+.date-group { padding:0 10px; margin-top:6px; }
+.date-label { font-size:9px; color:#9CA3AF; font-weight:600; margin-bottom:3px; display:block; }
+.bill-card { background:#FFF; border-radius:8px; padding:6px 8px; margin-bottom:4px; display:flex; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+.bill-icon { font-size:16px; margin-right:6px; }
+.bill-info { flex:1; }
+.bill-cat { font-size:10px; font-weight:600; color:#1F2937; display:block; }
+.bill-note { font-size:8px; color:#9CA3AF; }
+.bill-amount { font-size:12px; font-weight:700; }
+.bill-time { font-size:7px; color:#9CA3AF; }
+
+/* === 统计页 === */
+.tabs { display:flex; background:#F3F4F6; padding:2px; border-radius:12px; margin:5px 10px; }
+.tab-btn { flex:1; text-align:center; padding:4px; border-radius:12px; font-size:9px; color:#9CA3AF; }
+.tab-btn.active { background:#FFF; color:#4F46E5; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+.stat-card { background:linear-gradient(135deg,#4F46E5,#7C3AED); border-radius:10px; padding:10px; margin:5px 10px; color:#FFF; }
+.stat-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+.stat-label { font-size:8px; opacity:0.7; }
+.stat-val { font-size:12px; font-weight:700; }
+.rank-item { display:flex; align-items:center; padding:5px 10px; background:#FFF; margin-top:2px; }
+.rank-icon { font-size:14px; margin-right:6px; }
+.rank-name { flex:1; font-size:10px; color:#374151; }
+.rank-bar { width:40px; height:4px; background:#F3F4F6; border-radius:2px; overflow:hidden; margin-right:6px; }
+.rank-fill { height:100%; background:#4F46E5; border-radius:2px; }
+.rank-pct { font-size:8px; color:#9CA3AF; width:30px; text-align:right; }
+.rank-amt { font-size:10px; font-weight:600; color:#1F2937; width:50px; text-align:right; }
+
+/* === 管理页 === */
+.overview { background:linear-gradient(135deg,#4F46E5,#7C3AED); border-radius:10px; padding:12px; margin:5px 10px; color:#FFF; text-align:center; }
+.ov-emoji { font-size:24px; }
+.ov-name { font-size:11px; font-weight:700; margin:2px 0 6px; }
+.ov-stats { display:flex; }
+.ov-stat { flex:1; }
+.ov-num { font-size:13px; font-weight:700; display:block; }
+.ov-lbl { font-size:7px; opacity:0.7; }
+.mgmt-section { padding:6px 10px; margin-top:4px; }
+.mgmt-title { font-size:10px; font-weight:700; color:#1F2937; margin-bottom:4px; }
+.mgmt-card { background:#FFF; border-radius:10px; overflow:hidden; }
+.mgmt-row { display:flex; align-items:center; padding:8px; border-bottom:1px solid #F3F4F6; }
+.mgmt-icon { font-size:14px; margin-right:6px; }
+.mgmt-name { flex:1; font-size:10px; color:#374151; }
+.mgmt-meta { font-size:8px; color:#9CA3AF; }
+.mgmt-val { font-size:10px; font-weight:600; }
+</style>
+</head>
+<body>
+
+<!-- ========== 记账页 ========== -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>19:13</span><span>⚡72%</span></div>
+  <div class="content">
+    <div class="type-switch"><div class="type-btn active">支出</div><div class="type-btn">收入</div></div>
+    <div class="amount-area"><span class="amount-sym">¥</span><span class="amount-num">356</span></div>
+    <div class="section"><span class="label">币种</span><div style="display:flex;gap:3px"><span style="padding:2px 6px;border-radius:8px;background:#EEF2FF;border:1px solid #4F46E5;font-size:8px">🇨🇳 CNY</span><span style="padding:2px 6px;border-radius:8px;background:#F9FAFB;font-size:8px">🇺🇸 USD</span><span style="padding:2px 6px;border-radius:8px;background:#F9FAFB;font-size:8px">🇯🇵 JPY</span><span style="padding:2px 6px;border-radius:8px;background:#F9FAFB;font-size:8px">🇬🇧 GBP</span><span style="padding:2px 6px;border-radius:8px;background:#F9FAFB;font-size:8px">🇭🇰 HKD</span></div></div>
+    <div class="section"><span class="label">分类</span>
+      <div class="category-grid">
+        <div class="cat-item sel"><span class="cat-icon">🍜</span><span class="cat-name">餐饮</span></div>
+        <div class="cat-item"><span class="cat-icon">🚇</span><span class="cat-name">交通</span></div>
+        <div class="cat-item"><span class="cat-icon">🛒</span><span class="cat-name">购物</span></div>
+        <div class="cat-item"><span class="cat-icon">🏠</span><span class="cat-name">住房</span></div>
+        <div class="cat-item"><span class="cat-icon">🎮</span><span class="cat-name">娱乐</span></div>
+        <div class="cat-item"><span class="cat-icon">📱</span><span class="cat-name">通讯</span></div>
+        <div class="cat-item"><span class="cat-icon">💊</span><span class="cat-name">医疗</span></div>
+        <div class="cat-item" style="opacity:0.5"><span class="cat-icon">···</span><span class="cat-name">更多</span></div>
+      </div>
+    </div>
+    <div class="section"><input class="note-input" placeholder="添加备注..." value="火锅聚餐"></div>
+    <div class="section"><span class="label">花费人</span><div class="payer-row"><div class="person sel"><span class="person-av">😊</span><span class="person-nm">我</span></div><div class="person"><span class="person-av">👩</span><span class="person-nm">小红</span></div><div class="person"><span class="person-av">👨</span><span class="person-nm">大伟</span></div><div class="person" style="border:1px dashed #D1D5DB;background:transparent"><span class="person-av">＋</span><span class="person-nm">添加</span></div></div></div>
+    <div class="section"><span class="label">分摊</span><div class="split-row"><div class="sp-opt">不分摊</div><div class="sp-opt active">AA均摊</div><div class="sp-opt">按比例</div><div class="sp-opt">自定义</div></div><div style="font-size:9px;color:#4F46E5;margin-top:2px">每人 ¥118.67（3人）</div></div>
+    <div style="margin-top:auto">
+      <div class="kb-toolbar"><div class="kb-item">📅 今天</div><div class="kb-item">💳 微信支付</div></div>
+      <div class="keypad">
+        <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key key-del">⌫</div>
+        <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key key-func">+</div>
+        <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key key-func">−</div>
+        <div class="key">.</div><div class="key">0</div><div class="key">00</div><div class="key key-ok">完成</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabbar"><div class="tab active"><span class="tab-icon">✏️</span>记账</div><div class="tab"><span class="tab-icon">📋</span>明细</div><div class="tab"><span class="tab-icon">📊</span>统计</div><div class="tab"><span class="tab-icon">⚙️</span>管理</div></div>
+</div>
+<div class="phone-label">✏️ 记账（首页）</div>
+</div>
+
+<!-- ========== 明细页 ========== -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>19:13</span><span>⚡72%</span></div>
+  <div class="content">
+    <div class="page-header"><span class="page-title">📋 账单明细</span></div>
+    <div class="month-bar"><span style="font-size:11px">‹</span><span class="month-text">2026年5月</span><span style="font-size:11px">›</span></div>
+    <div class="summary">
+      <div class="summary-item"><span class="summary-val income-color">¥12,800</span><span class="summary-lbl">收入</span></div>
+      <div class="summary-item"><span class="summary-val expense-color">¥8,356</span><span class="summary-lbl">支出</span></div>
+      <div class="summary-item"><span class="summary-val primary">¥4,444</span><span class="summary-lbl">结余</span></div>
+    </div>
+    <div class="date-group">
+      <span class="date-label">今天 05/30</span>
+      <div class="bill-card"><span class="bill-icon">🍜</span><div class="bill-info"><span class="bill-cat">餐饮</span><span class="bill-note">火锅聚餐 · 大伟付款</span></div><span class="bill-amount expense-color">-¥356</span></div>
+      <div class="bill-card"><span class="bill-icon">🚇</span><div class="bill-info"><span class="bill-cat">交通</span><span class="bill-note">地铁</span></div><span class="bill-amount expense-color">-¥8</span></div>
+    </div>
+    <div class="date-group">
+      <span class="date-label">昨天 05/29</span>
+      <div class="bill-card"><span class="bill-icon">🛒</span><div class="bill-info"><span class="bill-cat">购物</span><span class="bill-note">京东 · 数据线</span></div><span class="bill-amount expense-color">-¥49</span></div>
+      <div class="bill-card"><span class="bill-icon">💰</span><div class="bill-info"><span class="bill-cat">工资</span><span class="bill-note">5月工资</span></div><span class="bill-amount income-color">+¥12,800</span></div>
+      <div class="bill-card"><span class="bill-icon">🍜</span><div class="bill-info"><span class="bill-cat">餐饮</span><span class="bill-note">午餐</span></div><span class="bill-amount expense-color">-¥32</span></div>
+    </div>
+    <div class="date-group">
+      <span class="date-label">05/28 周四</span>
+      <div class="bill-card"><span class="bill-icon">🎮</span><div class="bill-info"><span class="bill-cat">娱乐</span><span class="bill-note">电影票</span></div><span class="bill-amount expense-color">-¥78</span></div>
+      <div class="bill-card"><span class="bill-icon">📱</span><div class="bill-info"><span class="bill-cat">通讯</span><span class="bill-note">话费</span></div><span class="bill-amount expense-color">-¥50</span></div>
+    </div>
+    <div class="date-group">
+      <span class="date-label">05/27 周三</span>
+      <div class="bill-card"><span class="bill-icon">🏠</span><div class="bill-info"><span class="bill-cat">住房</span><span class="bill-note">房租</span></div><span class="bill-amount expense-color">-¥3,500</span></div>
+    </div>
+  </div>
+  <div class="tabbar"><div class="tab"><span class="tab-icon">✏️</span>记账</div><div class="tab active"><span class="tab-icon">📋</span>明细</div><div class="tab"><span class="tab-icon">📊</span>统计</div><div class="tab"><span class="tab-icon">⚙️</span>管理</div></div>
+</div>
+<div class="phone-label">📋 明细</div>
+</div>
+
+<!-- ========== 统计页 ========== -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>19:13</span><span>⚡72%</span></div>
+  <div class="content">
+    <div class="page-header"><span class="page-title">📊 统计分析</span></div>
+    <div class="tabs"><div class="tab-btn active">月度</div><div class="tab-btn">年度</div><div class="tab-btn">按人</div><div class="tab-btn">AA</div></div>
+    <div class="stat-card">
+      <div class="stat-row"><span class="stat-label">本月支出</span><span class="stat-val">¥8,356.00</span></div>
+      <div class="stat-row"><span class="stat-label">本月收入</span><span class="stat-val">¥12,800.00</span></div>
+      <div class="stat-row"><span class="stat-label">结余</span><span class="stat-val" style="color:#34D399">+¥4,444.00</span></div>
+      <div style="font-size:7px;opacity:0.5;margin-top:2px">日均 ¥270 · 预算剩余 ¥1,644</div>
+    </div>
+    <div class="section">
+      <span class="label">支出排行</span>
+      <div class="rank-item"><span class="rank-icon">🏠</span><span class="rank-name">住房</span><div class="rank-bar"><div class="rank-fill" style="width:100%"></div></div><span class="rank-pct">41.9%</span><span class="rank-amt">¥3,500</span></div>
+      <div class="rank-item"><span class="rank-icon">🍜</span><span class="rank-name">餐饮</span><div class="rank-bar"><div class="rank-fill" style="width:55%"></div></div><span class="rank-pct">23.0%</span><span class="rank-amt">¥1,920</span></div>
+      <div class="rank-item"><span class="rank-icon">🛒</span><span class="rank-name">购物</span><div class="rank-bar"><div class="rank-fill" style="width:22%"></div></div><span class="rank-pct">9.1%</span><span class="rank-amt">¥760</span></div>
+      <div class="rank-item"><span class="rank-icon">🎮</span><span class="rank-name">娱乐</span><div class="rank-bar"><div class="rank-fill" style="width:12%"></div></div><span class="rank-pct">5.0%</span><span class="rank-amt">¥418</span></div>
+      <div class="rank-item"><span class="rank-icon">📱</span><span class="rank-name">通讯</span><div class="rank-bar"><div class="rank-fill" style="width:6%"></div></div><span class="rank-pct">2.5%</span><span class="rank-amt">¥208</span></div>
+    </div>
+    <div class="section">
+      <span class="label">每日趋势</span>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:50px;padding:4px 0">
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:20%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:45%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:30%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:15%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:60%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:35%"></div>
+        <div style="flex:1;background:#4F46E5;border-radius:2px 2px 0 0;height:90%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:25%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:40%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:10%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:50%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:20%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:35%"></div>
+        <div style="flex:1;background:#EEF2FF;border-radius:2px 2px 0 0;height:70%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="tabbar"><div class="tab"><span class="tab-icon">✏️</span>记账</div><div class="tab"><span class="tab-icon">📋</span>明细</div><div class="tab active"><span class="tab-icon">📊</span>统计</div><div class="tab"><span class="tab-icon">⚙️</span>管理</div></div>
+</div>
+<div class="phone-label">📊 统计</div>
+</div>
+
+<!-- ========== 管理页 ========== -->
+<div>
+<div class="phone">
+  <div class="status-bar"><span>19:13</span><span>⚡72%</span></div>
+  <div class="content">
+    <div class="overview">
+      <span class="ov-emoji">💰</span>
+      <span class="ov-name">记账达人</span>
+      <div class="ov-stats">
+        <div class="ov-stat"><span class="ov-num">156</span><span class="ov-lbl">总记录</span></div>
+        <div class="ov-stat"><span class="ov-num">28</span><span class="ov-lbl">记账天数</span></div>
+        <div class="ov-stat"><span class="ov-num">¥4,444</span><span class="ov-lbl">总资产</span></div>
+      </div>
+    </div>
+    <div class="mgmt-section"><div class="mgmt-title">📚 账本</div><div class="mgmt-card">
+      <div class="mgmt-row"><span class="mgmt-icon">📒</span><span class="mgmt-name">我的账本</span><span class="mgmt-meta">个人</span><span style="color:#4F46E5;font-size:10px">✓</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">👥</span><span class="mgmt-name">旅行基金</span><span class="mgmt-meta">共享·3人</span><span style="color:#9CA3AF">›</span></div>
+    </div></div>
+    <div class="mgmt-section"><div class="mgmt-title">💳 账户</div><div class="mgmt-card">
+      <div class="mgmt-row"><span class="mgmt-icon">💚</span><span class="mgmt-name">微信支付</span><span class="mgmt-val">¥2,100</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">💙</span><span class="mgmt-name">支付宝</span><span class="mgmt-val">¥1,844</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">💵</span><span class="mgmt-name">现金</span><span class="mgmt-val">¥500</span></div>
+    </div></div>
+    <div class="mgmt-section"><div class="mgmt-title">👥 人员</div><div class="mgmt-card">
+      <div class="mgmt-row"><span class="mgmt-icon">😊</span><span class="mgmt-name">我</span><span style="font-size:8px;color:#4F46E5;background:#EEF2FF;padding:1px 6px;border-radius:8px">默认</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">👩</span><span class="mgmt-name">小红</span><span style="font-size:8px;color:#EF4444">删除</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">👨</span><span class="mgmt-name">大伟</span><span style="font-size:8px;color:#EF4444">删除</span></div>
+    </div></div>
+    <div class="mgmt-section"><div class="mgmt-card">
+      <div class="mgmt-row"><span class="mgmt-icon">📊</span><span class="mgmt-name">月度预算</span><span class="mgmt-val primary">¥10,000</span><span style="color:#9CA3AF">›</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">📤</span><span class="mgmt-name">导出数据</span><span style="color:#9CA3AF">›</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">🌍</span><span class="mgmt-name">币种排序</span><span style="color:#9CA3AF">›</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">📂</span><span class="mgmt-name">分类排序</span><span style="color:#9CA3AF">›</span></div>
+      <div class="mgmt-row"><span class="mgmt-icon">🗑️</span><span class="mgmt-name" style="color:#EF4444">清除所有数据</span><span style="color:#9CA3AF">›</span></div>
+    </div></div>
+  </div>
+  <div class="tabbar"><div class="tab"><span class="tab-icon">✏️</span>记账</div><div class="tab"><span class="tab-icon">📋</span>明细</div><div class="tab"><span class="tab-icon">📊</span>统计</div><div class="tab active"><span class="tab-icon">⚙️</span>管理</div></div>
+</div>
+<div class="phone-label">⚙️ 管理</div>
+</div>
+
+</body>
+</html>

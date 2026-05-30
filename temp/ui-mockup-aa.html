@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 AA结算</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif; background:#E8EAF0; display:flex; justify-content:center; padding:16px; }
+.phone { width:375px; height:812px; background:#F7F7FA; border-radius:40px; overflow:hidden; box-shadow:0 12px 48px rgba(0,0,0,0.15), inset 0 0 0 2px #DDD; display:flex; flex-direction:column; }
+.status-bar { height:44px; background:#FFF; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; color:#333; flex-shrink:0; }
+.content { flex:1; overflow-y:auto; padding:0; }
+
+/* 顶部tab */
+.tabs { display:flex; background:#F3F4F6; border-radius:22px; padding:3px; margin:12px 14px 8px; }
+.tab-btn { flex:1; text-align:center; padding:8px 0; border-radius:22px; font-size:13px; color:#9CA3AF; font-weight:500; }
+.tab-btn.active { background:#FFF; color:#4F46E5; font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+
+/* 概览卡片 */
+.aa-overview { margin:0 14px 12px; background:linear-gradient(135deg,#FF9800,#FFB74D); border-radius:16px; padding:16px 18px; color:#FFF; }
+.aa-title { font-size:18px; font-weight:700; margin-bottom:10px; }
+.aa-stats { display:flex; gap:12px; }
+.aa-stat { flex:1; }
+.aa-stat-val { font-size:20px; font-weight:700; display:block; }
+.aa-stat-lbl { font-size:11px; opacity:0.8; }
+
+/* 人员余额 */
+.section-title { font-size:12px; font-weight:600; color:#9CA3AF; margin:0 14px 6px; text-transform:uppercase; letter-spacing:0.5px; }
+.balance-list { margin:0 14px; }
+.balance-card { background:#FFF; border-radius:12px; padding:12px 14px; margin-bottom:6px; display:flex; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+.balance-avatar { font-size:28px; margin-right:10px; }
+.balance-info { flex:1; }
+.balance-name { font-size:14px; font-weight:600; color:#1F2937; display:block; }
+.balance-paid { font-size:11px; color:#9CA3AF; }
+.balance-amount { font-size:18px; font-weight:700; }
+.balance-pos { color:#EF4444; }
+.balance-neg { color:#10B981; }
+.balance-zero { color:#6B7280; }
+
+/* 转账建议 */
+.transfer-section { margin:12px 14px; }
+.transfer-card { background:#FFF; border-radius:12px; padding:14px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.04); border-left:4px solid #FF9800; }
+.transfer-flow { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.transfer-from { display:flex; align-items:center; gap:4px; background:#FEF3C7; padding:4px 10px; border-radius:16px; }
+.transfer-to { display:flex; align-items:center; gap:4px; background:#D1FAE5; padding:4px 10px; border-radius:16px; }
+.transfer-arrow { font-size:18px; color:#FF9800; font-weight:700; }
+.transfer-name { font-size:12px; font-weight:600; }
+.transfer-avatar { font-size:16px; }
+.transfer-amount { font-size:16px; font-weight:700; color:#FF9800; display:block; }
+.transfer-hint { font-size:11px; color:#9CA3AF; }
+
+/* 底部操作 */
+.aa-actions { padding:12px 14px; display:flex; gap:8px; }
+.aa-btn { flex:1; padding:12px; border-radius:14px; text-align:center; font-size:14px; font-weight:600; }
+.aa-btn-primary { background:linear-gradient(135deg,#FF9800,#FFB74D); color:#FFF; }
+.aa-btn-secondary { background:#FFF; color:#4F46E5; border:1.5px solid #4F46E5; }
+
+/* TabBar */
+.tabbar { height:50px; background:#FFF; border-top:1px solid #E5E7EB; display:flex; flex-shrink:0; }
+.tab { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:10px; color:#9CA3AF; }
+.tab.active { color:#4F46E5; font-weight:600; }
+.tab-icon { font-size:18px; margin-bottom:1px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar"><span>19:33</span><span>⚡72%</span></div>
+  <div class="content">
+    <div class="tabs">
+      <div class="tab-btn">月度</div>
+      <div class="tab-btn">年度</div>
+      <div class="tab-btn">按人</div>
+      <div class="tab-btn active">AA结算</div>
+    </div>
+
+    <!-- AA概览 -->
+    <div class="aa-overview">
+      <div class="aa-title">🍊 AA结算</div>
+      <div class="aa-stats">
+        <div class="aa-stat"><span class="aa-stat-val">¥1,068</span><span class="aa-stat-lbl">总支出</span></div>
+        <div class="aa-stat"><span class="aa-stat-val">3人</span><span class="aa-stat-lbl">参与人</span></div>
+        <div class="aa-stat"><span class="aa-stat-val">2笔</span><span class="aa-stat-lbl">需转账</span></div>
+      </div>
+    </div>
+
+    <!-- 人员余额 -->
+    <div class="section-title">各人余额</div>
+    <div class="balance-list">
+      <div class="balance-card">
+        <span class="balance-avatar">😊</span>
+        <div class="balance-info">
+          <span class="balance-name">我</span>
+          <span class="balance-paid">已付 ¥680 · 应付 ¥356</span>
+        </div>
+        <span class="balance-amount balance-pos">多付 ¥324</span>
+      </div>
+      <div class="balance-card">
+        <span class="balance-avatar">👩</span>
+        <div class="balance-info">
+          <span class="balance-name">小红</span>
+          <span class="balance-paid">已付 ¥0 · 应付 ¥356</span>
+        </div>
+        <span class="balance-amount balance-neg">少付 ¥356</span>
+      </div>
+      <div class="balance-card">
+        <span class="balance-avatar">👨</span>
+        <div class="balance-info">
+          <span class="balance-name">大伟</span>
+          <span class="balance-paid">已付 ¥388 · 应付 ¥356</span>
+        </div>
+        <span class="balance-amount balance-pos">多付 ¥32</span>
+      </div>
+    </div>
+
+    <!-- 转账建议 -->
+    <div class="section-title">最小转账方案</div>
+    <div class="transfer-section">
+      <div class="transfer-card">
+        <div class="transfer-flow">
+          <div class="transfer-from"><span class="transfer-avatar">👩</span><span class="transfer-name">小红</span></div>
+          <span class="transfer-arrow">→</span>
+          <div class="transfer-to"><span class="transfer-avatar">😊</span><span class="transfer-name">我</span></div>
+        </div>
+        <span class="transfer-amount">¥324.00</span>
+        <span class="transfer-hint">小红欠我最多，先转给我</span>
+      </div>
+      <div class="transfer-card">
+        <div class="transfer-flow">
+          <div class="transfer-from"><span class="transfer-avatar">👩</span><span class="transfer-name">小红</span></div>
+          <span class="transfer-arrow">→</span>
+          <div class="transfer-to"><span class="transfer-avatar">👨</span><span class="transfer-name">大伟</span></div>
+        </div>
+        <span class="transfer-amount">¥32.00</span>
+        <span class="transfer-hint">剩余转给大伟</span>
+      </div>
+    </div>
+
+    <!-- 操作 -->
+    <div class="aa-actions">
+      <div class="aa-btn aa-btn-secondary">选择月份</div>
+      <div class="aa-btn aa-btn-primary">标记已结清</div>
+    </div>
+  </div>
+  <div class="tabbar"><div class="tab"><span class="tab-icon">✏️</span>记账</div><div class="tab"><span class="tab-icon">📋</span>明细</div><div class="tab active"><span class="tab-icon">📊</span>统计</div><div class="tab"><span class="tab-icon">⚙️</span>管理</div></div>
+</div>
+</body>
+</html>

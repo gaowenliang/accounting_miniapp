@@ -371,22 +371,37 @@ const StorageManager = {
       ? expenseBills.filter(b => participantIds.includes(b.payer || 'self'))
       : expenseBills
 
-    const totalExpense = applicableBills.reduce((s, b) => s + b.amount, 0)
+    const totalExpense = applicableBills.reduce((s, b) => s + (b.amountCNY || b.amount), 0)
 
     // 参与AA的人
     const participants = participantIds || members.map(m => m.id)
     const personCount = participants.length
     if (personCount === 0) return { totalExpense, perPerson: 0, details: [] }
 
-    const perPerson = Math.floor(totalExpense / personCount)  // 分，向下取整
-    const remainder = totalExpense - perPerson * personCount    // 余数
+    const perPerson = Math.floor(totalExpense / personCount)
+    const remainder = totalExpense - perPerson * personCount
 
-    // 每人已付
+    // 每人已付（处理 splits + 多币种）
     const paid = {}
     participants.forEach(id => { paid[id] = 0 })
     applicableBills.forEach(b => {
+      const billAmount = b.amountCNY || b.amount
       const payerId = b.payer || 'self'
-      if (paid[payerId] !== undefined) paid[payerId] += b.amount
+      if (b.splits && b.splits.length > 0) {
+        // 有分摊明细，按 splits 算每人实付
+        b.splits.forEach(s => {
+          if (paid[s.memberId] !== undefined) {
+            // splits 的 amount 也需要换算
+            const splitAmount = b.currency && b.currency !== 'CNY' && b.exchangeRate
+              ? Math.round(s.amount / b.amount * billAmount)
+              : s.amount
+            paid[s.memberId] += splitAmount
+          }
+        })
+      } else {
+        // 无分摊，payer 全额
+        if (paid[payerId] !== undefined) paid[payerId] += billAmount
+      }
     })
 
     // 计算差额：正数=多付了（应收），负数=少付了（应付）
