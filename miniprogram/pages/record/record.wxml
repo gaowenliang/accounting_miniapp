@@ -26,7 +26,7 @@
       </view>
     </scroll-view>
     <view class="exchange-info" wx:if="{{selectedCurrency !== 'CNY'}}">
-      <text class="exchange-text">汇率 {{exchangeRate}} → ≈¥{{amountCNYText}}</text>
+      <text class="exchange-text">{{rateDisplay}} → ≈¥{{amountCNYText}}</text>
     </view>
   </view>
 
