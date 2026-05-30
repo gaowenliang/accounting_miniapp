@@ -1,62 +1,71 @@
-/* pages/bills/bills.wxss */
+/* pages/bills/bills.wxss — 靛蓝主题 */
 
+/* 月份导航 */
 .month-nav {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16rpx 8rpx; margin-bottom: 16rpx;
+  padding: 8rpx 0 20rpx;
 }
-.nav-btn {
-  font-size: 28rpx; color: #1A73E8; padding: 12rpx 20rpx;
-  font-weight: 600;
-}
-.nav-info { display: flex; flex-direction: column; align-items: center; }
-.nav-month { font-size: 32rpx; font-weight: 700; color: #2D3436; }
-.nav-summary { display: flex; gap: 16rpx; margin-top: 4rpx; font-size: 22rpx; }
-.nav-divider { color: #E0E0E0; }
+.nav-btn { font-size: 28rpx; color: #4F46E5; font-weight: 600; padding: 8rpx 16rpx; }
+.nav-info { text-align: center; }
+.nav-month { font-size: 34rpx; font-weight: 700; color: #1F2937; }
+.nav-summary { margin-top: 4rpx; display: flex; align-items: center; justify-content: center; gap: 12rpx; font-size: 22rpx; }
+.nav-divider { color: #D1D5DB; }
 
-/* 筛选 */
-.filter-bar { display: flex; align-items: center; gap: 12rpx; margin-bottom: 20rpx; }
-.filter-tabs { display: flex; background: #F0F2F5; border-radius: 44rpx; padding: 4rpx; }
+/* 筛选栏 */
+.filter-bar { display: flex; gap: 12rpx; margin-bottom: 20rpx; }
+.filter-tabs {
+  display: flex; background: #F3F4F6; border-radius: 44rpx; padding: 3rpx;
+}
 .filter-tab {
-  padding: 10rpx 24rpx; border-radius: 44rpx; font-size: 24rpx; color: #90A4AE; font-weight: 500;
+  padding: 8rpx 20rpx; border-radius: 44rpx;
+  font-size: 24rpx; color: #9CA3AF; font-weight: 500;
 }
-.filter-tab.active { background: #1A73E8; color: #FFFFFF; }
-.filter-tab.active.expense { background: #FF5252; }
-.filter-tab.active.income { background: #4CAF50; }
-
+.filter-tab.active { background: #4F46E5; color: #FFF; }
 .search-wrap {
-  flex: 1; display: flex; align-items: center; background: #FFFFFF;
-  border-radius: 44rpx; padding: 10rpx 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  flex: 1; display: flex; align-items: center;
+  background: #FFFFFF; border-radius: 44rpx; padding: 8rpx 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(79,70,229,0.04);
 }
-.search-icon { font-size: 24rpx; margin-right: 8rpx; }
-.search-input { flex: 1; font-size: 24rpx; }
-.search-clear { font-size: 24rpx; color: #90A4AE; padding: 4rpx; }
+.search-icon { font-size: 22rpx; margin-right: 8rpx; }
+.search-input { font-size: 24rpx; flex: 1; border: none; outline: none; }
+.search-clear { font-size: 22rpx; color: #9CA3AF; padding: 4rpx; }
 
-/* 分组 */
-.bill-group { margin-bottom: 20rpx; }
+/* 账单分组 */
+.bill-group { margin-bottom: 16rpx; }
 .group-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 12rpx 8rpx;
+  padding: 8rpx 8rpx 10rpx;
 }
-.group-date { font-size: 26rpx; font-weight: 600; color: #607D8B; }
-.group-summary { display: flex; gap: 16rpx; font-size: 22rpx; }
+.group-date { font-size: 26rpx; font-weight: 600; color: #6B7280; }
+.group-summary { display: flex; gap: 12rpx; font-size: 22rpx; }
 
-/* 账单条目 */
+/* 账单卡片 */
+.card {
+  background: #FFFFFF; border-radius: 20rpx; padding: 8rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(79,70,229,0.05);
+}
 .bill-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 20rpx 0; border-bottom: 1rpx solid #F0F2F5;
+  padding: 18rpx 0; border-bottom: 1rpx solid #F3F4F6;
 }
 .bill-item:last-child { border-bottom: none; }
 .bill-left { display: flex; align-items: center; flex: 1; min-width: 0; }
 .bill-icon { font-size: 40rpx; margin-right: 16rpx; flex-shrink: 0; }
 .bill-info { display: flex; flex-direction: column; min-width: 0; }
-.bill-category { font-size: 28rpx; font-weight: 500; color: #2D3436; }
+.bill-category { font-size: 28rpx; font-weight: 500; color: #1F2937; }
 .bill-note {
-  font-size: 22rpx; color: #90A4AE; margin-top: 4rpx;
+  font-size: 22rpx; color: #9CA3AF; margin-top: 4rpx;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.bill-payer {
-  font-size: 20rpx; color: #1A73E8; margin-top: 2rpx; opacity: 0.8;
-}
+.bill-payer { font-size: 20rpx; color: #4F46E5; margin-top: 2rpx; opacity: 0.75; }
 .bill-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* 空状态 */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 100rpx 40rpx;
+}
+.empty-state .emoji { font-size: 72rpx; margin-bottom: 20rpx; }
+.empty-state .title { font-size: 30rpx; font-weight: 600; color: #374151; margin-bottom: 8rpx; }
+.empty-state .desc { font-size: 24rpx; color: #9CA3AF; }
