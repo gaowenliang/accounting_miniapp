@@ -1,4 +1,4 @@
-<!-- pages/record/record.wxml — 记账页（全平铺版） -->
+<!-- pages/record/record.wxml — 记账页 -->
 <view class="container">
 
   <!-- 收入/支出切换 + 金额 -->
@@ -14,7 +14,7 @@
     </view>
   </view>
 
-  <!-- 币种选择 -->
+  <!-- 币种 -->
   <view class="section-flat">
     <text class="flat-label">币种</text>
     <scroll-view class="currency-scroll" scroll-x enable-flex>
@@ -30,12 +30,26 @@
     </view>
   </view>
 
-  <!-- 分类：4列网格 -->
+  <!-- 分类：前8个 + 更多 -->
   <view class="section-flat">
     <text class="flat-label">分类</text>
     <view class="category-grid">
       <view class="cat-item {{selectedCategory === item.key ? 'selected' : ''}}"
-            wx:for="{{categoryList}}" wx:key="key"
+            wx:for="{{topCategories}}" wx:key="key"
+            bindtap="selectCategory" data-key="{{item.key}}">
+        <text class="cat-icon">{{item.icon}}</text>
+        <text class="cat-name">{{item.name}}</text>
+      </view>
+      <!-- 更多/收起 -->
+      <view class="cat-item cat-more" bindtap="toggleMoreCategories">
+        <text class="cat-icon">{{showMoreCategories ? '▲' : '···'}}</text>
+        <text class="cat-name">{{showMoreCategories ? '收起' : '更多'}}</text>
+      </view>
+    </view>
+    <!-- 展开的更多分类 -->
+    <view class="category-grid" wx:if="{{showMoreCategories}}">
+      <view class="cat-item {{selectedCategory === item.key ? 'selected' : ''}}"
+            wx:for="{{moreCategories}}" wx:key="key"
             bindtap="selectCategory" data-key="{{item.key}}">
         <text class="cat-icon">{{item.icon}}</text>
         <text class="cat-name">{{item.name}}</text>
@@ -48,7 +62,7 @@
     <input class="note-input-main" placeholder="添加备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200" />
   </view>
 
-  <!-- 花费人：直接平铺 -->
+  <!-- 花费人 -->
   <view class="section-flat">
     <text class="flat-label">花费人</text>
     <scroll-view class="payer-scroll" scroll-x enable-flex>
@@ -65,7 +79,7 @@
     </scroll-view>
   </view>
 
-  <!-- 分摊方式（仅支出且多人时显示） -->
+  <!-- 分摊（仅支出且多人时显示） -->
   <view class="section-flat" wx:if="{{billType === 'expense' && members.length > 1}}">
     <text class="flat-label">分摊</text>
     <view class="split-bar">
@@ -99,7 +113,6 @@
 
   <!-- 自定义数字键盘 -->
   <view class="keyboard {{billType === 'expense' ? 'kb-expense' : 'kb-income'}}">
-    <!-- 日期 + 备注 + 账户 快捷栏 -->
     <view class="kb-toolbar">
       <view class="kb-toolbar-item" bindtap="pickDate">
         <text class="kb-toolbar-icon">📅</text>
@@ -110,7 +123,6 @@
         <text class="kb-toolbar-text">{{accountName}}</text>
       </view>
     </view>
-    <!-- 键盘 4×4: ⌫ / + / - / 完成 -->
     <view class="keypad">
       <view class="key" bindtap="pressKey" data-val="1" hover-class="key-hover">1</view>
       <view class="key" bindtap="pressKey" data-val="2" hover-class="key-hover">2</view>
@@ -130,13 +142,6 @@
       <view class="key key-ok" bindtap="pressKey" data-val="ok" hover-class="key-hover-ok">完成</view>
     </view>
   </view>
-
-  <!-- 隐藏的日期picker -->
-  <picker mode="date" value="{{billDateStr}}" bindchange="onDateChange" hidden>
-    <view id="datePicker"></view>
-  </picker>
-
-  <!-- 备注弹窗（备用） -->
 
   <!-- 账户选择弹窗 -->
   <view class="modal-mask" wx:if="{{showAccountPicker}}" bindtap="closeAccountPicker">

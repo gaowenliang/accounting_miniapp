@@ -21,6 +21,9 @@ Page({
     // 分类
     categoryList: [],
     selectedCategory: '',
+    topCategories: [],
+    moreCategories: [],
+    showMoreCategories: false,
     // 人员
     members: [],
     selectedPayer: 'self',
@@ -59,6 +62,7 @@ Page({
       selectedAccount: storage.getSettings().defaultAccount || 'wechat',
     })
     this.updateAccountName()
+    this.splitCategories()
   },
 
   onShow() {
@@ -68,14 +72,26 @@ Page({
     this.initSplitItems(members)
   },
 
+  splitCategories() {
+    const list = this.data.categoryList
+    this.setData({
+      topCategories: list.slice(0, 7),
+      moreCategories: list.slice(7)
+    })
+  },
+
+  toggleMoreCategories() {
+    this.setData({ showMoreCategories: !this.data.showMoreCategories })
+  },
+
   // ========== 收支切换 ==========
   switchType(e) {
     const type = e.currentTarget.dataset.type
+    const categoryList = categories.getCategories(type)
     this.setData({
-      billType: type,
-      categoryList: categories.getCategories(type),
-      selectedCategory: ''
+      billType: type, categoryList, selectedCategory: '', showMoreCategories: false
     })
+    this.splitCategories()
   },
 
   // ========== 币种 ==========

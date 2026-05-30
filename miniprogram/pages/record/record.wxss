@@ -61,6 +61,8 @@
 .cat-name { font-size: 18rpx; color: #6B7280; }
 .cat-item.selected .cat-icon { transform: scale(1.1); }
 .cat-item.selected .cat-name { color: #4F46E5; font-weight: 600; }
+.cat-more .cat-icon { color: #9CA3AF; }
+.cat-more .cat-name { color: #9CA3AF; }
 
 /* 备注输入 */
 .note-input-main {
