@@ -76,11 +76,14 @@ Page({
         }
       }
       const cat = categories.getCategoryBy(b.category, b.type)
+      const members = storage.getMembers()
+      const payer = members.find(m => m.id === (b.payer || 'self'))
       groups[dateStr].bills.push({
         ...b,
         categoryName: cat.name,
         categoryIcon: cat.icon,
-        amountText: util.formatMoney(b.amount)
+        amountText: util.formatMoney(b.amount),
+        payerName: payer ? payer.name : '我'
       })
       if (b.type === 'income') groups[dateStr].dayIncome += b.amount
       else groups[dateStr].dayExpense += b.amount

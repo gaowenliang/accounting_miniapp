@@ -84,6 +84,37 @@
     </scroll-view>
   </view>
 
+  <!-- 分摊（仅支出时显示） -->
+  <view class="split-section" wx:if="{{billType === 'expense' && members.length > 1}}">
+    <view class="split-header" bindtap="toggleSplit">
+      <text class="section-label">分摊方式</text>
+      <text class="split-mode">{{splitMode === 'equal' ? '均摊' : '自定义'}}</text>
+    </view>
+    <view class="split-options" wx:if="{{showSplitDetail}}">
+      <view class="split-mode-btns">
+        <view class="split-mode-btn {{splitMode === 'equal' ? 'active' : ''}}" bindtap="setSplitEqual">均摊</view>
+        <view class="split-mode-btn {{splitMode === 'custom' ? 'active' : ''}}" bindtap="setSplitCustom">自定义</view>
+      </view>
+      <!-- 均摊预览 -->
+      <view class="split-preview" wx:if="{{splitMode === 'equal'}}">
+        <text class="split-hint">每人 ¥{{splitPerPerson}}</text>
+      </view>
+      <!-- 自定义分摊 -->
+      <view class="split-items" wx:if="{{splitMode === 'custom'}}">
+        <view class="split-item" wx:for="{{splitItems}}" wx:key="memberId">
+          <text class="split-item-avatar">{{item.avatar}}</text>
+          <text class="split-item-name">{{item.name}}</text>
+          <input class="split-item-input" type="digit" placeholder="0"
+                 value="{{item.amountStr}}" bindinput="onSplitAmountInput"
+                 data-idx="{{index}}" />
+        </view>
+        <text class="split-remain" wx:if="{{splitRemainder !== 0}}">
+          {{splitRemainder > 0 ? '还差' : '多了'}} ¥{{(Math.abs(splitRemainder)/100).toFixed(2)}}
+        </text>
+      </view>
+    </view>
+  </view>
+
   <!-- 日期 + 账户行 -->
   <view class="options-row">
     <picker mode="date" bindchange="onDateChange">

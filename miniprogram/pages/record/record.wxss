@@ -81,7 +81,7 @@
 .option-input { font-size: 24rpx; color: #2D3436; width: 100%; }
 
 /* 人员选择 */
-.payer-section { margin-bottom: 16rpx; }
+.payer-section { margin-bottom: 12px; }
 .payer-scroll { white-space: nowrap; }
 .payer-item {
   display: inline-flex; flex-direction: column; align-items: center;
@@ -94,6 +94,36 @@
 .payer-avatar { font-size: 32rpx; margin-bottom: 2rpx; }
 .payer-name { font-size: 18rpx; color: #607D8B; }
 .payer-item.selected .payer-name { color: #1A73E8; font-weight: 600; }
+
+/* 分摊 */
+.split-section { margin-bottom: 12rpx; }
+.split-header { display: flex; justify-content: space-between; align-items: center; }
+.split-mode { font-size: 22rpx; color: #1A73E8; }
+.split-options { margin-top: 12rpx; }
+.split-mode-btns { display: flex; gap: 8rpx; margin-bottom: 12rpx; }
+.split-mode-btn {
+  flex: 1; text-align: center; padding: 10rpx; border-radius: 12rpx;
+  background: #F0F2F5; font-size: 24rpx; color: #607D8B;
+}
+.split-mode-btn.active { background: #1A73E8; color: #FFF; }
+.split-preview { text-align: center; padding: 12rpx; }
+.split-hint { font-size: 24rpx; color: #1A73E8; font-weight: 600; }
+.split-items { }
+.split-item {
+  display: flex; align-items: center; padding: 8rpx 0;
+  border-bottom: 1rpx solid #F0F2F5;
+}
+.split-item:last-child { border-bottom: none; }
+.split-item-avatar { font-size: 28rpx; margin-right: 8rpx; }
+.split-item-name { font-size: 24rpx; color: #2D3436; width: 60rpx; }
+.split-item-input {
+  flex: 1; font-size: 24rpx; text-align: right;
+  border: 2rpx solid #E3F2FD; border-radius: 12rpx;
+  padding: 8rpx 16rpx; background: #F5F6FA;
+}
+.split-remain {
+  font-size: 22rpx; color: #FF5252; text-align: center; display: block; margin-top: 8rpx;
+}
 
 /* 弹窗 */
 .modal-mask {

@@ -42,11 +42,14 @@ const StorageManager = {
     const record = {
       id: util.genId(),
       amount: bill.amount,         // 分
-      type: bill.type,             // 'income' | 'expense'
+      type: bill.type,             // 'income' | 'expense' | 'transfer'
       category: bill.category,     // 分类 key
       note: bill.note || '',
       account: bill.account || 'wechat',
       date: bill.date || Date.now(),
+      payer: bill.payer || 'self',
+      splits: bill.splits || null, // [{memberId, amount}] 分摊明细
+      targetAccount: bill.targetAccount || null, // 转账目标账户
       createdAt: Date.now()
     }
     bills.unshift(record)
@@ -317,7 +320,6 @@ const StorageManager = {
     bills.forEach(b => {
       const payerId = b.payer || 'self'
       if (!memberMap[payerId]) {
-        // 如果人员不在列表里（比如被删了），归到「未知」
         memberMap[payerId] = { id: payerId, name: '未知', avatar: '❓', totalExpense: 0, totalIncome: 0, billCount: 0, categories: {} }
       }
       const stat = memberMap[payerId]
@@ -331,7 +333,18 @@ const StorageManager = {
       }
     })
 
-    return Object.values(memberMap).filter(s => s.billCount > 0).sort((a, b) => b.totalExpense - a.totalExpense)
+    // 转换分类为排序列表，带百分比
+    const result = Object.values(memberMap).filter(s => s.billCount > 0).sort((a, b) => b.totalExpense - a.totalExpense)
+    result.forEach(stat => {
+      const maxCat = Math.max(...Object.values(stat.categories), 1)
+      stat.catList = Object.entries(stat.categories)
+        .map(([key, amount]) => {
+          const catInfo = categories.getCategoryBy(key, 'expense')
+          return { name: catInfo.name || key, amount, percent: Math.round(amount / maxCat * 100) }
+        })
+        .sort((a, b) => b.amount - a.amount)
+    })
+    return result
   },
 
   /**

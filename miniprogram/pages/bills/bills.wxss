@@ -55,5 +55,8 @@
   font-size: 22rpx; color: #90A4AE; margin-top: 4rpx;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.bill-payer {
+  font-size: 20rpx; color: #1A73E8; margin-top: 2rpx; opacity: 0.8;
+}
 .bill-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }

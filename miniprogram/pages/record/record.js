@@ -34,6 +34,12 @@ Page({
     selectedPayer: 'self',
     showAddMemberModal: false,
     newMemberName: '',
+    // 分摊
+    splitMode: 'equal',       // 'equal' | 'custom'
+    showSplitDetail: false,
+    splitItems: [],            // [{memberId, name, avatar, amount(分), amountStr}]
+    splitPerPerson: '0.00',
+    splitRemainder: 0,
     // 今日已记
     todayCount: 0,
     todayExpense: 0,
@@ -48,7 +54,9 @@ Page({
   onShow() {
     this.refreshLedgerInfo()
     this.loadTodayStats()
-    this.setData({ accounts: storage.getAccounts(), members: storage.getMembers() })
+    const members = storage.getMembers()
+    this.setData({ accounts: storage.getAccounts(), members })
+    this.initSplitItems(members)
   },
 
   refreshLedgerInfo() {
@@ -115,6 +123,7 @@ Page({
 
   onAmountInput(e) {
     this.setData({ amountStr: e.detail.value })
+    this.updateSplit()
   },
 
   // ========== 分类 ==========
@@ -189,7 +198,8 @@ Page({
       note: noteResult.value,
       account: this.data.selectedAccount,
       date: this.data.billDate || Date.now(),
-      payer: this.data.selectedPayer || 'self'
+      payer: this.data.selectedPayer || 'self',
+      splits: this.buildSplits()
     }
 
     const isInLedger = ledger.isInLedger()
@@ -238,12 +248,74 @@ Page({
 
   onNewMemberNameInput(e) { this.setData({ newMemberName: e.detail.value }) },
 
+  // ========== 分摊 ==========
+
+  initSplitItems(members) {
+    const items = members.map(m => ({
+      memberId: m.id, name: m.name, avatar: m.avatar, amount: 0, amountStr: ''
+    }))
+    this.setData({ splitItems: items })
+  },
+
+  toggleSplit() {
+    this.setData({ showSplitDetail: !this.data.showSplitDetail })
+  },
+
+  setSplitEqual() {
+    this.setData({ splitMode: 'equal' })
+    this.updateSplit()
+  },
+
+  setSplitCustom() {
+    this.setData({ splitMode: 'custom' })
+  },
+
+  updateSplit() {
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    const count = this.data.splitItems.length || 1
+    const perPerson = Math.floor(amountFen / count)
+    const perPersonStr = (perPerson / 100).toFixed(2)
+    this.setData({ splitPerPerson: perPersonStr })
+    if (this.data.splitMode === 'equal') {
+      // 自动分配
+      const items = this.data.splitItems.map((item, i) => ({
+        ...item, amount: perPerson, amountStr: perPersonStr
+      }))
+      const remainder = amountFen - perPerson * count
+      this.setData({ splitItems: items, splitRemainder: remainder })
+    }
+  },
+
+  onSplitAmountInput(e) {
+    const idx = e.currentTarget.dataset.idx
+    const val = e.detail.value
+    const items = [...this.data.splitItems]
+    items[idx].amountStr = val
+    items[idx].amount = util.yuanToFen(parseFloat(val) || 0)
+    const totalSplit = items.reduce((s, i) => s + i.amount, 0)
+    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    this.setData({ splitItems: items, splitRemainder: amountFen - totalSplit })
+  },
+
+  buildSplits() {
+    if (this.data.billType !== 'expense' || this.data.members.length <= 1) return null
+    if (this.data.splitMode === 'equal') return null  // 均摊由AA算法自动算
+    // 自定义分摊
+    return this.data.splitItems
+      .filter(i => i.amount > 0)
+      .map(i => ({ memberId: i.memberId, amount: i.amount }))
+  },
+
   confirmAddMember() {
     const name = this.data.newMemberName.trim()
     if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return }
     const members = storage.addMember(name)
     const newMember = members[members.length - 1]
-    this.setData({ members, selectedPayer: newMember.id, showAddMemberModal: false })
+    const splitItems = [...this.data.splitItems, {
+      memberId: newMember.id, name: newMember.name, avatar: newMember.avatar, amount: 0, amountStr: ''
+    }]
+    this.setData({ members, selectedPayer: newMember.id, showAddMemberModal: false, splitItems })
+    this.updateSplit()
     wx.showToast({ title: '已添加', icon: 'success' })
   },
 
