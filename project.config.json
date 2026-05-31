@@ -28,5 +28,8 @@
     }
   },
   "compileType": "miniprogram",
-  "condition": {}
+  "condition": {},
+  "appid": "touristappid",
+  "projectname": "记账助手",
+  "libVersion": "3.3.4"
 }
