@@ -170,30 +170,7 @@ Page({
 
   // ========== 日期 ==========
   pickDate() {
-    // 触发隐藏的 date picker
-    this.setData({ showDatePicker: true })
-    // 使用 wx 内置
-    const that = this
-    wx.showModal({ // fallback: 用简单的日期选择
-      title: '选择日期',
-      editable: true,
-      placeholderText: 'YYYY-MM-DD',
-      content: that.data.billDateStr,
-      success(res) {
-        if (res.confirm && res.content) {
-          const d = new Date(res.content)
-          if (!isNaN(d.getTime())) {
-            const today = new Date()
-            const isToday = d.toDateString() === today.toDateString()
-            that.setData({
-              billDate: d.getTime(),
-              billDateStr: res.content,
-              dateText: isToday ? '今天' : res.content
-            })
-          }
-        }
-      }
-    })
+    // 触发隐藏的 picker
   },
   onDateChange(e) {
     const val = e.detail.value
@@ -235,22 +212,32 @@ Page({
 
     let str = this.data.amountStr
 
-    // 00 保护：小数点后已有数字时不追加00，且总长度检查
+    // 00 保护
     if (val === '00') {
       if (str.includes('.') && str.split('.')[1].length > 0) return
-      if (str.length >= 9) return  // 00 后可能超 10 位
+      if (str.length >= 9) return
     }
 
     // 小数点保护
     if (val === '.' && str.includes('.')) return
 
-    // 小数位数保护（不包含 +- 运算符场景）
-    if (str.includes('.') && !['+', '-'].some(op => str.includes(op))) {
-      if (str.split('.')[1].length >= 2) return
+    // 运算符保护：不能连续，不能开头
+    if (val === '+' || val === '-') {
+      if (str.length === 0) return
+      const last = str[str.length - 1]
+      if (last === '+' || last === '-' || last === '.') return
+      if (str.length >= 12) return
+      str += val
+      this.setData({ amountStr: str })
+      return
     }
 
+    // 小数位数保护（取最后一个运算符之后的部分检查）
+    const lastSegment = str.split(/[+\-]/).pop()
+    if (lastSegment.includes('.') && lastSegment.split('.')[1].length >= 2) return
+
     // 总长度保护
-    if (str.length >= 10) return
+    if (str.length >= 12) return
 
     str += val
     this.setData({ amountStr: str })
@@ -258,14 +245,38 @@ Page({
   },
 
   afterAmountChange() {
-    this.updateAmountCNY()
+    // 如果有运算符，计算表达式结果
+    const str = this.data.amountStr
+    let computed = str
+    if (/[+\-]/.test(str.slice(1))) {
+      try {
+        // 安全计算：只允许数字和 +-.
+        const sanitized = str.replace(/[^0-9.+-]/g, '')
+        computed = Function('"use strict"; return (' + sanitized + ')')()
+        if (isNaN(computed) || !isFinite(computed)) computed = 0
+      } catch (e) { computed = 0 }
+    }
+    const amountFen = util.yuanToFen(parseFloat(computed) || 0)
+    const amountCNY = currencies.toCNY(amountFen, this.data.selectedCurrency, this.data.exchangeRate)
+    this.setData({ amountCNYText: (amountCNY / 100).toFixed(2), totalAmountFen: amountFen })
     if (this.data.splitMode === 'equal') this.calcEqualSplit()
   },
 
   // ========== 提交 ==========
   submitBill() {
-    const amountStr = this.data.amountStr
-    if (!amountStr || parseFloat(amountStr) <= 0) {
+    let amountStr = this.data.amountStr
+    if (!amountStr) { wx.showToast({ title: '请输入金额', icon: 'none' }); return }
+
+    // 如果有运算符，先计算
+    if (/[+\-]/.test(amountStr.slice(1))) {
+      try {
+        const sanitized = amountStr.replace(/[^0-9.+-]/g, '')
+        const computed = Function('"use strict"; return (' + sanitized + ')')()
+        if (!isNaN(computed) && isFinite(computed)) amountStr = String(computed)
+      } catch (e) {}
+    }
+
+    if (parseFloat(amountStr) <= 0) {
       wx.showToast({ title: '请输入金额', icon: 'none' }); return
     }
     if (!this.data.selectedCategory) {
@@ -303,6 +314,24 @@ Page({
       storage.updateAccountBalance(bill.account, delta)
     }
 
+    // 预算超支检查
+    if (bill.type === 'expense') {
+      const budget = storage.getBudget()
+      if (budget.enabled && budget.amount > 0) {
+        const now = new Date()
+        const monthStats = storage.getMonthStats(now.getFullYear(), now.getMonth() + 1)
+        const percent = Math.round(monthStats.totalExpense / budget.amount * 100)
+        if (percent >= budget.alertAt) {
+          wx.showModal({
+            title: '⚠️ 预算提醒',
+            content: `本月已支出 ¥${(monthStats.totalExpense / 100).toFixed(2)}，占预算的 ${percent}%（预算 ¥${(budget.amount / 100).toFixed(0)}）`,
+            showCancel: false,
+            confirmText: '知道了'
+          })
+        }
+      }
+    }
+
     this.setData({ amountStr: '', selectedCategory: '', note: '' })
     const sym = this.data.currencySymbol
     wx.showToast({ title: `${bill.type === 'income' ? '收入' : '支出'} ${sym}${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
@@ -310,8 +339,22 @@ Page({
 
   buildSplits() {
     if (this.data.billType !== 'expense' || this.data.members.length <= 1) return null
-    if (this.data.splitMode === 'no_split' || this.data.splitMode === 'equal') return null
+    if (this.data.splitMode === 'no_split') return null
     const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
+    if (amountFen <= 0) return null
+
+    // 均摊模式：计算每人份额
+    if (this.data.splitMode === 'equal') {
+      const count = this.data.splitItems.length || 1
+      const perPerson = Math.floor(amountFen / count)
+      const remainder = amountFen - perPerson * count
+      return this.data.splitItems.map((item, idx) => ({
+        memberId: item.memberId,
+        amount: perPerson + (idx < remainder ? 1 : 0)
+      }))
+    }
+
+    // 比例/自定义模式
     const ratioTotal = this.data.ratioTotal
     if (ratioTotal <= 0) return null
     return this.data.splitItems

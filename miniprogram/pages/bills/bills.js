@@ -19,7 +19,9 @@ Page({
     searching: false,
     // 账单列表（按日期分组）
     groupedBills: [],
-    hasBills: false
+    hasBills: false,
+    // 防抖定时器
+    _searchTimer: null
   },
 
   onLoad() {
@@ -38,14 +40,14 @@ Page({
     const { currentYear, currentMonth, filterType, searchKeyword } = this.data
     this.setData({ monthLabel: `${currentYear}年${currentMonth}月` })
 
-    let bills = storage.getBillsByMonth(currentYear, currentMonth)
+    // 一次取出全月数据
+    const allMonthBills = storage.getBillsByMonth(currentYear, currentMonth)
 
-    // 类型筛选
+    // 类型筛选 + 搜索
+    let bills = allMonthBills
     if (filterType !== 'all') {
       bills = bills.filter(b => b.type === filterType)
     }
-
-    // 搜索
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase()
       bills = bills.filter(b =>
@@ -54,12 +56,11 @@ Page({
       )
     }
 
-    // 统计
+    // 统计（基于全月数据）
     let monthIncome = 0, monthExpense = 0
-    const allMonthBills = storage.getBillsByMonth(currentYear, currentMonth)
     allMonthBills.forEach(b => {
-      if (b.type === 'income') monthIncome += b.amount
-      else monthExpense += b.amount
+      if (b.type === 'income') monthIncome += (b.amountCNY || b.amount)
+      else monthExpense += (b.amountCNY || b.amount)
     })
 
     // 按日期分组
@@ -133,13 +134,12 @@ Page({
     this.loadBills()
   },
 
-  // 搜索
+  // 搜索（防抖 300ms）
   onSearchInput(e) {
-    this.setData({
-      searchKeyword: e.detail.value.trim(),
-      searching: e.detail.value.trim().length > 0
-    })
-    this.loadBills()
+    const val = e.detail.value.trim()
+    this.setData({ searchKeyword: val, searching: val.length > 0 })
+    if (this._searchTimer) clearTimeout(this._searchTimer)
+    this._searchTimer = setTimeout(() => this.loadBills(), 300)
   },
 
   clearSearch() {
@@ -150,11 +150,18 @@ Page({
   // 删除账单
   deleteBill(e) {
     const billId = e.currentTarget.dataset.id
+    const bill = storage.getBills().find(b => b.id === billId)
+    if (!bill) return
     wx.showModal({
       title: '删除账单',
       content: '确定删除这条记录？删除后不可恢复。',
       success: (res) => {
         if (res.confirm) {
+          // 回退账户余额
+          const delta = bill.type === 'income'
+            ? -(bill.amountCNY || bill.amount)
+            : (bill.amountCNY || bill.amount)
+          storage.updateAccountBalance(bill.account, delta)
           storage.deleteBill(billId)
           this.loadBills()
           wx.showToast({ title: '已删除', icon: 'success' })

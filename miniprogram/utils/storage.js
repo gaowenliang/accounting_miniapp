@@ -453,6 +453,54 @@ const StorageManager = {
     }
   },
 
+  /**
+   * 分类支出排行
+   */
+  getCategoryRanking(year, month) {
+    const bills = this.getBillsByMonth(year, month)
+    const expenseBills = bills.filter(b => b.type === 'expense')
+    const totalExpense = expenseBills.reduce((s, b) => s + (b.amountCNY || b.amount), 0) || 1
+    const catMap = {}
+    expenseBills.forEach(b => {
+      if (!catMap[b.category]) catMap[b.category] = 0
+      catMap[b.category] += (b.amountCNY || b.amount)
+    })
+    return Object.entries(catMap)
+      .map(([key, amount]) => {
+        const catInfo = categories.getCategoryBy(key, 'expense')
+        return {
+          key,
+          name: catInfo.name || key,
+          icon: catInfo.icon || '📦',
+          color: catInfo.color || '#607D8B',
+          amount,
+          percent: Math.round(amount / totalExpense * 100)
+        }
+      })
+      .sort((a, b) => b.amount - a.amount)
+  },
+
+  /**
+   * 每日支出趋势
+   */
+  getDailyTrend(year, month) {
+    const bills = this.getBillsByMonth(year, month)
+    const expenseBills = bills.filter(b => b.type === 'expense')
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const dayMap = {}
+    for (let d = 1; d <= daysInMonth; d++) dayMap[d] = 0
+    expenseBills.forEach(b => {
+      const day = new Date(b.date).getDate()
+      dayMap[day] = (dayMap[day] || 0) + (b.amountCNY || b.amount)
+    })
+    const maxVal = Math.max(...Object.values(dayMap), 1)
+    return Object.entries(dayMap).map(([day, amount]) => ({
+      day: parseInt(day),
+      amount,
+      height: Math.round(amount / maxVal * 100)
+    }))
+  },
+
   // ========== 全局统计 ==========
 
   clearBills() {

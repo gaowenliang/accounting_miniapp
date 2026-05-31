@@ -103,21 +103,23 @@
       <text class="split-remain" wx:if="{{splitRemainder !== 0}}">
         {{splitRemainder > 0 ? '还差' : '多了'}} {{currencySymbol}}{{(Math.abs(splitRemainder)/100).toFixed(2)}}
       </text>
-      <text class="split-preview-text" wx:if="{{splitMode === 'ratio' && ratioTotal > 0}}">
-        <block wx:for="{{splitItems}}" wx:key="memberId">
-          {{item.name}} {{(item.amount / ratioTotal * 100).toFixed(1)}}% → {{currencySymbol}}{{(item.amount / ratioTotal * totalAmountFen / 100).toFixed(2)}}　
-        </block>
-      </text>
+      <view class="ratio-preview-list" wx:if="{{splitMode === 'ratio' && ratioTotal > 0}}">
+        <view class="ratio-preview-row" wx:for="{{splitItems}}" wx:key="memberId">
+          <text class="ratio-preview-name">{{item.name}}</text>
+          <text class="ratio-preview-pct">{{(item.amount / ratioTotal * 100).toFixed(1)}}%</text>
+          <text class="ratio-preview-amt">{{currencySymbol}}{{(item.amount / ratioTotal * totalAmountFen / 100).toFixed(2)}}</text>
+        </view>
+      </view>
     </view>
   </view>
 
   <!-- 自定义数字键盘 -->
   <view class="keyboard {{billType === 'expense' ? 'kb-expense' : 'kb-income'}}">
     <view class="kb-toolbar">
-      <view class="kb-toolbar-item" bindtap="pickDate">
+      <picker class="kb-toolbar-item" mode="date" value="{{billDateStr}}" bindchange="onDateChange">
         <text class="kb-toolbar-icon">📅</text>
         <text class="kb-toolbar-text">{{dateText}}</text>
-      </view>
+      </picker>
       <view class="kb-toolbar-item" bindtap="pickAccount">
         <text class="kb-toolbar-icon">💳</text>
         <text class="kb-toolbar-text">{{accountName}}</text>

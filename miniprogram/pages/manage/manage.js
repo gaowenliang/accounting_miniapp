@@ -5,6 +5,7 @@ const storage = require('../../utils/storage')
 const validator = require('../../utils/validator')
 const ledger = require('../../utils/ledger')
 const currencies = require('../../data/currencies')
+const categories = require('../../data/categories')
 
 Page({
   data: {

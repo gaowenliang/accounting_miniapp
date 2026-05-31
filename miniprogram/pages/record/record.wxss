@@ -103,6 +103,13 @@
 }
 .split-remain { font-size: 20rpx; color: #EF4444; text-align: center; display: block; margin-top: 4rpx; }
 
+/* 比率预览 */
+.ratio-preview-list { margin-top: 8rpx; }
+.ratio-preview-row { display: flex; align-items: center; padding: 4rpx 0; }
+.ratio-preview-name { font-size: 22rpx; color: #374151; width: 60rpx; }
+.ratio-preview-pct { font-size: 22rpx; color: #6B7280; flex: 1; }
+.ratio-preview-amt { font-size: 22rpx; font-weight: 600; color: #4F46E5; font-variant-numeric: tabular-nums; }
+
 /* ===== 键盘 ===== */
 .keyboard {
   margin-top: auto; background: #E5E7EB;

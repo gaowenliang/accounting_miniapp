@@ -107,18 +107,26 @@ Page({
 
   loadYearly() {
     const { currentYear } = this.data
+    // 一次拉全年数据，避免循环 12 次
+    const yearStart = util.monthStart(currentYear, 1)
+    const yearEnd = util.monthEnd(currentYear, 12)
+    const allBills = storage.getBills().filter(b => b.date >= yearStart && b.date <= yearEnd)
+
     let totalExpense = 0, totalIncome = 0
     const monthlyData = []
-
     for (let m = 1; m <= 12; m++) {
-      const stats = storage.getMonthStats(currentYear, m)
-      totalExpense += stats.totalExpense
-      totalIncome += stats.totalIncome
-      monthlyData.push({
-        month: m,
-        expense: stats.totalExpense,
-        income: stats.totalIncome
+      const ms = util.monthStart(currentYear, m)
+      const me = util.monthEnd(currentYear, m)
+      const monthBills = allBills.filter(b => b.date >= ms && b.date <= me)
+      let income = 0, expense = 0
+      monthBills.forEach(b => {
+        const amt = b.amountCNY || b.amount
+        if (b.type === 'income') income += amt
+        else expense += amt
       })
+      totalIncome += income
+      totalExpense += expense
+      monthlyData.push({ month: m, expense, income })
     }
 
     this.setData({
