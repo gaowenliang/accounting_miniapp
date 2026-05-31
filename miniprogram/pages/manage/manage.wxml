@@ -198,6 +198,14 @@
     </view>
   </view>
 
+  <!-- 分享功能 -->
+  <view class="share-section">
+    <button class="share-btn" open-type="share">
+      <text class="share-icon">📤</text>
+      <text class="share-text">分享给朋友</text>
+    </button>
+  </view>
+
   <!-- 其他 -->
   <view class="section">
     <view class="card">

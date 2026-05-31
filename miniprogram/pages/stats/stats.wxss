@@ -258,3 +258,19 @@
   padding: 12rpx 0 4rpx; font-size: 26rpx; font-weight: 600;
   color: #1F2937; border-top: 2rpx solid #E5E7EB;
 }
+
+/* 汇率折算表 */
+.rate-stat-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8rpx 0; font-size: 22rpx; color: #9CA3AF;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+.rate-stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10rpx 0; font-size: 24rpx; color: #374151;
+  border-bottom: 1rpx solid #F9FAFB;
+}
+.rs-cur { min-width: 140rpx; }
+.rs-rate { min-width: 140rpx; color: #6B7280; font-size: 22rpx; }
+.rs-amount { flex: 1; text-align: right; }
+.rs-cny { min-width: 160rpx; text-align: right; font-weight: 500; }

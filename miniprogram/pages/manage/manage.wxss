@@ -229,6 +229,21 @@
   font-weight: 700;
 }
 
+/* 分享 */
+.share-section {
+  padding: 20rpx;
+  margin-top: 20rpx;
+}
+.share-btn {
+  display: flex; align-items: center; justify-content: center; gap: 12rpx;
+  background: #4F46E5; color: #fff; border-radius: 12rpx;
+  padding: 20rpx; font-size: 28rpx; border: none;
+  width: 100%;
+}
+.share-btn::after { border: none; }
+.share-icon { font-size: 32rpx; }
+.share-text { font-size: 28rpx; }
+
 /* 账本概况卡片 */
 .ledger-overview-card {
   background: linear-gradient(135deg, #4F46E5, #7C3AED);

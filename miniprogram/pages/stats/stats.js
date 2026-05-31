@@ -142,7 +142,15 @@ Page({
 
     // 按子维度加载额外数据
     if (subMode === 'currency') {
-      updateData.currencyStats = storage.getCurrencyStats(currentYear, currentMonth)
+      const currencyStats = storage.getCurrencyStats(currentYear, currentMonth)
+      currencyStats.list.forEach(item => {
+        if (item.code === 'CNY') {
+          item.rateDisplay = ''
+        } else {
+          item.rateDisplay = '预设:' + item.rate
+        }
+      })
+      updateData.currencyStats = currencyStats
     } else if (subMode === 'account') {
       updateData.accountStats = storage.getAccountStats(currentYear, currentMonth)
     }
@@ -251,6 +259,15 @@ Page({
     const participants = this.data.aaParticipants.map(p => ({ ...p, selected: allSelected }))
     this.setData({ aaParticipants: participants, aaAllSelected: allSelected })
     this.recalcAA()
+  },
+
+  onShareAppMessage() {
+    const { currentYear, currentMonth, mode } = this.data
+    const modeNames = { monthly: '月度', yearly: '年度', person: '按人', aa: 'AA结算' }
+    return {
+      title: `记账统计 - ${currentYear}年${currentMonth}月${modeNames[mode] || ''}分析`,
+      path: '/pages/stats/stats'
+    }
   },
 
   recalcAA() {

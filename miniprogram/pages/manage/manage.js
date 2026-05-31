@@ -579,6 +579,17 @@ Page({
     wx.showToast({ title: '数据已清除', icon: 'success' })
   },
 
+  onShareAppMessage() {
+    const bills = storage.getBills()
+    const totalExpense = bills.filter(b => b.type === 'expense')
+      .reduce((s, b) => s + (b.amountCNY || b.amount), 0)
+    return {
+      title: `记账本 - ${Math.round(totalExpense/100)}笔支出 ¥${(totalExpense/100).toFixed(2)}`,
+      path: '/pages/record/record',
+      imageUrl: '' // 使用默认截图
+    }
+  },
+
   // ===== 备份/恢复 =====
   backupData() {
     wx.showLoading({ title: '备份中...' })

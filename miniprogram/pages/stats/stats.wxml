@@ -1,6 +1,11 @@
 <!-- pages/stats/stats.wxml — 统计分析 -->
 <view class="container">
 
+  <!-- 分享浮动按钮 -->
+  <button class="share-float" open-type="share" style="position:fixed;right:20rpx;bottom:140rpx;z-index:99;background:#4F46E5;color:#fff;border-radius:24rpx;padding:12rpx 24rpx;font-size:24rpx;border:none;display:flex;align-items:center;gap:6rpx;">
+    📤 分享
+  </button>
+
   <!-- 模式切换 -->
   <view class="mode-switch">
     <view class="mode-btn {{mode === 'monthly' ? 'active' : ''}}" bindtap="switchMode" data-mode="monthly">月度</view>
@@ -145,6 +150,23 @@
             <view class="legend-dot" style="background:{{item.code==='CNY'?'#00C4B8':item.code==='USD'?'#8B5CF6':item.code==='EUR'?'#3B82F6':'#FFAD60'}}"></view>
             <text class="legend-text">{{item.name}} ({{item.code}})</text>
           </view>
+        </view>
+      </view>
+
+      <!-- 汇率折算表 -->
+      <view class="card" wx:if="{{currencyStats.list.length > 1}}">
+        <text class="section-title-inline">按币种分汇率统计</text>
+        <view class="rate-stat-header">
+          <text class="rs-cur">币种</text>
+          <text class="rs-rate">汇率</text>
+          <text class="rs-amount">金额</text>
+          <text class="rs-cny">折合人民币</text>
+        </view>
+        <view class="rate-stat-row" wx:for="{{currencyStats.list}}" wx:key="code">
+          <text class="rs-cur">{{item.flag}} {{item.code}}</text>
+          <text class="rs-rate">{{item.rateDisplay || '-'}}</text>
+          <text class="rs-amount">{{item.symbol}}{{(item.amount/100).toFixed(2)}}</text>
+          <text class="rs-cny">¥{{(item.amountCNY/100).toFixed(2)}}</text>
         </view>
       </view>
     </block>
