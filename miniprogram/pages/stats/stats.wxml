@@ -49,20 +49,53 @@
 
     <!-- 分类维度 -->
     <block wx:if="{{subMode === 'category'}}">
-    <view class="section-title">支出排行</view>
-    <view class="card">
-      <view class="rank-item" wx:for="{{categoryRanking}}" wx:key="key">
-        <view class="rank-left">
-          <text class="rank-icon">{{item.icon}}</text>
-          <text class="rank-name">{{item.name}}</text>
+    <!-- 图表切换 -->
+    <view class="chart-toggle">
+      <text class="chart-toggle-item {{chartType === 'donut' ? 'active' : ''}}" bindtap="switchChart" data-type="donut">占比图</text>
+      <text class="chart-toggle-divider">|</text>
+      <text class="chart-toggle-item {{chartType === 'list' ? 'active' : ''}}" bindtap="switchChart" data-type="list">列表</text>
+    </view>
+
+    <!-- 占比图模式 -->
+    <view class="card" wx:if="{{chartType === 'donut'}}">
+      <text class="section-title-inline">折合人民币金额</text>
+      <!-- 横向占比条 -->
+      <view class="donut-bar-wrap">
+        <view class="donut-bar-segment" wx:for="{{categoryRanking}}" wx:key="name"
+              style="width:{{item.percent}}%;background:{{item.color}}">
         </view>
-        <view class="rank-center">
-          <view class="rank-bar" style="width:{{item.percent}}%;background:{{item.color}}"></view>
+      </view>
+      <!-- 图例 -->
+      <view class="donut-legend">
+        <view class="legend-item" wx:for="{{categoryRanking}}" wx:key="name">
+          <view class="legend-dot" style="background:{{item.color}}"></view>
+          <text class="legend-text">{{item.icon}} {{item.name}} {{item.percent}}%</text>
         </view>
-        <view class="rank-right">
-          <text class="rank-amount">¥{{(item.amount/100).toFixed(0)}}</text>
-          <text class="rank-percent">{{item.percent}}%</text>
+      </view>
+    </view>
+
+    <!-- 列表模式 -->
+    <view class="card" wx:if="{{chartType === 'list'}}">
+      <!-- 表头 -->
+      <view class="cat-rank-header">
+        <text>分类</text><text>笔数</text><text>金额(¥)</text><text>占比</text>
+      </view>
+      <!-- 数据行 -->
+      <view class="cat-rank-row" wx:for="{{categoryRanking}}" wx:key="name">
+        <view class="cat-rank-name">
+          <view class="cat-rank-dot" style="background:{{item.color}}"></view>
+          <text>{{item.icon}} {{item.name}}</text>
         </view>
+        <text>{{item.count || 0}}笔</text>
+        <text>¥{{item.amountStr || '0.00'}}</text>
+        <text>{{item.percent}}%</text>
+      </view>
+      <!-- 合计行 -->
+      <view class="cat-rank-total" wx:if="{{categoryRanking.length > 0}}">
+        <text>合计</text>
+        <text></text>
+        <text>¥{{(categoryTotal/100).toFixed(2)}}</text>
+        <text>100%</text>
       </view>
       <view class="empty-hint" wx:if="{{categoryRanking.length === 0}}">暂无数据</view>
     </view>

@@ -31,6 +31,9 @@ Page({
     subMode: 'category',
     currencyStats: { list: [], totalCNY: 0 },
     accountStats: { list: [], totalCNY: 0 },
+    // 分类排行图表
+    chartType: 'donut',  // donut / list
+    categoryTotal: 0,
   },
 
   onLoad() {
@@ -65,6 +68,10 @@ Page({
   switchSubMode(e) {
     this.setData({ subMode: e.currentTarget.dataset.mode })
     this.loadMonthly()
+  },
+
+  switchChart(e) {
+    this.setData({ chartType: e.currentTarget.dataset.type })
   },
 
   // ========== 月份/年份导航 ==========
@@ -102,7 +109,26 @@ Page({
     const stats = storage.getMonthStats(currentYear, currentMonth)
 
     // 基础数据（分类维度始终加载）
+    const CHART_COLORS = ['#00C4B8', '#8B5CF6', '#3B82F6', '#FFAD60', '#EF4444', '#6366F1', '#F59E0B', '#10B981', '#EC4899', '#6B7280']
     const ranking = storage.getCategoryRanking(currentYear, currentMonth)
+
+    // 统计每个分类的笔数
+    const bills = storage.getBillsByMonth(currentYear, currentMonth)
+    const expenseBills = bills.filter(b => b.type === 'expense')
+    const catCountMap = {}
+    expenseBills.forEach(b => {
+      if (!catCountMap[b.category]) catCountMap[b.category] = 0
+      catCountMap[b.category]++
+    })
+
+    ranking.forEach((item, i) => {
+      item.color = CHART_COLORS[i % CHART_COLORS.length]
+      item.amountStr = (item.amount / 100).toFixed(2)
+      item.count = catCountMap[item.key] || 0
+    })
+
+    const categoryTotal = ranking.reduce((s, r) => s + (r.amount || 0), 0)
+
     const trend = storage.getDailyTrend(currentYear, currentMonth)
 
     const updateData = {
@@ -110,6 +136,7 @@ Page({
       monthIncome: stats.totalIncome,
       monthBalance: stats.totalIncome - stats.totalExpense,
       categoryRanking: ranking,
+      categoryTotal,
       dailyTrend: trend
     }
 

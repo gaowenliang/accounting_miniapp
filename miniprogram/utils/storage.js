@@ -596,6 +596,20 @@ const StorageManager = {
     return { list, totalCNY }
   },
 
+  // ========== 成员分组 ==========
+
+  getMemberGroups() {
+    try {
+      return wx.getStorageSync('memberGroups') || []
+    } catch (e) { return [] }
+  },
+
+  saveMemberGroups(groups) {
+    try {
+      wx.setStorageSync('memberGroups', groups)
+    } catch (e) { console.error('saveMemberGroups error', e) }
+  },
+
   // ========== 全局统计 ==========
 
   clearBills() {

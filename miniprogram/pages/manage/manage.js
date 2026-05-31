@@ -50,7 +50,14 @@ Page({
     deletedMembers: [],
     historySelected: [],
     // 账本概览
-    overview: { memberCount: 0, currencies: [], totalExpenseCNY: 0, expenseByCurrency: [], totalIncomeCNY: 0 }
+    overview: { memberCount: 0, currencies: [], totalExpenseCNY: 0, expenseByCurrency: [], totalIncomeCNY: 0 },
+    // 分组
+    showGroupManager: false,
+    memberGroups: [],
+    newGroupName: '',
+    editingGroupId: null,
+    showAssignGroup: false,
+    assigningMemberId: null
   },
 
   onShow() {
@@ -114,6 +121,14 @@ Page({
         expenseByCurrency: expenseList
       }
     })
+
+    // 加载分组信息，给成员附加分组标签
+    const memberGroups = storage.getMemberGroups()
+    const membersWithGroups = this.data.members.map(m => {
+      const groups = memberGroups.filter(g => g.memberIds.includes(m.id)).map(g => g.name)
+      return { ...m, groups }
+    })
+    this.setData({ members: membersWithGroups, memberGroups })
   },
 
   // ========== 账本切换 ==========
@@ -404,6 +419,79 @@ Page({
     storage.saveDeletedMembers(remaining)
     this.setData({ showHistoryImport: false, members, historySelected: [] })
     wx.showToast({ title: `已导入${added}人`, icon: 'success' })
+  },
+
+  // ========== 成员分组 ==========
+
+  openGroupManager() {
+    this.setData({
+      showGroupManager: true,
+      memberGroups: storage.getMemberGroups()
+    })
+  },
+
+  closeGroupManager() {
+    this.setData({ showGroupManager: false })
+  },
+
+  onGroupNameInput(e) {
+    this.setData({ newGroupName: e.detail.value })
+  },
+
+  createGroup() {
+    const name = this.data.newGroupName.trim()
+    if (!name) {
+      wx.showToast({ title: '请输入分组名', icon: 'none' }); return
+    }
+    const groups = storage.getMemberGroups()
+    if (groups.find(g => g.name === name)) {
+      wx.showToast({ title: '分组已存在', icon: 'none' }); return
+    }
+    groups.push({
+      id: 'group_' + Date.now(),
+      name,
+      memberIds: [],
+      createdAt: Date.now()
+    })
+    storage.saveMemberGroups(groups)
+    this.setData({ memberGroups: groups, newGroupName: '' })
+    wx.showToast({ title: '分组已创建', icon: 'success' })
+  },
+
+  deleteGroup(e) {
+    const id = e.currentTarget.dataset.id
+    const groups = storage.getMemberGroups().filter(g => g.id !== id)
+    storage.saveMemberGroups(groups)
+    this.setData({ memberGroups: groups })
+  },
+
+  openAssignGroup(e) {
+    const memberId = e.currentTarget.dataset.id
+    this.setData({
+      showAssignGroup: true,
+      assigningMemberId: memberId,
+      memberGroups: storage.getMemberGroups()
+    })
+  },
+
+  closeAssignGroup() {
+    this.setData({ showAssignGroup: false })
+  },
+
+  toggleMemberGroup(e) {
+    const groupId = e.currentTarget.dataset.id
+    const memberId = this.data.assigningMemberId
+    const groups = storage.getMemberGroups()
+    const group = groups.find(g => g.id === groupId)
+    if (!group) return
+    const idx = group.memberIds.indexOf(memberId)
+    if (idx >= 0) {
+      group.memberIds.splice(idx, 1)
+    } else {
+      group.memberIds.push(memberId)
+    }
+    storage.saveMemberGroups(groups)
+    this.setData({ memberGroups: groups })
   },
 
   // ========== 导出 ==========

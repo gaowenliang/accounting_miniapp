@@ -152,6 +152,7 @@
     <view class="section-header">
       <text class="section-title">👥 人员</text>
       <view class="header-actions">
+        <text class="action-btn" bindtap="openGroupManager">分组管理</text>
         <text class="action-btn" bindtap="openHistoryImport">历史导入</text>
         <text class="action-btn" bindtap="openBatchAdd">批量添加</text>
         <text class="action-btn primary" bindtap="showAddMemberModal">+ 添加</text>
@@ -160,10 +161,16 @@
     <view class="card">
       <view class="member-row" wx:for="{{members}}" wx:key="id">
         <text class="member-avatar">{{item.avatar}}</text>
-        <text class="member-name">{{item.name}}</text>
+        <view class="member-info">
+          <text class="member-name">{{item.name}}</text>
+          <view class="member-groups" wx:if="{{item.groups && item.groups.length > 0}}">
+            <text class="group-tag" wx:for="{{item.groups}}" wx:for-item="gname" wx:key="*this">{{gname}}</text>
+          </view>
+        </view>
         <text class="member-default" wx:if="{{item.isDefault}}">默认</text>
         <view class="member-actions" wx:if="{{!item.isDefault}}">
-          <text class="member-remove" bindtap="removeMember" data-id="{{item.id}}">删除</text>
+          <text class="member-action-btn" bindtap="openAssignGroup" data-id="{{item.id}}">分组</text>
+          <text class="member-action-btn delete" bindtap="removeMember" data-id="{{item.id}}">删除</text>
         </view>
       </view>
     </view>
@@ -340,6 +347,59 @@
       <view class="modal-footer">
         <view class="btn-cancel" bindtap="closeHistoryImport">取消</view>
         <view class="btn-primary" bindtap="confirmHistoryImport">导入({{historySelected.length}})</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分组管理弹窗 -->
+  <view class="modal-mask" wx:if="{{showGroupManager}}" bindtap="closeGroupManager">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">分组管理</view>
+      <view class="modal-body">
+        <!-- 创建分组 -->
+        <view class="group-create-bar">
+          <input class="group-input" placeholder="输入分组名" value="{{newGroupName}}" bindinput="onGroupNameInput" bindconfirm="createGroup" />
+          <view class="group-create-btn" bindtap="createGroup">创建</view>
+        </view>
+        <!-- 分组列表 -->
+        <view class="group-list" wx:if="{{memberGroups.length > 0}}">
+          <view class="group-item" wx:for="{{memberGroups}}" wx:key="id">
+            <view class="group-info">
+              <text class="group-name">{{item.name}}</text>
+              <text class="group-count">{{item.memberIds.length}}人</text>
+            </view>
+            <text class="group-del" bindtap="deleteGroup" data-id="{{item.id}}">删除</text>
+          </view>
+        </view>
+        <view class="empty-tip" wx:else>
+          <text>暂无分组，创建一个吧</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-primary" bindtap="closeGroupManager">关闭</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分配分组弹窗 -->
+  <view class="modal-mask" wx:if="{{showAssignGroup}}" bindtap="closeAssignGroup">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">分配到分组</view>
+      <view class="modal-body">
+        <view class="group-assign-list" wx:if="{{memberGroups.length > 0}}">
+          <view class="group-assign-item" wx:for="{{memberGroups}}" wx:key="id" bindtap="toggleMemberGroup" data-id="{{item.id}}">
+            <view class="group-assign-check {{item.memberIds.indexOf(assigningMemberId) >= 0 ? 'checked' : ''}}">
+              {{item.memberIds.indexOf(assigningMemberId) >= 0 ? '✓' : ''}}
+            </view>
+            <text>{{item.name}}</text>
+          </view>
+        </view>
+        <view class="empty-tip" wx:else>
+          <text>请先创建分组</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-primary" bindtap="closeAssignGroup">完成</view>
       </view>
     </view>
   </view>

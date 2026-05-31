@@ -72,10 +72,56 @@
 }
 .member-row:last-child { border-bottom: none; }
 .member-avatar { font-size: 28rpx; margin-right: 10rpx; }
-.member-name { font-size: 26rpx; color: #1F2937; flex: 1; }
+.member-info { flex: 1; display: flex; flex-direction: column; }
+.member-name { font-size: 26rpx; color: #1F2937; }
 .member-default { font-size: 20rpx; color: #4F46E5; background: #EEF2FF; padding: 2rpx 12rpx; border-radius: 8rpx; }
 .member-actions { display: flex; gap: 12rpx; }
+.member-action-btn { font-size: 22rpx; color: #6B7280; padding: 4rpx 12rpx; }
+.member-action-btn.delete { color: #EF4444; }
 .member-remove { font-size: 22rpx; color: #EF4444; }
+
+/* 分组标签 */
+.member-groups { display: flex; gap: 6rpx; margin-top: 4rpx; }
+.group-tag {
+  font-size: 18rpx; color: #4F46E5; background: #EEF2FF;
+  padding: 2rpx 10rpx; border-radius: 6rpx;
+}
+
+/* 分组管理弹窗 */
+.group-create-bar { display: flex; gap: 12rpx; margin-bottom: 16rpx; }
+.group-input {
+  flex: 1; background: #F3F4F6; border-radius: 8rpx;
+  padding: 12rpx 16rpx; font-size: 28rpx;
+}
+.group-create-btn {
+  background: #4F46E5; color: #fff; padding: 12rpx 24rpx;
+  border-radius: 8rpx; font-size: 28rpx; text-align: center;
+  display: flex; align-items: center;
+}
+.group-list { margin-top: 12rpx; }
+.group-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12rpx 0; border-bottom: 1rpx solid #F3F4F6;
+}
+.group-info { display: flex; gap: 12rpx; align-items: center; }
+.group-name { font-size: 28rpx; color: #1F2937; }
+.group-count { font-size: 22rpx; color: #9CA3AF; }
+.group-del { font-size: 24rpx; color: #EF4444; }
+
+.group-assign-list { margin: 16rpx 0; }
+.group-assign-item {
+  display: flex; align-items: center; gap: 12rpx;
+  padding: 16rpx 0; border-bottom: 1rpx solid #F3F4F6;
+}
+.group-assign-check {
+  width: 36rpx; height: 36rpx; border-radius: 8rpx;
+  border: 2rpx solid #D1D5DB; display: flex; align-items: center;
+  justify-content: center; font-size: 20rpx; color: #fff;
+}
+.group-assign-check.checked {
+  background: #4F46E5; border-color: #4F46E5;
+}
+.empty-tip { text-align: center; padding: 32rpx; color: #9CA3AF; font-size: 26rpx; }
 
 /* 设置 */
 .setting-row {
