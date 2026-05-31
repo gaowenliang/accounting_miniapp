@@ -334,6 +334,100 @@ Page({
     wx.showToast({ title: '数据已清除', icon: 'success' })
   },
 
+  // ===== 备份/恢复 =====
+  backupData() {
+    wx.showLoading({ title: '备份中...' })
+    try {
+      const backup = {
+        version: 2,
+        exportedAt: Date.now(),
+        bills: storage.getBills(),
+        accounts: storage.getAccounts(),
+        members: storage.getMembers(),
+        budget: storage.getBudget(),
+        settings: storage.getSettings(),
+        ledgerList: ledger.getLedgerList()
+      }
+      wx.hideLoading()
+
+      wx.showActionSheet({
+        itemList: ['复制到剪贴板', '保存为文件'],
+        success: (res) => {
+          const json = JSON.stringify(backup)
+          if (res.tapIndex === 0) {
+            wx.setClipboardData({
+              data: json,
+              success: () => wx.showToast({ title: '备份已复制', icon: 'success' })
+            })
+          } else {
+            const fs = wx.getFileSystemManager()
+            const fileName = `记账备份_${util.formatDate(Date.now())}.json`
+            const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`
+            fs.writeFile({
+              filePath,
+              data: json,
+              encoding: 'utf8',
+              success: () => {
+                wx.shareFileMessage({
+                  filePath,
+                  fileName,
+                  fail: () => {
+                    wx.openDocument({ filePath, showMenu: true })
+                  }
+                })
+              },
+              fail: () => wx.showToast({ title: '保存失败', icon: 'none' })
+            })
+          }
+        }
+      })
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: '备份失败', icon: 'none' })
+    }
+  },
+
+  restoreData() {
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      extension: ['json'],
+      success: (res) => {
+        const filePath = res.tempFiles[0].path
+        try {
+          const fs = wx.getFileSystemManager()
+          const content = fs.readFileSync(filePath, 'utf8')
+          const data = JSON.parse(content)
+
+          // 校验格式
+          if (!data.version || !data.bills) {
+            wx.showToast({ title: '文件格式不对', icon: 'none' }); return
+          }
+
+          wx.showModal({
+            title: '⚠️ 恢复数据',
+            content: `将覆盖当前数据（${data.bills.length}条记录）。确定恢复？`,
+            success: (modalRes) => {
+              if (!modalRes.confirm) return
+              // 恢复数据
+              if (data.bills) storage.saveBills(data.bills)
+              if (data.accounts) storage.saveAccounts(data.accounts)
+              if (data.members) storage.saveMembers(data.members)
+              if (data.budget) storage.saveBudget(data.budget)
+              if (data.settings) storage.saveSettings(data.settings)
+              if (data.ledgerList) ledger.saveLedgerList(data.ledgerList)
+
+              this.loadData()
+              wx.showToast({ title: '恢复成功', icon: 'success' })
+            }
+          })
+        } catch (e) {
+          wx.showToast({ title: '文件解析失败', icon: 'none' })
+        }
+      }
+    })
+  },
+
   // ===== 币种排序 =====
   moveCurrencyUp(e) {
     const idx = e.currentTarget.dataset.idx

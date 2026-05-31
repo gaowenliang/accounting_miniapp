@@ -151,8 +151,22 @@ const LedgerManager = {
       this.switchLedger(list[0].id)
     }
 
-    // 清缓存
+    // 清缓存（bills + members + 所有可能的 key）
+    const types = ['bills', 'members', 'accounts']
+    types.forEach(t => {
+      try { wx.removeStorageSync(this._cacheKey(ledgerId, t)) } catch (e) {}
+    })
     try { wx.removeStorageSync(this.KEYS.LEDGER_CACHE + ledgerId) } catch (e) {}
+
+    // 共享账本：云端清理
+    if (target && target.type === 'shared' && wx.cloud) {
+      try {
+        wx.cloud.callFunction({
+          name: 'billData',
+          data: { action: 'leaveLedger', ledgerId }
+        })
+      } catch (e) {}
+    }
 
     return { success: true }
   },

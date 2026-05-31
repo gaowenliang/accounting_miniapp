@@ -1,8 +1,43 @@
-<!-- pages/ledger-members/ledger-members.wxml -->
+<!-- pages/ledger-members/ledger-members.wxml — 共享账本成员管理 -->
 <view class="container">
-  <view class="empty-state">
-    <text class="emoji">👥</text>
-    <text class="title">成员管理</text>
-    <text class="desc">共享账本成员功能开发中</text>
+
+  <!-- 标题 -->
+  <view class="header">
+    <text class="header-title">{{ledgerName}}</text>
+    <text class="header-sub">成员管理</text>
   </view>
+
+  <!-- 成员列表 -->
+  <view class="card" wx:if="{{!loading}}">
+    <view class="member-item" wx:for="{{members}}" wx:key="openid">
+      <view class="member-left">
+        <view class="member-avatar-wrap">
+          <text class="member-avatar">{{item.avatar || '😊'}}</text>
+        </view>
+        <view class="member-info">
+          <text class="member-name">{{item.name || item.nickName || '未知'}}</text>
+          <text class="member-role" wx:if="{{item.role === 'owner'}}">创建者</text>
+          <text class="member-joined" wx:else>{{item.joinedAt ? '加入于 ' + item.joinedAt : '成员'}}</text>
+        </view>
+      </view>
+      <view class="member-actions" wx:if="{{item.role !== 'owner'}}">
+        <text class="member-remove-btn" catchtap="removeMember" data-id="{{item.openid || item._openid}}">移除</text>
+      </view>
+    </view>
+
+    <view class="empty-hint" wx:if="{{members.length === 0}}">
+      暂无成员
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-actions">
+    <view class="leave-btn" bindtap="leaveLedger">退出账本</view>
+  </view>
+
 </view>

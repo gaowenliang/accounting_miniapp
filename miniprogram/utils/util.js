@@ -95,7 +95,8 @@ function monthEnd(year, month) {
 let _idCounter = 0
 function genId() {
   _idCounter = (_idCounter + 1) % 1000000
-  return 'b_' + Date.now() + '_' + _idCounter + '_' + Math.random().toString(36).substr(2, 4)
+  const rand = Math.floor(Math.random() * 0xFFFF).toString(36)
+  return 'b_' + Date.now().toString(36) + '_' + _idCounter.toString(36) + '_' + rand
 }
 
 /**

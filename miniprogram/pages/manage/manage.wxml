@@ -169,6 +169,20 @@
         </view>
         <text class="setting-arrow">›</text>
       </view>
+      <view class="setting-row" bindtap="backupData">
+        <view class="setting-left">
+          <text>💾</text>
+          <text class="setting-label">备份数据</text>
+        </view>
+        <text class="setting-arrow">›</text>
+      </view>
+      <view class="setting-row" bindtap="restoreData">
+        <view class="setting-left">
+          <text>📥</text>
+          <text class="setting-label">恢复数据</text>
+        </view>
+        <text class="setting-arrow">›</text>
+      </view>
       <view class="setting-row" bindtap="showClearConfirm">
         <view class="setting-left">
           <text>🗑️</text>

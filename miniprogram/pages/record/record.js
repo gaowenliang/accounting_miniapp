@@ -19,6 +19,7 @@ Page({
     currencySymbol: '¥',
     exchangeRate: 1,
     amountCNYText: '0.00',
+    rateDisplay: '',
     // 分类
     categoryList: [],
     selectedCategory: '',
@@ -102,18 +103,11 @@ Page({
     this.setData({
       selectedCurrency: code,
       currencySymbol: info.symbol,
-      exchangeRate: info.rate
+      exchangeRate: info.rate,
+      rateDisplay: currencies.getRateDisplay(code)
     })
-    this.updateAmountCNY()
-    if (this.data.splitMode === 'equal') this.calcEqualSplit()
+    this.afterAmountChange()
   },
-
-  updateAmountCNY() {
-    const amountFen = util.yuanToFen(parseFloat(this.data.amountStr) || 0)
-    const amountCNY = currencies.toCNY(amountFen, this.data.selectedCurrency, this.data.exchangeRate)
-    this.setData({ amountCNYText: (amountCNY / 100).toFixed(2), totalAmountFen: amountCNY })
-  },
-
   // ========== 分类 ==========
   selectCategory(e) {
     this.setData({ selectedCategory: e.currentTarget.dataset.key })
@@ -251,9 +245,8 @@ Page({
     let computed = str
     if (/[+\-]/.test(str.slice(1))) {
       try {
-        // 安全计算：只允许数字和 +-.
-        const sanitized = str.replace(/[^0-9.+-]/g, '')
-        computed = Function('"use strict"; return (' + sanitized + ')')()
+        // 安全计算：逐步解析加法表达式
+        computed = this._safeEval(str)
         if (isNaN(computed) || !isFinite(computed)) computed = 0
       } catch (e) { computed = 0 }
     }
@@ -271,8 +264,7 @@ Page({
     // 如果有运算符，先计算
     if (/[+\-]/.test(amountStr.slice(1))) {
       try {
-        const sanitized = amountStr.replace(/[^0-9.+-]/g, '')
-        const computed = Function('"use strict"; return (' + sanitized + ')')()
+        const computed = this._safeEval(amountStr)
         if (!isNaN(computed) && isFinite(computed)) amountStr = String(computed)
       } catch (e) {}
     }
@@ -339,6 +331,26 @@ Page({
     this.setData({ amountStr: '', selectedCategory: '', note: '' })
     const sym = this.data.currencySymbol
     wx.showToast({ title: `${bill.type === 'income' ? '收入' : '支出'} ${sym}${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
+  },
+
+  /**
+   * 安全计算加法表达式（替代 Function/eval）
+   * 支持格式: "3.5+1.2-0.7" 或 "100"
+   */
+  _safeEval(expr) {
+    try {
+      // 只保留数字、小数点、+-
+      const sanitized = expr.replace(/[^0-9.+-]/g, '')
+      // 用正则分割成 [数字, 运算符, 数字, ...]
+      const tokens = sanitized.match(/[+-]?[\d.]+/g)
+      if (!tokens) return 0
+      let result = 0
+      for (const t of tokens) {
+        const n = parseFloat(t)
+        if (!isNaN(n) && isFinite(n)) result += n
+      }
+      return result
+    } catch (e) { return 0 }
   },
 
   buildSplits() {

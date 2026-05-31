@@ -1,1 +1,44 @@
 /* pages/ledger-members/ledger-members.wxss */
+.container { padding: 0 28rpx; background: #F7F7FA; min-height: 100vh; }
+
+.header { padding: 32rpx 0 16rpx; }
+.header-title { font-size: 34rpx; font-weight: 700; color: #1F2937; display: block; }
+.header-sub { font-size: 24rpx; color: #9CA3AF; margin-top: 4rpx; display: block; }
+
+.card {
+  background: #FFF; border-radius: 20rpx; padding: 8rpx 24rpx;
+  box-shadow: 0 2rpx 16rpx rgba(79,70,229,0.05);
+}
+
+.member-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18rpx 0; border-bottom: 1rpx solid #F3F4F6;
+}
+.member-item:last-child { border-bottom: none; }
+
+.member-left { display: flex; align-items: center; flex: 1; min-width: 0; }
+.member-avatar-wrap {
+  width: 64rpx; height: 64rpx; border-radius: 50%;
+  background: #EEF2FF; display: flex; align-items: center; justify-content: center;
+  margin-right: 16rpx; flex-shrink: 0;
+}
+.member-avatar { font-size: 32rpx; }
+
+.member-info { display: flex; flex-direction: column; min-width: 0; }
+.member-name { font-size: 28rpx; font-weight: 600; color: #1F2937; }
+.member-role { font-size: 20rpx; color: #4F46E5; background: #EEF2FF; padding: 2rpx 12rpx; border-radius: 8rpx; margin-top: 4rpx; display: inline-block; }
+.member-joined { font-size: 20rpx; color: #9CA3AF; margin-top: 4rpx; }
+
+.member-actions { display: flex; gap: 12rpx; }
+.member-remove-btn { font-size: 24rpx; color: #EF4444; padding: 8rpx 16rpx; }
+
+.empty-hint { text-align: center; padding: 40rpx; font-size: 26rpx; color: #D1D5DB; }
+
+.loading { text-align: center; padding: 60rpx; font-size: 26rpx; color: #9CA3AF; }
+
+.bottom-actions { padding: 40rpx 0 80rpx; }
+.leave-btn {
+  text-align: center; padding: 24rpx; border-radius: 44rpx;
+  font-size: 28rpx; color: #EF4444; font-weight: 600;
+  border: 2rpx solid #FCA5A5; background: #FEF2F2;
+}

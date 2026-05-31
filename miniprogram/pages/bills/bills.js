@@ -57,9 +57,12 @@ Page({
     }
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase()
+      const kwNum = parseFloat(searchKeyword)  // 支持按金额搜索
       bills = bills.filter(b =>
         (b.note && b.note.toLowerCase().includes(kw)) ||
-        b.category.includes(kw)
+        b.category.includes(kw) ||
+        (kwNum > 0 && Math.abs((b.amountCNY || b.amount) / 100 - kwNum) < 0.005) ||
+        (kwNum > 0 && String((b.amountCNY || b.amount) / 100).includes(searchKeyword))
       )
     }
 

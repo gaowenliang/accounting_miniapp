@@ -207,13 +207,15 @@ Page({
             wx.showToast({ title: result.reason || '删除失败', icon: 'none' })
           }
         } else {
-          // 个人账本：清空本地数据
-          storage.clearBills()
-          const list = ledger.getLedgerList().filter(l => l.id !== this.ledgerId)
-          ledger.saveLedgerList(list)
+          // 个人账本：用 deleteLedger 统一处理
+          const result = ledger.deleteLedger(this.ledgerId)
           wx.hideLoading()
-          wx.showToast({ title: '已删除', icon: 'success' })
-          setTimeout(() => wx.navigateBack(), 1000)
+          if (result.success) {
+            wx.showToast({ title: '已删除', icon: 'success' })
+            setTimeout(() => wx.navigateBack(), 1000)
+          } else {
+            wx.showToast({ title: result.reason || '删除失败', icon: 'none' })
+          }
         }
       }
     })
