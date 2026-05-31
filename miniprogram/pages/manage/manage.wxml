@@ -23,6 +23,34 @@
     </view>
   </view>
 
+  <!-- 账本概况 -->
+  <view class="ledger-overview-card">
+    <text class="ledger-ov-title">账本概况</text>
+    <view class="ledger-ov-row">
+      <view class="ledger-ov-label">👤 成员人数</view>
+      <text class="ledger-ov-value">{{overview.memberCount}}人</text>
+    </view>
+    <view class="ledger-ov-row" wx:if="{{overview.currencies.length > 0}}">
+      <view class="ledger-ov-label">💱 货币种类</view>
+      <view class="ledger-ov-currencies">
+        <text class="ledger-ov-cur-item" wx:for="{{overview.currencies}}" wx:key="code">{{item.flag}} {{item.name}}</text>
+      </view>
+    </view>
+    <view class="ledger-ov-row">
+      <view class="ledger-ov-label">💸 支出汇总</view>
+      <view class="ledger-ov-values">
+        <text class="ledger-ov-amount">¥{{(overview.totalExpenseCNY/100).toFixed(2)}}</text>
+        <text class="ledger-ov-sub" wx:for="{{overview.expenseByCurrency}}" wx:key="code" wx:if="{{item.code !== 'CNY'}}">
+          {{item.symbol}}{{(item.amount/100).toFixed(2)}} {{item.name}}
+        </text>
+      </view>
+    </view>
+    <view class="ledger-ov-row">
+      <view class="ledger-ov-label">💰 收入汇总</view>
+      <text class="ledger-ov-amount income">¥{{(overview.totalIncomeCNY/100).toFixed(2)}}</text>
+    </view>
+  </view>
+
   <!-- 账本管理 -->
   <view class="section">
     <view class="section-header">
@@ -123,7 +151,11 @@
   <view class="section">
     <view class="section-header">
       <text class="section-title">👥 人员</text>
-      <text class="action-btn primary" bindtap="showAddMemberModal">+ 添加</text>
+      <view class="header-actions">
+        <text class="action-btn" bindtap="openHistoryImport">历史导入</text>
+        <text class="action-btn" bindtap="openBatchAdd">批量添加</text>
+        <text class="action-btn primary" bindtap="showAddMemberModal">+ 添加</text>
+      </view>
     </view>
     <view class="card">
       <view class="member-row" wx:for="{{members}}" wx:key="id">
@@ -271,6 +303,43 @@
       <view class="modal-footer">
         <view class="btn-cancel" bindtap="cancelAddMember">取消</view>
         <view class="btn-primary" bindtap="confirmAddMember">添加</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 批量添加成员弹窗 -->
+  <view class="modal-mask" wx:if="{{showBatchAdd}}" bindtap="closeBatchAdd">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">批量添加成员</view>
+      <view class="modal-body">
+        <textarea class="batch-textarea" placeholder="每一行输入一个成员名&#10;例：&#10;小王&#10;小李&#10;小杨" value="{{batchNames}}" bindinput="onBatchInput" auto-height maxlength="1000" />
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="closeBatchAdd">取消</view>
+        <view class="btn-primary" bindtap="saveBatchAdd">保存</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 从历史导入弹窗 -->
+  <view class="modal-mask" wx:if="{{showHistoryImport}}" bindtap="closeHistoryImport">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">从历史导入</view>
+      <view class="modal-body">
+        <text class="modal-hint" style="margin-bottom: 16rpx;">选择要恢复的成员</text>
+        <view class="history-list">
+          <view class="history-item {{historySelected.indexOf(item.name) >= 0 ? 'selected' : ''}}"
+                wx:for="{{deletedMembers}}" wx:key="name"
+                bindtap="toggleHistoryItem" data-name="{{item.name}}">
+            <text class="history-avatar">{{item.avatar}}</text>
+            <text class="history-name">{{item.name}}</text>
+            <view class="history-check" wx:if="{{historySelected.indexOf(item.name) >= 0}}">✓</view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="closeHistoryImport">取消</view>
+        <view class="btn-primary" bindtap="confirmHistoryImport">导入({{historySelected.length}})</view>
       </view>
     </view>
   </view>

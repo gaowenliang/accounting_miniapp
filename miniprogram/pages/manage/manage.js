@@ -41,7 +41,16 @@ Page({
     // 人员
     members: [],
     showMemberModal: false,
-    newMemberName: ''
+    newMemberName: '',
+    // 批量添加
+    showBatchAdd: false,
+    batchNames: '',
+    // 从历史导入
+    showHistoryImport: false,
+    deletedMembers: [],
+    historySelected: [],
+    // 账本概览
+    overview: { memberCount: 0, currencies: [], totalExpenseCNY: 0, expenseByCurrency: [], totalIncomeCNY: 0 }
   },
 
   onShow() {
@@ -57,6 +66,33 @@ Page({
     const budget = storage.getBudget()
     const members = storage.getMembers()
 
+    // 计算账本概览
+    const bills = storage.getBills()
+    const currencySet = new Set()
+    const expenseMap = {}
+    let totalExpenseCNY = 0, totalIncomeCNY = 0
+    bills.forEach(b => {
+      const cur = b.currency || 'CNY'
+      const amt = b.amount || 0
+      const amtCNY = b.amountCNY || amt
+      currencySet.add(cur)
+      if (!expenseMap[cur]) expenseMap[cur] = 0
+      if (b.type === 'expense') {
+        expenseMap[cur] += amt
+        totalExpenseCNY += amtCNY
+      } else {
+        totalIncomeCNY += amtCNY
+      }
+    })
+    const currencyList2 = Array.from(currencySet).map(code => {
+      const info = currencies.getCurrency(code)
+      return { code, name: info.name, flag: info.flag }
+    })
+    const expenseList = Object.keys(expenseMap).filter(k => expenseMap[k] > 0).map(code => {
+      const info = currencies.getCurrency(code)
+      return { code, symbol: info.symbol, name: info.name, amount: expenseMap[code] }
+    })
+
     this.setData({
       ledgerList: list,
       currentLedger: current,
@@ -69,7 +105,14 @@ Page({
       budgetAmountText: budget.amount > 0 ? (budget.amount / 100).toFixed(0) : '0',
       members,
       currencyList: currencies.getAllCurrencies(),
-      catSortList: categories.getCategories(this.data.catSortType)
+      catSortList: categories.getCategories(this.data.catSortType),
+      overview: {
+        memberCount: members.length,
+        currencies: currencyList2,
+        totalExpenseCNY,
+        totalIncomeCNY,
+        expenseByCurrency: expenseList
+      }
     })
   },
 
@@ -260,6 +303,107 @@ Page({
         }
       }
     })
+  },
+
+  // ===== 批量添加 =====
+
+  openBatchAdd() {
+    this.setData({ showBatchAdd: true, batchNames: '' })
+  },
+
+  closeBatchAdd() {
+    this.setData({ showBatchAdd: false })
+  },
+
+  onBatchInput(e) {
+    this.setData({ batchNames: e.detail.value })
+  },
+
+  saveBatchAdd() {
+    const names = this.data.batchNames.split('\n')
+      .map(n => n.trim())
+      .filter(n => n.length > 0)
+    if (names.length === 0) {
+      wx.showToast({ title: '请输入成员名', icon: 'none' })
+      return
+    }
+    const members = storage.getMembers()
+    const existNames = members.map(m => m.name)
+    let added = 0
+    names.forEach(name => {
+      if (!existNames.includes(name)) {
+        members.push({
+          id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          name,
+          avatar: '😊',
+          isDefault: false,
+          createdAt: Date.now()
+        })
+        existNames.push(name)
+        added++
+      }
+    })
+    storage.saveMembers(members)
+    this.setData({ showBatchAdd: false, members, batchNames: '' })
+    wx.showToast({ title: `已添加${added}人`, icon: 'success' })
+  },
+
+  // ===== 从历史导入 =====
+
+  openHistoryImport() {
+    const deletedMembers = storage.getDeletedMembers()
+    if (deletedMembers.length === 0) {
+      wx.showToast({ title: '暂无历史成员', icon: 'none' })
+      return
+    }
+    this.setData({ showHistoryImport: true, deletedMembers, historySelected: [] })
+  },
+
+  closeHistoryImport() {
+    this.setData({ showHistoryImport: false })
+  },
+
+  toggleHistoryItem(e) {
+    const name = e.currentTarget.dataset.name
+    let selected = [...this.data.historySelected]
+    const idx = selected.indexOf(name)
+    if (idx >= 0) {
+      selected.splice(idx, 1)
+    } else {
+      selected.push(name)
+    }
+    this.setData({ historySelected: selected })
+  },
+
+  confirmHistoryImport() {
+    const selected = this.data.historySelected
+    if (selected.length === 0) {
+      wx.showToast({ title: '请选择成员', icon: 'none' })
+      return
+    }
+    const members = storage.getMembers()
+    const existNames = members.map(m => m.name)
+    let added = 0
+    selected.forEach(name => {
+      if (!existNames.includes(name)) {
+        const info = this.data.deletedMembers.find(h => h.name === name)
+        members.push({
+          id: 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          name,
+          avatar: (info && info.avatar) || '😊',
+          isDefault: false,
+          createdAt: Date.now()
+        })
+        existNames.push(name)
+        added++
+      }
+    })
+    storage.saveMembers(members)
+    // 清除已导入的历史记录
+    const remaining = this.data.deletedMembers.filter(h => !selected.includes(h.name))
+    storage.saveDeletedMembers(remaining)
+    this.setData({ showHistoryImport: false, members, historySelected: [] })
+    wx.showToast({ title: `已导入${added}人`, icon: 'success' })
   },
 
   // ========== 导出 ==========

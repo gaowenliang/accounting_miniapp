@@ -137,3 +137,103 @@
   font-size: 28rpx; color: #4F46E5; padding: 8rpx 16rpx;
   background: #EEF2FF; border-radius: 12rpx; font-weight: 600;
 }
+
+/* 批量添加 */
+.batch-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  border: 2rpx solid #E5E7EB;
+  box-sizing: border-box;
+}
+
+/* 历史导入 */
+.history-list {
+  max-height: 500rpx;
+  overflow-y: auto;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 16rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+  border-radius: 12rpx;
+}
+.history-item.selected {
+  background: #EEF2FF;
+}
+.history-item:last-child {
+  border-bottom: none;
+}
+.history-avatar {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+}
+.history-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: #1F2937;
+}
+.history-check {
+  color: #4F46E5;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+/* 账本概况卡片 */
+.ledger-overview-card {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  color: #fff;
+}
+.ledger-ov-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+  display: block;
+}
+.ledger-ov-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8rpx 0;
+  font-size: 24rpx;
+}
+.ledger-ov-label {
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+.ledger-ov-value {
+  font-weight: 500;
+}
+.ledger-ov-currencies {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6rpx;
+}
+.ledger-ov-cur-item {
+  font-size: 22rpx;
+}
+.ledger-ov-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.ledger-ov-amount {
+  font-weight: 600;
+  font-size: 28rpx;
+}
+.ledger-ov-sub {
+  font-size: 20rpx;
+  opacity: 0.7;
+  margin-top: 2rpx;
+}
+.ledger-ov-amount.income {
+  color: #86EFAC;
+}

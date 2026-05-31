@@ -316,8 +316,25 @@ const StorageManager = {
 
   removeMember(memberId) {
     let members = this.getMembers()
+    const removed = members.find(m => m.id === memberId)
     members = members.filter(m => m.id !== memberId)
     this.saveMembers(members)
+    // 保存到历史记录（用于"从历史导入"）
+    if (removed && !removed.isDefault) {
+      const history = this.getDeletedMembers()
+      if (!history.find(h => h.name === removed.name)) {
+        history.push({ name: removed.name, avatar: removed.avatar || '😊', deletedAt: Date.now() })
+        this.saveDeletedMembers(history)
+      }
+    }
+  },
+
+  getDeletedMembers() {
+    try { return wx.getStorageSync('deletedMembers') || [] } catch (e) { return [] }
+  },
+
+  saveDeletedMembers(list) {
+    try { wx.setStorageSync('deletedMembers', list) } catch (e) {}
   },
 
   // ========== 按人统计 ==========
