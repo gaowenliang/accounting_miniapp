@@ -14,13 +14,16 @@
 /* 筛选栏 */
 .filter-bar { display: flex; gap: 12rpx; margin-bottom: 20rpx; }
 .filter-tabs {
-  display: flex; background: #F3F4F6; border-radius: 44rpx; padding: 3rpx;
+  display: flex; background: #F3F4F6; border-radius: 44rpx; padding: 3rpx; flex-shrink: 0;
 }
 .filter-tab {
   padding: 8rpx 20rpx; border-radius: 44rpx;
   font-size: 24rpx; color: #9CA3AF; font-weight: 500;
 }
 .filter-tab.active { background: #4F46E5; color: #FFF; }
+.filter-bar-right {
+  flex: 1; display: flex; align-items: center; gap: 8rpx;
+}
 .search-wrap {
   flex: 1; display: flex; align-items: center;
   background: #FFFFFF; border-radius: 44rpx; padding: 8rpx 20rpx;
@@ -29,6 +32,26 @@
 .search-icon { font-size: 22rpx; margin-right: 8rpx; }
 .search-input { font-size: 24rpx; flex: 1; border: none; outline: none; }
 .search-clear { font-size: 22rpx; color: #9CA3AF; padding: 4rpx; }
+
+/* 详情开关 */
+.detail-toggle {
+  display: flex; align-items: center; gap: 4rpx;
+  padding: 6rpx 16rpx; background: #F3F4F6; border-radius: 20rpx;
+  flex-shrink: 0;
+}
+.detail-toggle-text { font-size: 22rpx; color: #6B7280; }
+.detail-toggle-icon { font-size: 18rpx; color: #9CA3AF; }
+
+/* 展开详情 */
+.bill-detail {
+  display: flex; flex-wrap: wrap; gap: 8rpx 16rpx;
+  margin-top: 6rpx; padding-top: 6rpx;
+  border-top: 1rpx solid #F9FAFB;
+}
+.bill-detail-item {
+  font-size: 20rpx; color: #9CA3AF;
+  background: #F9FAFB; padding: 2rpx 8rpx; border-radius: 6rpx;
+}
 
 /* 账单分组 */
 .bill-group { margin-bottom: 16rpx; }
@@ -47,6 +70,7 @@
 .bill-item {
   display: flex; justify-content: space-between; align-items: center;
   padding: 18rpx 0; border-bottom: 1rpx solid #F3F4F6;
+  flex-wrap: wrap;
 }
 .bill-item:last-child { border-bottom: none; }
 .bill-left { display: flex; align-items: center; flex: 1; min-width: 0; }
@@ -61,6 +85,7 @@
 .bill-currency { font-size: 18rpx; color: #F59E0B; margin-top: 2rpx; }
 .bill-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bill-detail { width: 100%; box-sizing: border-box; }
 
 /* 空状态 */
 .empty-state {

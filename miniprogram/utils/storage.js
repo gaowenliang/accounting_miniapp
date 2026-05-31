@@ -511,6 +511,74 @@ const StorageManager = {
     }))
   },
 
+  // ========== 多维度统计（月度子维度） ==========
+
+  /**
+   * 按币种统计
+   */
+  getCurrencyStats(year, month) {
+    const bills = this.getBillsByMonth(year, month)
+    const currencyMap = {}
+    const currencies = require('../data/currencies')
+    let totalCNY = 0
+    bills.forEach(b => {
+      const cur = b.currency || 'CNY'
+      const amtCNY = b.amountCNY || b.amount
+      if (!currencyMap[cur]) currencyMap[cur] = { code: cur, count: 0, amount: 0, amountCNY: 0 }
+      currencyMap[cur].count++
+      currencyMap[cur].amount += b.amount  // 原始金额（分）
+      currencyMap[cur].amountCNY += amtCNY
+      totalCNY += amtCNY
+    })
+    // 转数组 + 加百分比
+    const list = Object.values(currencyMap).map(c => {
+      const info = currencies.getCurrency(c.code)
+      return {
+        ...c,
+        symbol: info.symbol,
+        name: info.name,
+        flag: info.flag,
+        rate: info.rate,
+        percent: totalCNY > 0 ? Math.round(c.amountCNY / totalCNY * 100) : 0
+      }
+    }).sort((a, b) => b.amountCNY - a.amountCNY)
+    return { list, totalCNY }
+  },
+
+  /**
+   * 按账户统计
+   */
+  getAccountStats(year, month) {
+    const bills = this.getBillsByMonth(year, month)
+    const accounts = this.getAccounts()
+    const members = this.getMembers()
+    const accountMap = {}
+    let totalCNY = 0
+
+    bills.forEach(b => {
+      const amt = b.amountCNY || b.amount
+      const accountKey = b.account || 'unknown'
+      const payer = members.find(m => m.id === (b.payer || 'self'))
+      const key = `${payer ? payer.name : '我'}-${accounts.find(a => a.key === accountKey)?.name || accountKey}`
+
+      if (!accountMap[key]) accountMap[key] = {
+        accountKey, payerId: b.payer || 'self', payerName: payer ? payer.name : '我',
+        accountName: accounts.find(a => a.key === accountKey)?.name || accountKey,
+        count: 0, amount: 0, amountCNY: 0
+      }
+      accountMap[key].count++
+      accountMap[key].amountCNY += amt
+      totalCNY += amt
+    })
+
+    const list = Object.values(accountMap).map(a => ({
+      ...a,
+      percent: totalCNY > 0 ? Math.round(a.amountCNY / totalCNY * 100) : 0
+    })).sort((a, b) => b.amountCNY - a.amountCNY)
+
+    return { list, totalCNY }
+  },
+
   // ========== 全局统计 ==========
 
   clearBills() {

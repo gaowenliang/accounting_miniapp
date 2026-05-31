@@ -17,6 +17,12 @@
       <view class="nav-arrow" bindtap="nextMonth">▶</view>
     </view>
 
+    <view class="sub-tabs">
+      <view class="sub-tab {{subMode === 'category' ? 'active' : ''}}" bindtap="switchSubMode" data-mode="category">分类</view>
+      <view class="sub-tab {{subMode === 'currency' ? 'active' : ''}}" bindtap="switchSubMode" data-mode="currency">货币</view>
+      <view class="sub-tab {{subMode === 'account' ? 'active' : ''}}" bindtap="switchSubMode" data-mode="account">账户</view>
+    </view>
+
     <view class="card summary-card">
       <view class="summary-row">
         <text class="summary-label">收入</text>
@@ -41,6 +47,8 @@
       </view>
     </view>
 
+    <!-- 分类维度 -->
+    <block wx:if="{{subMode === 'category'}}">
     <view class="section-title">支出排行</view>
     <view class="card">
       <view class="rank-item" wx:for="{{categoryRanking}}" wx:key="key">
@@ -68,6 +76,71 @@
         </view>
       </view>
     </view>
+    </block>
+
+    <!-- 货币统计 -->
+    <block wx:if="{{subMode === 'currency'}}">
+      <view class="card">
+        <text class="section-title-inline">按币种统计</text>
+        <view class="currency-stat-row currency-stat-header">
+          <text class="cs-code">币种</text>
+          <text class="cs-count">笔数</text>
+          <text class="cs-amount">金额</text>
+          <text class="cs-cny">折合人民币</text>
+          <text class="cs-pct">占比</text>
+        </view>
+        <view class="currency-stat-row" wx:for="{{currencyStats.list}}" wx:key="code">
+          <text class="cs-code">{{item.flag}} {{item.code}}</text>
+          <text class="cs-count">{{item.count}}笔</text>
+          <text class="cs-amount">{{item.symbol}}{{(item.amount/100).toFixed(2)}}</text>
+          <text class="cs-cny">¥{{(item.amountCNY/100).toFixed(2)}}</text>
+          <text class="cs-pct">{{item.percent}}%</text>
+        </view>
+        <view class="empty-hint" wx:if="{{currencyStats.list.length === 0}}">暂无数据</view>
+      </view>
+
+      <view class="card" wx:if="{{currencyStats.list.length > 1}}">
+        <text class="section-title-inline">折合人民币占比</text>
+        <view class="donut-chart-area">
+          <view class="donut-bar" wx:for="{{currencyStats.list}}" wx:key="code"
+                style="width:{{item.percent}}%;background:{{item.code==='CNY'?'#00C4B8':item.code==='USD'?'#8B5CF6':item.code==='EUR'?'#3B82F6':'#FFAD60'}}">
+            <text class="donut-label" wx:if="{{item.percent >= 10}}">{{item.code}} {{item.percent}}%</text>
+          </view>
+        </view>
+        <view class="donut-legend">
+          <view class="legend-item" wx:for="{{currencyStats.list}}" wx:key="code">
+            <view class="legend-dot" style="background:{{item.code==='CNY'?'#00C4B8':item.code==='USD'?'#8B5CF6':item.code==='EUR'?'#3B82F6':'#FFAD60'}}"></view>
+            <text class="legend-text">{{item.name}} ({{item.code}})</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 账户统计 -->
+    <block wx:if="{{subMode === 'account'}}">
+      <view class="card">
+        <text class="section-title-inline">成员×账户统计</text>
+        <view class="account-stat-header">
+          <text>成员-账户</text><text>笔数</text><text>金额(¥)</text><text>占比</text>
+        </view>
+        <view class="account-stat-row" wx:for="{{accountStats.list}}" wx:key="payerId">
+          <text class="as-name">{{item.payerName}}-{{item.accountName}}</text>
+          <text class="as-count">{{item.count}}笔</text>
+          <text class="as-amount">¥{{(item.amountCNY/100).toFixed(2)}}</text>
+          <text class="as-pct">{{item.percent}}%</text>
+        </view>
+        <view class="empty-hint" wx:if="{{accountStats.list.length === 0}}">暂无数据</view>
+      </view>
+      <view class="card" wx:if="{{accountStats.list.length > 0}}">
+        <text class="section-title-inline">折合人民币对比</text>
+        <view class="h-bar-item" wx:for="{{accountStats.list}}" wx:key="payerId">
+          <text class="h-bar-label">{{item.payerName}}-{{item.accountName}}</text>
+          <view class="h-bar-wrap"><view class="h-bar" style="width:{{item.percent}}%"></view></view>
+          <text class="h-bar-val">¥{{(item.amountCNY/100).toFixed(0)}}</text>
+        </view>
+      </view>
+    </block>
+
   </block>
 
   <!-- ===== 年度 ===== -->

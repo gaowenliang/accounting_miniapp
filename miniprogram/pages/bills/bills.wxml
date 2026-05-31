@@ -22,10 +22,16 @@
       <view class="filter-tab {{filterType === 'expense' ? 'active expense' : ''}}" bindtap="switchFilter" data-type="expense">支出</view>
       <view class="filter-tab {{filterType === 'income' ? 'active income' : ''}}" bindtap="switchFilter" data-type="income">收入</view>
     </view>
-    <view class="search-wrap">
-      <text class="search-icon">🔍</text>
-      <input class="search-input" placeholder="搜索..." value="{{searchKeyword}}" bindinput="onSearchInput" />
-      <text class="search-clear" wx:if="{{searching}}" bindtap="clearSearch">✕</text>
+    <view class="filter-bar-right">
+      <view class="search-wrap">
+        <text class="search-icon">🔍</text>
+        <input class="search-input" placeholder="搜索..." value="{{searchKeyword}}" bindinput="onSearchInput" />
+        <text class="search-clear" wx:if="{{searching}}" bindtap="clearSearch">✕</text>
+      </view>
+      <view class="detail-toggle" bindtap="toggleShowDetail">
+        <text class="detail-toggle-text">{{showDetail ? '隐藏详情' : '显示详情'}}</text>
+        <text class="detail-toggle-icon">{{showDetail ? '▼' : '▶'}}</text>
+      </view>
     </view>
   </view>
 
@@ -65,7 +71,12 @@
             <text class="bill-action action-delete" catchtap="deleteBill" data-id="{{bill.id}}">删除</text>
           </view>
         </view>
-      </view>
+        <view class="bill-detail" wx:if="{{showDetail}}">
+          <text class="bill-detail-item" wx:if="{{bill.payerName}}">👤 {{bill.payerName}} 付款</text>
+          <text class="bill-detail-item" wx:if="{{bill.splitNames}}">👥 {{bill.splitNames}}</text>
+          <text class="bill-detail-item" wx:if="{{bill.perPerson}}">📊 人均 {{bill.perPerson}}</text>
+          <text class="bill-detail-item" wx:if="{{bill.currencyDisplay}}">💱 {{bill.currencyDisplay}}</text>
+        </view>
     </view>
   </view>
 

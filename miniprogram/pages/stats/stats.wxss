@@ -155,3 +155,68 @@
 .pd-bill-note { font-size: 18rpx; color: #9CA3AF; }
 .pd-bill-amount { font-size: 24rpx; font-weight: 700; margin-right: 8rpx; }
 .pd-bill-date { font-size: 18rpx; color: #9CA3AF; }
+
+/* ===== 月度子维度切换 ===== */
+.sub-tabs {
+  display: flex; gap: 0; margin-bottom: 20rpx;
+  background: #F3F4F6; border-radius: 44rpx; padding: 4rpx;
+}
+.sub-tab {
+  flex: 1; text-align: center; padding: 10rpx 0; border-radius: 44rpx;
+  font-size: 24rpx; font-weight: 600; color: #9CA3AF; transition: all 0.2s;
+}
+.sub-tab.active { background: #4F46E5; color: #FFFFFF; }
+
+/* ===== 货币统计 ===== */
+.currency-stat-row {
+  display: flex; align-items: center; padding: 12rpx 0;
+  border-bottom: 1rpx solid #F3F4F6; font-size: 24rpx;
+}
+.currency-stat-row:last-child { border-bottom: none; }
+.currency-stat-header {
+  font-size: 22rpx !important; color: #9CA3AF; padding: 8rpx 0;
+}
+.cs-code { width: 120rpx; flex-shrink: 0; color: #374151; }
+.cs-count { width: 80rpx; flex-shrink: 0; color: #6B7280; text-align: center; }
+.cs-amount { flex: 1; color: #374151; text-align: right; font-variant-numeric: tabular-nums; }
+.cs-cny { flex: 1; color: #1F2937; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.cs-pct { width: 80rpx; flex-shrink: 0; color: #4F46E5; font-weight: 600; text-align: right; }
+
+/* 环形占比条 */
+.donut-chart-area {
+  display: flex; height: 40rpx; border-radius: 20rpx; overflow: hidden;
+  margin: 16rpx 0;
+}
+.donut-bar {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 2rpx; transition: width 0.3s;
+}
+.donut-label { font-size: 20rpx; color: #FFF; font-weight: 600; white-space: nowrap; }
+.donut-legend { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 12rpx; }
+.legend-item { display: flex; align-items: center; gap: 6rpx; }
+.legend-dot { width: 16rpx; height: 16rpx; border-radius: 8rpx; flex-shrink: 0; }
+.legend-text { font-size: 22rpx; color: #6B7280; }
+
+/* ===== 账户统计 ===== */
+.account-stat-header {
+  display: flex; align-items: center; padding: 8rpx 0;
+  border-bottom: 1rpx solid #E5E7EB; font-size: 22rpx; color: #9CA3AF;
+}
+.account-stat-header text { flex: 1; text-align: center; }
+.account-stat-header text:first-child { flex: 2; text-align: left; }
+.account-stat-row {
+  display: flex; align-items: center; padding: 14rpx 0;
+  border-bottom: 1rpx solid #F3F4F6; font-size: 24rpx;
+}
+.account-stat-row:last-child { border-bottom: none; }
+.as-name { flex: 2; color: #374151; }
+.as-count { flex: 1; color: #6B7280; text-align: center; }
+.as-amount { flex: 1; color: #1F2937; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.as-pct { flex: 1; color: #4F46E5; font-weight: 600; text-align: right; }
+
+/* 横向条形图 */
+.h-bar-item { display: flex; align-items: center; padding: 10rpx 0; }
+.h-bar-label { font-size: 22rpx; color: #374151; width: 180rpx; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h-bar-wrap { flex: 1; height: 16rpx; background: #F3F4F6; border-radius: 8rpx; overflow: hidden; margin: 0 12rpx; }
+.h-bar { height: 100%; background: linear-gradient(90deg, #4F46E5, #6366F1); border-radius: 8rpx; min-width: 4rpx; transition: width 0.3s; }
+.h-bar-val { font-size: 22rpx; font-weight: 600; color: #1F2937; min-width: 100rpx; text-align: right; font-variant-numeric: tabular-nums; }

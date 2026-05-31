@@ -27,6 +27,10 @@ Page({
     aaResult: null,
     aaParticipants: [],
     aaAllSelected: true,
+    // 月度子维度：category / currency / account
+    subMode: 'category',
+    currencyStats: { list: [], totalCNY: 0 },
+    accountStats: { list: [], totalCNY: 0 },
   },
 
   onLoad() {
@@ -54,8 +58,13 @@ Page({
   // ========== 模式切换 ==========
 
   switchMode(e) {
-    this.setData({ mode: e.currentTarget.dataset.mode })
+    this.setData({ mode: e.currentTarget.dataset.mode, subMode: 'category' })
     this.refresh()
+  },
+
+  switchSubMode(e) {
+    this.setData({ subMode: e.currentTarget.dataset.mode })
+    this.loadMonthly()
   },
 
   // ========== 月份/年份导航 ==========
@@ -89,18 +98,29 @@ Page({
   // ========== 月度统计 ==========
 
   loadMonthly() {
-    const { currentYear, currentMonth } = this.data
+    const { currentYear, currentMonth, subMode } = this.data
     const stats = storage.getMonthStats(currentYear, currentMonth)
+
+    // 基础数据（分类维度始终加载）
     const ranking = storage.getCategoryRanking(currentYear, currentMonth)
     const trend = storage.getDailyTrend(currentYear, currentMonth)
 
-    this.setData({
+    const updateData = {
       monthExpense: stats.totalExpense,
       monthIncome: stats.totalIncome,
       monthBalance: stats.totalIncome - stats.totalExpense,
       categoryRanking: ranking,
       dailyTrend: trend
-    })
+    }
+
+    // 按子维度加载额外数据
+    if (subMode === 'currency') {
+      updateData.currencyStats = storage.getCurrencyStats(currentYear, currentMonth)
+    } else if (subMode === 'account') {
+      updateData.accountStats = storage.getAccountStats(currentYear, currentMonth)
+    }
+
+    this.setData(updateData)
   },
 
   // ========== 年度统计 ==========

@@ -22,6 +22,8 @@ Page({
     hasBills: false,
     // 防抖定时器
     _searchTimer: null,
+    // 详情开关
+    showDetail: false,
     // 编辑
     showEditModal: false,
     editingBillId: '',
@@ -41,6 +43,10 @@ Page({
 
   onShow() {
     this.loadBills()
+  },
+
+  toggleShowDetail() {
+    this.setData({ showDetail: !this.data.showDetail })
   },
 
   loadBills() {
@@ -89,13 +95,40 @@ Page({
       const cat = categories.getCategoryBy(b.category, b.type)
       const members = storage.getMembers()
       const payer = members.find(m => m.id === (b.payer || 'self'))
+
+      // 分摊信息
+      let splitNames = ''
+      let perPerson = ''
+      if (b.splits && b.splits.length > 0) {
+        const memberNames = b.splits.map(s => {
+          const m = members.find(mm => mm.id === s.memberId)
+          return m ? m.name : '未知'
+        })
+        splitNames = memberNames.join('、')
+        const total = b.amountCNY || b.amount
+        perPerson = '¥' + (Math.round(total / b.splits.length) / 100).toFixed(2)
+      } else if (members.length > 1) {
+        splitNames = '未分摊'
+      }
+
+      // 币种显示
+      let currencyDisplay = ''
+      if (b.currency && b.currency !== 'CNY') {
+        const currencies = require('../../data/currencies')
+        const info = currencies.getCurrency(b.currency)
+        currencyDisplay = info ? `${info.symbol}${(b.amount/100).toFixed(2)} → ≈¥${((b.amountCNY||b.amount)/100).toFixed(2)}` : `${b.currency} ${(b.amount/100).toFixed(2)}`
+      }
+
       groups[dateStr].bills.push({
         ...b,
         categoryName: cat.name,
         categoryIcon: cat.icon,
         amountText: util.formatMoney(b.amount),
         amountCNYText: b.amountCNY ? ((b.amountCNY / 100).toFixed(2)) : '',
-        payerName: payer ? payer.name : '我'
+        payerName: payer ? payer.name : '我',
+        splitNames,
+        perPerson,
+        currencyDisplay
       })
       if (b.type === 'income') groups[dateStr].dayIncome += b.amount
       else groups[dateStr].dayExpense += b.amount
