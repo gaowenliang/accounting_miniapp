@@ -264,14 +264,56 @@ Page({
     if (bills.length === 0) {
       wx.showToast({ title: '没有数据可导出', icon: 'none' }); return
     }
-    let csv = '日期,类型,分类,金额(元),备注,账户\n'
-    bills.forEach(b => {
-      const cat = require('../../data/categories').getCategoryBy(b.category, b.type)
-      csv += `${util.formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.note || ''},${b.account}\n`
-    })
-    wx.setClipboardData({
-      data: csv,
-      success: () => wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
+
+    wx.showActionSheet({
+      itemList: ['复制到剪贴板', '保存为文件'],
+      success: (res) => {
+        let csv = '\uFEFF'  // BOM 头，Excel 兼容中文
+        csv += '日期,类型,分类,金额(元),币种,备注,账户,付款人\n'
+        bills.forEach(b => {
+          const cat = categories.getCategoryBy(b.category, b.type)
+          const members = storage.getMembers()
+          const payer = members.find(m => m.id === (b.payer || 'self'))
+          // CSV 注入防护
+          let note = b.note || ''
+          if (/^[=+@\-]/.test(note)) note = "'" + note
+          csv += `${util.formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${note},${b.account},${payer ? payer.name : '我'}\n`
+        })
+
+        if (res.tapIndex === 0) {
+          // 复制到剪贴板
+          wx.setClipboardData({
+            data: csv,
+            success: () => wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
+          })
+        } else if (res.tapIndex === 1) {
+          // 保存为文件
+          const fs = wx.getFileSystemManager()
+          const fileName = `账单_${util.formatDate(Date.now())}.csv`
+          const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`
+          fs.writeFile({
+            filePath,
+            data: csv,
+            encoding: 'utf8',
+            success: () => {
+              wx.shareFileMessage({
+                filePath,
+                fileName,
+                success: () => wx.showToast({ title: '已发送', icon: 'success' }),
+                fail: () => {
+                  // 分享失败就打开文件
+                  wx.openDocument({
+                    filePath,
+                    showMenu: true,
+                    success: () => wx.showToast({ title: '已打开', icon: 'success' })
+                  })
+                }
+              })
+            },
+            fail: () => wx.showToast({ title: '保存失败', icon: 'none' })
+          })
+        }
+      }
     })
   },
 

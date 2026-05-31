@@ -21,7 +21,14 @@ Page({
     groupedBills: [],
     hasBills: false,
     // 防抖定时器
-    _searchTimer: null
+    _searchTimer: null,
+    // 编辑
+    showEditModal: false,
+    editingBillId: '',
+    editAmount: '',
+    editCategory: '',
+    editNote: '',
+    editCategories: []
   },
 
   onLoad() {
@@ -168,5 +175,64 @@ Page({
         }
       }
     })
+  },
+
+  // ========== 编辑账单 ==========
+
+  editBill(e) {
+    const billId = e.currentTarget.dataset.id
+    const bill = storage.getBills().find(b => b.id === billId)
+    if (!bill) return
+    this.setData({
+      showEditModal: true,
+      editingBillId: billId,
+      editAmount: (bill.amount / 100).toFixed(2),
+      editCategory: bill.category,
+      editNote: bill.note || '',
+      editCategories: categories.getCategories(bill.type)
+    })
+  },
+
+  onEditAmount(e) { this.setData({ editAmount: e.detail.value }) },
+  onEditNote(e) { this.setData({ editNote: e.detail.value }) },
+
+  selectEditCategory(e) {
+    this.setData({ editCategory: e.currentTarget.dataset.key })
+  },
+
+  cancelEdit() { this.setData({ showEditModal: false }) },
+
+  confirmEdit() {
+    const { editingBillId, editAmount, editCategory, editNote } = this.data
+    const amount = parseFloat(editAmount)
+    if (!amount || amount <= 0) {
+      wx.showToast({ title: '请输入有效金额', icon: 'none' }); return
+    }
+    if (!editCategory) {
+      wx.showToast({ title: '请选择分类', icon: 'none' }); return
+    }
+
+    // 计算金额差异，更新账户余额
+    const oldBill = storage.getBills().find(b => b.id === editingBillId)
+    if (oldBill) {
+      const oldAmountCNY = oldBill.amountCNY || oldBill.amount
+      const newAmountFen = Math.round(amount * 100)
+      const newAmountCNY = oldBill.currency && oldBill.currency !== 'CNY'
+        ? Math.round(newAmountFen * (oldBill.exchangeRate || 1))
+        : newAmountFen
+      const oldDelta = oldBill.type === 'income' ? -oldAmountCNY : oldAmountCNY
+      const newDelta = oldBill.type === 'income' ? newAmountCNY : -newAmountCNY
+      storage.updateAccountBalance(oldBill.account, oldDelta + newDelta)
+    }
+
+    storage.updateBill(editingBillId, {
+      amount: Math.round(amount * 100),
+      category: editCategory,
+      note: editNote.trim()
+    })
+
+    this.setData({ showEditModal: false })
+    this.loadBills()
+    wx.showToast({ title: '已保存', icon: 'success' })
   }
 })

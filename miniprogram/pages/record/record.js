@@ -6,6 +6,7 @@ const validator = require('../../utils/validator')
 const categories = require('../../data/categories')
 const currencies = require('../../data/currencies')
 const ledger = require('../../utils/ledger')
+const cloudSync = require('../../utils/cloud-sync')
 
 Page({
   data: {
@@ -309,9 +310,12 @@ Page({
       bill.createdAt = Date.now()
       ledger.optimisticAddBill(current.id, bill)
     } else {
-      storage.addBill(bill)
+      const record = storage.addBill(bill)
+      bill.id = record.id
       const delta = bill.type === 'income' ? amountCNY : -amountCNY
       storage.updateAccountBalance(bill.account, delta)
+      // 推送云端
+      cloudSync.pushBill(bill)
     }
 
     // 预算超支检查

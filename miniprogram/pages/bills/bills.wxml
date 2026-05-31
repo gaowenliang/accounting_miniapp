@@ -60,7 +60,43 @@
           <text class="bill-amount {{bill.type === 'income' ? 'text-income' : 'text-expense'}}">
             {{bill.type === 'income' ? '+' : '-'}}{{bill.amountText}}
           </text>
+          <view class="bill-actions">
+            <text class="bill-action" catchtap="editBill" data-id="{{bill.id}}">编辑</text>
+            <text class="bill-action action-delete" catchtap="deleteBill" data-id="{{bill.id}}">删除</text>
+          </view>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 编辑弹窗 -->
+  <view class="modal-mask" wx:if="{{showEditModal}}" bindtap="cancelEdit">
+    <view class="modal-content edit-modal" catchtap="">
+      <view class="modal-header">编辑账单</view>
+      <view class="modal-body">
+        <view class="edit-row">
+          <text class="edit-label">金额</text>
+          <input class="edit-input" type="digit" value="{{editAmount}}" bindinput="onEditAmount" placeholder="0.00" />
+        </view>
+        <view class="edit-row">
+          <text class="edit-label">分类</text>
+          <view class="edit-cats">
+            <view class="edit-cat {{editCategory === item.key ? 'selected' : ''}}"
+                  wx:for="{{editCategories}}" wx:key="key"
+                  bindtap="selectEditCategory" data-key="{{item.key}}">
+              <text>{{item.icon}}</text>
+              <text class="edit-cat-name">{{item.name}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="edit-row">
+          <text class="edit-label">备注</text>
+          <input class="edit-input" value="{{editNote}}" bindinput="onEditNote" placeholder="备注" maxlength="200" />
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="cancelEdit">取消</view>
+        <view class="btn-primary" bindtap="confirmEdit">保存</view>
       </view>
     </view>
   </view>
