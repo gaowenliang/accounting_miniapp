@@ -84,7 +84,10 @@ const LedgerManager = {
   /**
    * 初始化默认个人账本
    */
-  initDefaultLedger() {
+  /**
+   * 确保默认账本存在，返回账本列表
+   */
+  ensureAndGetList() {
     const list = this.getLedgerList()
     if (list.length === 0) {
       const personal = {
@@ -100,6 +103,13 @@ const LedgerManager = {
       return [personal]
     }
     return list
+  },
+
+  /**
+   * @deprecated 用 ensureAndGetList() 替代
+   */
+  initDefaultLedger() {
+    return this.ensureAndGetList()
   },
 
   /**

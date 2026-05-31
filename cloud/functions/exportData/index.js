@@ -48,19 +48,21 @@ async function fetchAllBills(openid, start, end) {
 }
 
 function billsToCSV(bills) {
-  const header = '日期,类型,分类,金额(元),备注,账户,付款人\n'
+  const header = '日期,类型,分类,金额(元),币种,汇率,人民币等值(元),备注,账户,付款人\n'
   const rows = bills.map(b => {
     const date = new Date(b.date)
     const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
     const type = b.type === 'income' ? '收入' : '支出'
     const cat = CATEGORIES[b.category] || b.category
     const amount = (b.amount / 100).toFixed(2)
+    const currency = b.currency || 'CNY'
+    const rate = b.exchangeRate || 1
+    const amountCNY = b.amountCNY ? (b.amountCNY / 100).toFixed(2) : amount
     let note = (b.note || '').replace(/,/g, '，').replace(/\n/g, ' ')
-    // 防CSV公式注入
-    if (/^[=+@-]/.test(note)) note = '\'' + note
+    if (/^[=+@-]/.test(note)) note = "'" + note
     const account = b.account || ''
     const payer = b.payer || ''
-    return `${dateStr},${type},${cat},${amount},${note},${account},${payer}`
+    return `${dateStr},${type},${cat},${amount},${currency},${rate},${amountCNY},${note},${account},${payer}`
   }).join('\n')
   return header + rows
 }

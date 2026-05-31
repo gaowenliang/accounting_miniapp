@@ -240,19 +240,29 @@ const StorageManager = {
    * 获取年度统计
    */
   getYearStats(year) {
+    const yearStart = this.getBills().length > 0
+      ? new Date(year, 0, 1).getTime()
+      : 0
+    const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999).getTime()
+    const allBills = this.getBills().filter(b => b.date >= yearStart && b.date <= yearEnd)
+
     let totalIncome = 0
     let totalExpense = 0
     const monthlyData = []
 
-    for (let m = 0; m < 12; m++) {
-      const stats = this.getMonthStats(year, m)
-      totalIncome += stats.totalIncome
-      totalExpense += stats.totalExpense
-      monthlyData.push({
-        month: m + 1,
-        income: stats.totalIncome,
-        expense: stats.totalExpense
+    for (let m = 1; m <= 12; m++) {
+      const ms = util.monthStart(year, m)
+      const me = util.monthEnd(year, m)
+      const monthBills = allBills.filter(b => b.date >= ms && b.date <= me)
+      let income = 0, expense = 0
+      monthBills.forEach(b => {
+        const amt = b.amountCNY || b.amount
+        if (b.type === 'income') income += amt
+        else expense += amt
       })
+      totalIncome += income
+      totalExpense += expense
+      monthlyData.push({ month: m, income, expense })
     }
 
     return {

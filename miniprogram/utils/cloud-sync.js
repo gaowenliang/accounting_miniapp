@@ -1,5 +1,7 @@
 // utils/cloud-sync.js — 云端同步（参考养花小程序架构）
 
+const storage = require('./storage')
+
 const CloudSync = {
   /**
    * 启动时同步

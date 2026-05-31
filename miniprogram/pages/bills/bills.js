@@ -218,10 +218,11 @@ Page({
     // 计算金额差异，更新账户余额
     const oldBill = storage.getBills().find(b => b.id === editingBillId)
     if (oldBill) {
+      const currencies = require('../../data/currencies')
       const oldAmountCNY = oldBill.amountCNY || oldBill.amount
       const newAmountFen = Math.round(amount * 100)
       const newAmountCNY = oldBill.currency && oldBill.currency !== 'CNY'
-        ? Math.round(newAmountFen * (oldBill.exchangeRate || 1))
+        ? currencies.toCNY(newAmountFen, oldBill.currency, oldBill.exchangeRate)
         : newAmountFen
       const oldDelta = oldBill.type === 'income' ? -oldAmountCNY : oldAmountCNY
       const newDelta = oldBill.type === 'income' ? newAmountCNY : -newAmountCNY

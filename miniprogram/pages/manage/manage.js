@@ -50,7 +50,7 @@ Page({
 
   loadData() {
     const current = ledger.getCurrentLedger()
-    const list = ledger.initDefaultLedger()
+    const list = ledger.ensureAndGetList()
     const stats = storage.getOverallStats()
     const accounts = storage.getAccounts()
     const totalAssets = accounts.reduce((s, a) => s + (a.balance || 0), 0)
@@ -245,9 +245,14 @@ Page({
   },
   removeMember(e) {
     const id = e.currentTarget.dataset.id
+    const member = this.data.members.find(m => m.id === id)
+    const name = member ? member.name : '该成员'
+    // 检查是否有关联账单
+    const bills = storage.getBills().filter(b => (b.payer || 'self') === id)
+    const billInfo = bills.length > 0 ? `\n该成员有 ${bills.length} 条历史记录，删除后记录会显示为「未知」` : ''
     wx.showModal({
       title: '删除人员',
-      content: '删除后历史记录仍会保留',
+      content: `确定删除「${name}」？${billInfo}`,
       success: (res) => {
         if (res.confirm) {
           storage.removeMember(id)
@@ -322,11 +327,19 @@ Page({
   showClearConfirm() { this.setData({ showClearModal: true }) },
   cancelClear() { this.setData({ showClearModal: false }) },
   clearAllData() {
-    // 只清业务数据，保留用户设置
-    const keysToClear = ['bills', 'accounts', 'budget', 'members', 'categories_expense', 'categories_income']
+    // 清业务数据
+    const keysToClear = ['bills', 'accounts', 'budget', 'members', 'categories_expense', 'categories_income',
+      'ledgerList', 'currentLedger', 'currency_order', 'exchange_rates']
     keysToClear.forEach(key => {
       try { wx.removeStorageSync(key) } catch (e) {}
     })
+    // 清所有 ledger 缓存
+    try {
+      const res = wx.getStorageInfoSync()
+      res.keys.forEach(key => {
+        if (key.startsWith('ledgerCache_')) wx.removeStorageSync(key)
+      })
+    } catch (e) {}
     // 重新初始化默认数据
     ledger.initDefaultLedger()
     this.setData({ showClearModal: false })

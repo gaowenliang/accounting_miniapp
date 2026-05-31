@@ -5,15 +5,25 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
-// 防刷：每用户每分钟最多 30 次
-const rateLimiter = {}
+// 防刷：每用户每分钟最多 30 次，Map + 容量上限防 OOM
+const rateLimiter = new Map()
+const RATE_LIMIT_MAX_USERS = 10000
+
 function checkRateLimit(openid) {
   const now = Date.now()
-  if (!rateLimiter[openid]) rateLimiter[openid] = []
-  // 清理 60s 前的记录
-  rateLimiter[openid] = rateLimiter[openid].filter(t => now - t < 60000)
-  if (rateLimiter[openid].length >= 30) return false
-  rateLimiter[openid].push(now)
+  // 总容量保护：超过上限时全量清理
+  if (rateLimiter.size > RATE_LIMIT_MAX_USERS) {
+    for (const [key, timestamps] of rateLimiter) {
+      const filtered = timestamps.filter(t => now - t < 60000)
+      if (filtered.length === 0) rateLimiter.delete(key)
+      else rateLimiter.set(key, filtered)
+    }
+  }
+  const timestamps = rateLimiter.get(openid) || []
+  const recent = timestamps.filter(t => now - t < 60000)
+  if (recent.length >= 30) return false
+  recent.push(now)
+  rateLimiter.set(openid, recent)
   return true
 }
 
@@ -47,7 +57,7 @@ exports.main = async (event, context) => {
     case 'leaveLedger':
       return leaveLedger(OPENID, event.ledgerId)
     case 'getLedgerBills':
-      return getLedgerBills(OPENID, event.ledgerId, event.limit || 200)
+      return getLedgerBills(OPENID, event.ledgerId, event.limit || 200, event.startTime, event.endTime)
     default:
       return { success: false, error: 'Unknown action' }
   }
@@ -193,9 +203,22 @@ async function deleteBill(openid, billId, ledgerId) {
 
 async function createLedger(openid, data) {
   if (!data || !data.name) return { success: false, error: '缺少名称' }
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // 去掉易混淆的 I/O/0/1
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+  // 生成唯一邀请码（最多重试5次）
   let inviteCode = ''
-  for (let i = 0; i < 6; i++) inviteCode += chars[Math.floor(Math.random() * chars.length)]
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let code = ''
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    // 检查是否已存在
+    const existing = await db.collection('ledgers').where({ inviteCode: code }).limit(1).count()
+    if (existing.total === 0) {
+      inviteCode = code
+      break
+    }
+  }
+  if (!inviteCode) return { success: false, error: '邀请码生成失败，请重试' }
+
   try {
     const result = await db.collection('ledgers').add({
       data: {
@@ -301,7 +324,7 @@ async function leaveLedger(openid, ledgerId) {
   }
 }
 
-async function getLedgerBills(openid, ledgerId, limit) {
+async function getLedgerBills(openid, ledgerId, limit, startTime, endTime) {
   try {
     const memberRes = await db.collection('ledger_members')
       .where({ ledgerId, _openid: openid })
@@ -309,6 +332,15 @@ async function getLedgerBills(openid, ledgerId, limit) {
     if (memberRes.data.length === 0) {
       return { success: false, error: '无权访问' }
     }
+
+    // 构建查询条件
+    const where = { ledgerId }
+    if (startTime && endTime) {
+      where.date = _.gte(startTime).and(_.lte(endTime))
+    } else if (startTime) {
+      where.date = _.gte(startTime)
+    }
+
     // 循环拉取
     let allData = []
     let skip = 0
@@ -318,7 +350,7 @@ async function getLedgerBills(openid, ledgerId, limit) {
 
     do {
       batch = await db.collection('ledger_bills')
-        .where({ ledgerId })
+        .where(where)
         .orderBy('date', 'desc')
         .skip(skip)
         .limit(BATCH_SIZE)
