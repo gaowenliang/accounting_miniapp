@@ -506,15 +506,17 @@ Page({
       itemList: ['复制到剪贴板', '保存为文件'],
       success: (res) => {
         let csv = '\uFEFF'  // BOM 头，Excel 兼容中文
-        csv += '日期,类型,分类,金额(元),币种,备注,账户,付款人\n'
+        csv += '日期,类型,分类,金额(元),币种,汇率,人民币等值(元),备注,账户,付款人\n'
+        const members = storage.getMembers()
         bills.forEach(b => {
           const cat = categories.getCategoryBy(b.category, b.type)
-          const members = storage.getMembers()
           const payer = members.find(m => m.id === (b.payer || 'self'))
           // CSV 注入防护
           let note = b.note || ''
           if (/^[=+@\-]/.test(note)) note = "'" + note
-          csv += `${util.formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${note},${b.account},${payer ? payer.name : '我'}\n`
+          const rate = b.exchangeRate || 1
+          const amountCNY = b.amountCNY || b.amount
+          csv += `${util.formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${rate},${(amountCNY/100).toFixed(2)},${note},${b.account},${payer ? payer.name : '我'}\n`
         })
 
         if (res.tapIndex === 0) {

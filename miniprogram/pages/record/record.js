@@ -328,7 +328,13 @@ Page({
       }
     }
 
-    this.setData({ amountStr: '', selectedCategory: '', note: '' })
+    this.setData({
+      amountStr: '',
+      selectedCategory: '',
+      note: '',
+      splitMode: 'no_split',
+      splitMembers: []
+    })
     const sym = this.data.currencySymbol
     wx.showToast({ title: `${bill.type === 'income' ? '收入' : '支出'} ${sym}${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
   },

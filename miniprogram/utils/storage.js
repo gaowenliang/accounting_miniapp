@@ -13,24 +13,35 @@ const StorageManager = {
     MEMBERS: 'members'
   },
 
+  // 内存缓存，避免高频重复读取 Storage
+  _cache: {},
+
+  _getCached(key) {
+    if (this._cache[key] !== undefined) return this._cache[key]
+    let val
+    try { val = wx.getStorageSync(key) } catch (e) { val = null }
+    this._cache[key] = val
+    return val
+  },
+
+  _setCached(key, val) {
+    this._cache[key] = val
+    try { wx.setStorageSync(key, val) } catch (e) { console.error('save failed:', key, e) }
+  },
+
+  invalidateCache() {
+    this._cache = {}
+  },
+
   // ========== 账单 ==========
 
   getBills() {
-    try {
-      return wx.getStorageSync(this.KEYS.BILLS) || []
-    } catch (e) {
-      console.error('读取账单失败:', e)
-      return []
-    }
+    const cached = this._getCached(this.KEYS.BILLS)
+    return cached || []
   },
 
   saveBills(bills) {
-    try {
-      wx.setStorageSync(this.KEYS.BILLS, bills)
-    } catch (e) {
-      console.error('保存账单失败:', e)
-      wx.showToast({ title: '存储空间不足', icon: 'none' })
-    }
+    this._setCached(this.KEYS.BILLS, bills)
   },
 
   /**
@@ -220,7 +231,7 @@ const StorageManager = {
         if (!categoryStats[b.category]) {
           categoryStats[b.category] = { amount: 0, count: 0 }
         }
-        categoryStats[b.category].amount += b.amount
+        categoryStats[b.category].amount += (b.amountCNY || b.amount)
         categoryStats[b.category].count += 1
       }
     })
@@ -569,26 +580,32 @@ const StorageManager = {
     const bills = this.getBillsByMonth(year, month)
     const accounts = this.getAccounts()
     const members = this.getMembers()
-    const accountMap = {}
+    // 预建 Map，避免循环内 O(n) 查找
+    const memberMap = new Map(members.map(m => [m.id, m]))
+    const accountMap = new Map(accounts.map(a => [a.key, a]))
+    const statsMap = {}
     let totalCNY = 0
 
     bills.forEach(b => {
       const amt = b.amountCNY || b.amount
       const accountKey = b.account || 'unknown'
-      const payer = members.find(m => m.id === (b.payer || 'self'))
-      const key = `${payer ? payer.name : '我'}-${accounts.find(a => a.key === accountKey)?.name || accountKey}`
+      const payerId = b.payer || 'self'
+      const payer = memberMap.get(payerId)
+      const payerName = payer ? payer.name : '我'
+      const accountObj = accountMap.get(accountKey)
+      const accountName = accountObj ? accountObj.name : accountKey
+      const key = `${payerName}-${accountName}`
 
-      if (!accountMap[key]) accountMap[key] = {
-        accountKey, payerId: b.payer || 'self', payerName: payer ? payer.name : '我',
-        accountName: accounts.find(a => a.key === accountKey)?.name || accountKey,
+      if (!statsMap[key]) statsMap[key] = {
+        accountKey, payerId, payerName, accountName,
         count: 0, amount: 0, amountCNY: 0
       }
-      accountMap[key].count++
-      accountMap[key].amountCNY += amt
+      statsMap[key].count++
+      statsMap[key].amountCNY += amt
       totalCNY += amt
     })
 
-    const list = Object.values(accountMap).map(a => ({
+    const list = Object.values(statsMap).map(a => ({
       ...a,
       percent: totalCNY > 0 ? Math.round(a.amountCNY / totalCNY * 100) : 0
     })).sort((a, b) => b.amountCNY - a.amountCNY)

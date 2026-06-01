@@ -250,11 +250,11 @@ Page({
 
     // 计算金额差异，更新账户余额
     const oldBill = storage.getBills().find(b => b.id === editingBillId)
+    const newAmountFen = Math.round(amount * 100)
+    let newAmountCNY = newAmountFen
     if (oldBill) {
-      const currencies = require('../../data/currencies')
       const oldAmountCNY = oldBill.amountCNY || oldBill.amount
-      const newAmountFen = Math.round(amount * 100)
-      const newAmountCNY = oldBill.currency && oldBill.currency !== 'CNY'
+      newAmountCNY = oldBill.currency && oldBill.currency !== 'CNY'
         ? currencies.toCNY(newAmountFen, oldBill.currency, oldBill.exchangeRate)
         : newAmountFen
       const oldDelta = oldBill.type === 'income' ? -oldAmountCNY : oldAmountCNY
@@ -262,11 +262,16 @@ Page({
       storage.updateAccountBalance(oldBill.account, oldDelta + newDelta)
     }
 
-    storage.updateBill(editingBillId, {
-      amount: Math.round(amount * 100),
+    const updates = {
+      amount: newAmountFen,
       category: editCategory,
       note: editNote.trim()
-    })
+    }
+    // 外币账单同步更新 amountCNY
+    if (oldBill && oldBill.currency && oldBill.currency !== 'CNY') {
+      updates.amountCNY = newAmountCNY
+    }
+    storage.updateBill(editingBillId, updates)
 
     this.setData({ showEditModal: false })
     this.loadBills()
