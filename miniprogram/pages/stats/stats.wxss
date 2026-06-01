@@ -76,11 +76,16 @@
 .trend-label { font-size: 16rpx; color: #9CA3AF; margin-top: 6rpx; }
 
 /* 年度 */
+.yearly-legend { display: flex; gap: 24rpx; margin-bottom: 12rpx; justify-content: center; }
+.yearly-legend-item { display: flex; align-items: center; gap: 6rpx; font-size: 22rpx; color: #6B7280; }
+.yearly-legend-dot { width: 16rpx; height: 16rpx; border-radius: 4rpx; }
 .yearly-row { display: flex; align-items: center; padding: 10rpx 0; }
 .yearly-month { font-size: 24rpx; color: #6B7280; width: 64rpx; }
-.yearly-bar-wrap { flex: 1; height: 6rpx; background: #F3F4F6; border-radius: 3rpx; margin: 0 12rpx; overflow: hidden; }
-.yearly-bar.expense { height: 100%; background: linear-gradient(90deg, #EF4444, #F87171); border-radius: 3rpx; min-width: 2rpx; }
-.yearly-amount { font-size: 22rpx; color: #EF4444; min-width: 100rpx; text-align: right; font-variant-numeric: tabular-nums; }
+.yearly-bar-wrap { flex: 1; display: flex; flex-direction: column; gap: 4rpx; margin: 0 12rpx; }
+.yearly-bar-wrap > view { height: 6rpx; border-radius: 3rpx; min-width: 2rpx; }
+.yearly-bar.expense { background: linear-gradient(90deg, #EF4444, #F87171); }
+.yearly-bar.income { background: linear-gradient(90deg, #10B981, #34D399); }
+.yearly-amount { font-size: 22rpx; min-width: 100rpx; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ===== 按人统计 ===== */
 .person-card {
@@ -142,7 +147,10 @@
 .aa-settle-name { font-size: 24rpx; font-weight: 500; color: #1F2937; }
 .aa-settle-arrow { display: flex; flex-direction: column; align-items: center; flex: 1; }
 .aa-settle-amount { font-size: 32rpx; font-weight: 700; color: #F59E0B; font-variant-numeric: tabular-nums; }
-.aa-settle-label { font-size: 20rpx; color: #9CA3AF; margin-top: 2rpx; }
+.aa-settle-dir { display: flex; align-items: center; gap: 4rpx; margin-top: 2rpx; }
+.aa-settle-label { font-size: 20rpx; color: #9CA3AF; }
+.aa-arrow-anim { font-size: 24rpx; color: #F59E0B; animation: arrowPulse 1.2s ease-in-out infinite; }
+@keyframes arrowPulse { 0%,100%{opacity:0.4;transform:translateX(0)} 50%{opacity:1;transform:translateX(4rpx)} }
 
 .empty-hint { text-align: center; padding: 32rpx; font-size: 24rpx; color: #D1D5DB; }
 /* 人员明细展开 */

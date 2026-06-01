@@ -12,7 +12,7 @@
 .nav-divider { color: #D1D5DB; }
 
 /* 筛选栏 */
-.filter-bar { display: flex; gap: 12rpx; margin-bottom: 20rpx; }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 20rpx; }
 .filter-tabs {
   display: flex; background: #F3F4F6; border-radius: 44rpx; padding: 3rpx; flex-shrink: 0;
 }
@@ -97,9 +97,9 @@
 .empty-state .desc { font-size: 24rpx; color: #9CA3AF; }
 
 /* 操作按钮 */
-.bill-actions { display: flex; gap: 12rpx; margin-top: 4rpx; }
-.bill-action { font-size: 20rpx; color: #4F46E5; padding: 2rpx 0; }
-.bill-action.action-delete { color: #EF4444; }
+.bill-actions { display: flex; gap: 16rpx; margin-top: 6rpx; }
+.bill-action { font-size: 22rpx; color: #4F46E5; padding: 8rpx 12rpx; border-radius: 8rpx; background: #F9FAFB; }
+.bill-action.action-delete { color: #EF4444; background: #FEF2F2; }
 
 /* 编辑弹窗 */
 .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 999; }

@@ -57,7 +57,10 @@ Page({
     newGroupName: '',
     editingGroupId: null,
     showAssignGroup: false,
-    assigningMemberId: null
+    assigningMemberId: null,
+    // 折叠状态
+    showCurrencySort: false,
+    showCatSort: false
   },
 
   onShow() {
@@ -711,6 +714,10 @@ Page({
     wx.showToast({ title: '已恢复默认', icon: 'success' })
   },
 
+  toggleCurrencySort() {
+    this.setData({ showCurrencySort: !this.data.showCurrencySort })
+  },
+
   // ===== 分类排序 =====
   switchCatSort(e) {
     const type = e.currentTarget.dataset.type
@@ -739,5 +746,9 @@ Page({
     categories.resetCategories()
     this.setData({ catSortList: categories.getCategories(this.data.catSortType) })
     wx.showToast({ title: '已恢复默认', icon: 'success' })
+  },
+
+  toggleCatSort() {
+    this.setData({ showCatSort: !this.data.showCatSort })
   },
 })

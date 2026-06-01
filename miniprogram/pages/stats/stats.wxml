@@ -226,12 +226,18 @@
 
     <view class="section-title">月度趋势</view>
     <view class="card">
+      <view class="yearly-legend">
+        <view class="yearly-legend-item"><view class="yearly-legend-dot" style="background:#F87171"></view><text>支出</text></view>
+        <view class="yearly-legend-item"><view class="yearly-legend-dot" style="background:#34D399"></view><text>收入</text></view>
+      </view>
       <view class="yearly-row" wx:for="{{monthlyData}}" wx:key="month">
         <text class="yearly-month">{{item.month}}月</text>
         <view class="yearly-bar-wrap">
           <view class="yearly-bar expense" style="width:{{item.expense/(yearlyExpense||1)*100}}%"></view>
+          <view class="yearly-bar income" style="width:{{item.income/(yearlyIncome||1)*100}}%"></view>
         </view>
         <text class="yearly-amount text-expense">¥{{(item.expense/100).toFixed(0)}}</text>
+        <text class="yearly-amount text-income">¥{{(item.income/100).toFixed(0)}}</text>
       </view>
     </view>
   </block>
@@ -361,7 +367,11 @@
           </view>
           <view class="aa-settle-arrow">
             <text class="aa-settle-amount">¥{{(item.amount/100).toFixed(2)}}</text>
-            <text class="aa-settle-label">付给</text>
+            <view class="aa-settle-dir">
+              <text class="aa-arrow-anim">→</text>
+              <text class="aa-settle-label">付给</text>
+              <text class="aa-arrow-anim">→</text>
+            </view>
           </view>
           <view class="aa-settle-person">
             <text class="aa-settle-avatar">{{item.toAvatar || '😊'}}</text>

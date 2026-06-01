@@ -88,6 +88,7 @@
       <view class="split-opt {{splitMode === 'ratio' ? 'active' : ''}}" bindtap="setSplitRatio">按比例</view>
       <view class="split-opt {{splitMode === 'custom' ? 'active' : ''}}" bindtap="setSplitCustom">自定义</view>
     </view>
+    <text class="split-hint" wx:if="{{splitMode === 'no_split'}}">仅记录付款人支出，不进行分摊</text>
     <view class="split-preview-area" wx:if="{{splitMode === 'equal'}}">
       <text class="split-preview-text">每人 {{currencySymbol}}{{splitPerPerson}}</text>
     </view>

@@ -89,6 +89,7 @@
 .split-opt { padding: 8rpx 20rpx; border-radius: 20rpx; background: #F3F4F6; font-size: 24rpx; color: #6B7280; }
 .split-opt.active { background: #4F46E5; color: #FFF; font-weight: 600; }
 .split-preview-area { margin-top: 8rpx; }
+.split-hint { font-size: 22rpx; color: #9CA3AF; margin-top: 6rpx; display: block; }
 .split-preview-text { font-size: 24rpx; color: #4F46E5; font-weight: 500; display: block; line-height: 1.5; }
 
 .custom-splits { margin-top: 10rpx; }
