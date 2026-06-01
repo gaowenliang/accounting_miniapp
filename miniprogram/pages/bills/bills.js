@@ -3,6 +3,7 @@
 const util = require('../../utils/util')
 const storage = require('../../utils/storage')
 const categories = require('../../data/categories')
+const currencies = require('../../data/currencies')
 
 Page({
   data: {
@@ -114,7 +115,6 @@ Page({
       // 币种显示
       let currencyDisplay = ''
       if (b.currency && b.currency !== 'CNY') {
-        const currencies = require('../../data/currencies')
         const info = currencies.getCurrency(b.currency)
         currencyDisplay = info ? `${info.symbol}${(b.amount/100).toFixed(2)} → ≈¥${((b.amountCNY||b.amount)/100).toFixed(2)}` : `${b.currency} ${(b.amount/100).toFixed(2)}`
       }

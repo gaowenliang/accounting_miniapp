@@ -564,9 +564,10 @@ Page({
   showClearConfirm() { this.setData({ showClearModal: true }) },
   cancelClear() { this.setData({ showClearModal: false }) },
   clearAllData() {
+    storage.invalidateCache()
     // 清业务数据
     const keysToClear = ['bills', 'accounts', 'budget', 'members', 'categories_expense', 'categories_income',
-      'ledgerList', 'currentLedger', 'currency_order', 'exchange_rates']
+      'ledgerList', 'currentLedger', 'currency_order', 'exchange_rates', 'deletedMembers', 'memberGroups']
     keysToClear.forEach(key => {
       try { wx.removeStorageSync(key) } catch (e) {}
     })

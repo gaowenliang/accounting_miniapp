@@ -130,32 +130,22 @@ const StorageManager = {
   // ========== 账户 ==========
 
   getAccounts() {
-    try {
-      const stored = wx.getStorageSync(this.KEYS.ACCOUNTS)
-      if (!stored || stored.length === 0) {
-        // 首次使用，初始化默认账户
-        const defaults = categories.DEFAULT_ACCOUNTS.map(a => ({
-          ...a,
-          id: util.genId(),
-          balance: 0,    // 分
-          isDefault: true
-        }))
-        this.saveAccounts(defaults)
-        return defaults
-      }
-      return stored
-    } catch (e) {
-      console.error('读取账户失败:', e)
-      return []
+    const stored = this._getCached(this.KEYS.ACCOUNTS)
+    if (!stored || stored.length === 0) {
+      const defaults = categories.DEFAULT_ACCOUNTS.map(a => ({
+        ...a,
+        id: util.genId(),
+        balance: 0,
+        isDefault: true
+      }))
+      this.saveAccounts(defaults)
+      return defaults
     }
+    return stored
   },
 
   saveAccounts(accounts) {
-    try {
-      wx.setStorageSync(this.KEYS.ACCOUNTS, accounts)
-    } catch (e) {
-      console.error('保存账户失败:', e)
-    }
+    this._setCached(this.KEYS.ACCOUNTS, accounts)
   },
 
   addAccount(account) {
@@ -193,23 +183,15 @@ const StorageManager = {
   // ========== 预算 ==========
 
   getBudget() {
-    try {
-      return wx.getStorageSync(this.KEYS.BUDGET) || {
-        amount: 0,        // 分
-        enabled: false,
-        alertAt: 80       // 80% 时提醒
-      }
-    } catch (e) {
-      return { amount: 0, enabled: false, alertAt: 80 }
+    return this._getCached(this.KEYS.BUDGET) || {
+      amount: 0,
+      enabled: false,
+      alertAt: 80
     }
   },
 
   saveBudget(budget) {
-    try {
-      wx.setStorageSync(this.KEYS.BUDGET, budget)
-    } catch (e) {
-      console.error('保存预算失败:', e)
-    }
+    this._setCached(this.KEYS.BUDGET, budget)
   },
 
   // ========== 统计 ==========
@@ -287,7 +269,7 @@ const StorageManager = {
   // ========== 设置 ==========
 
   getSettings() {
-    return wx.getStorageSync(this.KEYS.SETTINGS) || {
+    return this._getCached(this.KEYS.SETTINGS) || {
       defaultAccount: 'wechat',
       defaultType: 'expense',
       budgetAlert: true
@@ -295,26 +277,19 @@ const StorageManager = {
   },
 
   saveSettings(settings) {
-    wx.setStorageSync(this.KEYS.SETTINGS, settings)
+    this._setCached(this.KEYS.SETTINGS, settings)
   },
 
   // ========== 人员管理 ==========
 
-  /**
-   * 获取人员列表（本地）
-   */
   getMembers() {
-    try {
-      return wx.getStorageSync(this.KEYS.MEMBERS) || [
-        { id: 'self', name: '我', avatar: '😊', isDefault: true }
-      ]
-    } catch (e) {
-      return [{ id: 'self', name: '我', avatar: '😊', isDefault: true }]
-    }
+    return this._getCached(this.KEYS.MEMBERS) || [
+      { id: 'self', name: '我', avatar: '😊', isDefault: true }
+    ]
   },
 
   saveMembers(members) {
-    try { wx.setStorageSync(this.KEYS.MEMBERS, members) } catch (e) {}
+    this._setCached(this.KEYS.MEMBERS, members)
   },
 
   addMember(name, avatar = '😊') {
@@ -630,7 +605,7 @@ const StorageManager = {
   // ========== 全局统计 ==========
 
   clearBills() {
-    try { wx.setStorageSync('bills', []) } catch (e) {}
+    this._setCached(this.KEYS.BILLS, [])
   },
 
   getOverallStats() {
