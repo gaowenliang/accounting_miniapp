@@ -95,7 +95,7 @@ Page({
     // 收入：工资、奖金、投资、兼职、红包 + 其他
     const isExpense = this.data.billType === 'expense'
     const topKeys = isExpense
-      ? ['food', 'drinks', 'transport', 'accommodation', 'tickets']
+      ? ['food', 'drinks', 'shopping', 'transport', 'accommodation']
       : ['salary', 'bonus', 'investment', 'freelance', 'gift']
     const topCategories = []
     const moreCategories = []
