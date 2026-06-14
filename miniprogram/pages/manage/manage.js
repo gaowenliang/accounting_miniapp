@@ -15,6 +15,8 @@ Page({
     showLedgerModal: false,
     newLedgerName: '',
     newLedgerType: 'personal',
+    newLedgerInviteMode: 'auto',  // auto/custom/off
+    newLedgerCustomCode: '',
     showInviteModal: false,
     inviteCode: '',
     joinCode: '',
@@ -159,7 +161,7 @@ Page({
   // ========== 创建账本 ==========
 
   showCreateLedger() {
-    this.setData({ showLedgerModal: true, newLedgerName: '', newLedgerType: 'personal' })
+    this.setData({ showLedgerModal: true, newLedgerName: '', newLedgerType: 'personal', newLedgerInviteMode: 'auto', newLedgerCustomCode: '' })
   },
 
   cancelCreateLedger() {
@@ -173,6 +175,18 @@ Page({
   switchLedgerType(e) {
     this.setData({ newLedgerType: e.currentTarget.dataset.type })
   },
+
+  setInviteMode(e) {
+    this.setData({ newLedgerInviteMode: e.currentTarget.dataset.mode })
+  },
+
+  onCustomCodeInput(e) {
+    // 只允许大写字母和数字
+    const val = e.detail.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    this.setData({ newLedgerCustomCode: val })
+  },
+
+  noop() {},
 
   async confirmCreateLedger() {
     const name = this.data.newLedgerName.trim()
@@ -188,11 +202,24 @@ Page({
       }
       wx.showLoading({ title: '创建中...' })
       try {
+        // 自定义邀请码校验
+        const inviteMode = this.data.newLedgerInviteMode
+        const customCode = this.data.newLedgerCustomCode
+        const reqData = { name, icon: '📒' }
+        if (inviteMode === 'custom') {
+          if (!customCode || customCode.length !== 6) {
+            wx.showToast({ title: '邀请码需6位字母数字', icon: 'none' }); return
+          }
+          reqData.customInviteCode = customCode
+        } else if (inviteMode === 'off') {
+          reqData.inviteEnabled = false
+        }
+
         const res = await wx.cloud.callFunction({
           name: 'billData',
           data: {
             action: 'createLedger',
-            data: { name, icon: '📒' }
+            data: reqData
           }
         })
         wx.hideLoading()
@@ -212,7 +239,8 @@ Page({
           icon: '📒',
           type: 'shared',
           role: 'owner',
-          inviteCode: res.result.inviteCode,
+          inviteCode: res.result.inviteCode || '',
+          inviteEnabled: inviteMode !== 'off',
           createdAt: Date.now(),
           memberCount: 1
         }

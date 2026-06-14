@@ -338,3 +338,13 @@
   margin-top: 6rpx;
   display: block;
 }
+
+/* 共享账本选项 */
+.shared-options { margin-top: 20rpx; padding: 16rpx; background: #F9FAFB; border-radius: 16rpx; }
+.shared-opt-row { display: flex; align-items: center; justify-content: space-between; }
+.shared-opt-label { font-size: 24rpx; font-weight: 600; color: #6B7280; }
+.shared-opt-toggles { display: flex; gap: 8rpx; }
+.shared-opt-btn { font-size: 20rpx; padding: 6rpx 16rpx; border-radius: 20rpx; background: #FFF; color: #9CA3AF; border: 2rpx solid #E5E7EB; }
+.shared-opt-btn.active { background: #EEF2FF; color: #4F46E5; border-color: #4F46E5; font-weight: 600; }
+.shared-opt-btn.active.danger { background: #FEE2E2; color: #EF4444; border-color: #EF4444; }
+.shared-custom-code { margin-top: 12rpx; text-align: center; letter-spacing: 8rpx; font-size: 32rpx; font-weight: 700; text-transform: uppercase; }

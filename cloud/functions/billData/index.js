@@ -190,20 +190,37 @@ async function deleteBill(openid, billId, ledgerId) {
 async function createLedger(openid, data) {
   if (!data || !data.name) return { success: false, error: '缺少名称' }
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const inviteEnabled = data.inviteEnabled !== false  // 默认开启
 
-  // 生成唯一邀请码（最多重试5次）
   let inviteCode = ''
-  for (let attempt = 0; attempt < 5; attempt++) {
-    let code = ''
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
-    // 检查是否已存在
-    const existing = await db.collection('ledgers').where({ inviteCode: code }).limit(1).count()
-    if (existing.total === 0) {
-      inviteCode = code
-      break
+
+  if (!inviteEnabled) {
+    // 关闭邀请码，用空字符串标记
+    inviteCode = '__DISABLED__'
+  } else if (data.customInviteCode) {
+    // 自定义邀请码，校验格式 + 唯一性
+    const code = data.customInviteCode.toUpperCase()
+    if (!/^[A-Z0-9]{6}$/.test(code)) {
+      return { success: false, error: '邀请码需6位大写字母或数字' }
     }
+    const existing = await db.collection('ledgers').where({ inviteCode: code }).limit(1).count()
+    if (existing.total > 0) {
+      return { success: false, error: '该邀请码已被使用' }
+    }
+    inviteCode = code
+  } else {
+    // 自动生成唯一邀请码（最多重试5次）
+    for (let attempt = 0; attempt < 5; attempt++) {
+      let code = ''
+      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+      const existing = await db.collection('ledgers').where({ inviteCode: code }).limit(1).count()
+      if (existing.total === 0) {
+        inviteCode = code
+        break
+      }
+    }
+    if (!inviteCode) return { success: false, error: '邀请码生成失败，请重试' }
   }
-  if (!inviteCode) return { success: false, error: '邀请码生成失败，请重试' }
 
   try {
     const result = await db.collection('ledgers').add({
@@ -212,6 +229,7 @@ async function createLedger(openid, data) {
         name: data.name,
         icon: data.icon || '📒',
         inviteCode,
+        inviteEnabled,
         memberCount: 1,
         createdAt: Date.now()
       }
@@ -224,7 +242,7 @@ async function createLedger(openid, data) {
         joinedAt: Date.now()
       }
     })
-    return { success: true, _id: result._id, inviteCode }
+    return { success: true, _id: result._id, inviteCode: inviteEnabled ? inviteCode : '' }
   } catch (e) {
     return { success: false, error: e.message }
   }

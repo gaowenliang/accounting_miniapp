@@ -247,18 +247,34 @@
 
   <!-- 创建账本弹窗 -->
   <view class="modal-mask" wx:if="{{showLedgerModal}}" bindtap="cancelCreateLedger">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">新建账本</view>
       <view class="modal-body">
-        <input class="form-input" placeholder="账本名称" value="{{newLedgerName}}" bindinput="onNewLedgerNameInput" focus="{{showLedgerModal}}" />
+        <input class="form-input" placeholder="账本名称" value="{{newLedgerName}}" bindinput="onNewLedgerNameInput" />
         <view class="type-select">
-          <view class="type-opt {{newLedgerType === 'personal' ? 'active' : ''}}" bindtap="switchLedgerType" data-type="personal">
+          <view class="type-opt {{newLedgerType === 'personal' ? 'active' : ''}}" catchtap="switchLedgerType" data-type="personal">
             📒 个人账本
           </view>
-          <view class="type-opt {{newLedgerType === 'shared' ? 'active' : ''}}" bindtap="switchLedgerType" data-type="shared">
+          <view class="type-opt {{newLedgerType === 'shared' ? 'active' : ''}}" catchtap="switchLedgerType" data-type="shared">
             👥 共享账本
           </view>
         </view>
+        <!-- 共享账本选项 -->
+        <block wx:if="{{newLedgerType === 'shared'}}">
+          <view class="shared-options">
+            <view class="shared-opt-row">
+              <text class="shared-opt-label">邀请码</text>
+              <view class="shared-opt-toggles">
+                <text class="shared-opt-btn {{newLedgerInviteMode === 'auto' ? 'active' : ''}}" catchtap="setInviteMode" data-mode="auto">自动生成</text>
+                <text class="shared-opt-btn {{newLedgerInviteMode === 'custom' ? 'active' : ''}}" catchtap="setInviteMode" data-mode="custom">自定义</text>
+                <text class="shared-opt-btn {{newLedgerInviteMode === 'off' ? 'active danger' : ''}}" catchtap="setInviteMode" data-mode="off">关闭</text>
+              </view>
+            </view>
+            <input class="form-input shared-custom-code" wx:if="{{newLedgerInviteMode === 'custom'}}" placeholder="6位字母数字" value="{{newLedgerCustomCode}}" bindinput="onCustomCodeInput" maxlength="6" />
+            <text class="modal-hint" wx:if="{{newLedgerInviteMode === 'auto'}}">系统自动生成6位邀请码</text>
+            <text class="modal-hint" wx:if="{{newLedgerInviteMode === 'off'}}">只能通过你分享小程序卡片邀请</text>
+          </view>
+        </block>
       </view>
       <view class="modal-footer">
         <view class="btn-cancel" bindtap="cancelCreateLedger">取消</view>
@@ -269,7 +285,7 @@
 
   <!-- 邀请弹窗 -->
   <view class="modal-mask" wx:if="{{showInviteModal}}" bindtap="cancelInvite">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">邀请成员</view>
       <view class="modal-body">
         <text class="invite-label">分享邀请码给需要加入的人</text>
@@ -286,7 +302,7 @@
 
   <!-- 加入弹窗 -->
   <view class="modal-mask" wx:if="{{showJoinModal}}" bindtap="cancelJoin">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">加入共享账本</view>
       <view class="modal-body">
         <input class="form-input" placeholder="输入6位邀请码" type="text" maxlength="6" value="{{joinCode}}" bindinput="onJoinCodeInput" focus="{{showJoinModal}}" />
@@ -300,7 +316,7 @@
 
   <!-- 预算弹窗 -->
   <view class="modal-mask" wx:if="{{showBudgetModal}}" bindtap="cancelBudget">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">设置月度预算</view>
       <view class="modal-body">
         <input class="form-input" type="digit" placeholder="输入预算金额" value="{{budgetInput}}" bindinput="onBudgetInput" focus="{{showBudgetModal}}" />
@@ -315,7 +331,7 @@
 
   <!-- 添加人员弹窗 -->
   <view class="modal-mask" wx:if="{{showMemberModal}}" bindtap="cancelAddMember">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">添加人员</view>
       <view class="modal-body">
         <input class="form-input" placeholder="输入姓名" value="{{newMemberName}}" bindinput="onMemberNameInput" focus="{{showMemberModal}}" />
@@ -329,7 +345,7 @@
 
   <!-- 批量添加成员弹窗 -->
   <view class="modal-mask" wx:if="{{showBatchAdd}}" bindtap="closeBatchAdd">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">批量添加成员</view>
       <view class="modal-body">
         <textarea class="batch-textarea" placeholder="每一行输入一个成员名&#10;例：&#10;小王&#10;小李&#10;小杨" value="{{batchNames}}" bindinput="onBatchInput" auto-height maxlength="1000" />
@@ -343,7 +359,7 @@
 
   <!-- 从历史导入弹窗 -->
   <view class="modal-mask" wx:if="{{showHistoryImport}}" bindtap="closeHistoryImport">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">从历史导入</view>
       <view class="modal-body">
         <text class="modal-hint" style="margin-bottom: 16rpx;">选择要恢复的成员</text>
@@ -366,7 +382,7 @@
 
   <!-- 分组管理弹窗 -->
   <view class="modal-mask" wx:if="{{showGroupManager}}" bindtap="closeGroupManager">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">分组管理</view>
       <view class="modal-body">
         <!-- 创建分组 -->
@@ -396,7 +412,7 @@
 
   <!-- 分配分组弹窗 -->
   <view class="modal-mask" wx:if="{{showAssignGroup}}" bindtap="closeAssignGroup">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">分配到分组</view>
       <view class="modal-body">
         <view class="group-assign-list" wx:if="{{memberGroups.length > 0}}">
@@ -435,7 +451,7 @@
 
   <!-- 错误日志弹窗 -->
   <view class="modal-mask" wx:if="{{showErrorModal}}" bindtap="closeErrorLog">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header">🐛 错误日志</view>
       <view class="modal-body" style="max-height: 60vh; overflow-y: auto;">
         <view class="error-log-item" wx:for="{{errorLogs}}" wx:key="index">
@@ -459,7 +475,7 @@
 
   <!-- 清除确认 -->
   <view class="modal-mask" wx:if="{{showClearModal}}" bindtap="cancelClear">
-    <view class="modal-content" catchtap="">
+    <view class="modal-content" catchtap="noop">
       <view class="modal-header danger">⚠️ 清除所有数据</view>
       <view class="modal-body">
         <text class="modal-warn">此操作不可恢复！所有账单、账户、预算数据将被清除。</text>
