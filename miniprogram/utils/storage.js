@@ -242,6 +242,7 @@ const StorageManager = {
     const accounts = this.getAccounts()
     accounts.push({
       id: util.genId(),
+      key: account.key || 'custom_' + Date.now(),
       name: account.name,
       icon: account.icon || '💳',
       type: account.type || 'digital',

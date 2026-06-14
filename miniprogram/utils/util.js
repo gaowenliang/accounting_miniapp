@@ -133,7 +133,7 @@ function billsToCSV(bills, members, categoriesModule) {
   const catMod = categoriesModule || require('../data/categories')
   const memberMap = new Map((members || []).map(m => [m.id, m]))
   let csv = '\uFEFF'  // BOM 头
-  csv += '日期,类型,分类,金额(元),币种,汇率,人民币等值(元),备注,账户,付款人\n'
+  csv += '日期,类型,分类,金额(元),币种,汇率,人民币等值(元),备注,账户,付款人,收据\n'
   bills.forEach(b => {
     const cat = catMod.getCategoryBy(b.category, b.type)
     const payer = memberMap.get(b.payer || 'self')
@@ -142,7 +142,7 @@ function billsToCSV(bills, members, categoriesModule) {
     if (/^[=+@\-]/.test(note)) note = "'" + note
     const rate = b.exchangeRate || 1
     const amountCNY = b.amountCNY || b.amount
-    csv += `${formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${rate},${(amountCNY/100).toFixed(2)},${note},${b.account},${payer ? payer.name : '我'}\n`
+    csv += `${formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${rate},${(amountCNY/100).toFixed(2)},${note},${b.account},${payer ? payer.name : '我'},${b.receipt ? '有' : ''}\n`
   })
   return csv
 }

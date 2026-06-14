@@ -608,7 +608,7 @@ Page({
     wx.showActionSheet({
       itemList: ['复制到剪贴板', '保存为文件'],
       success: (res) => {
-        const csv = util.billsToCSV(bills, storage.getMembers(), categories)
+        const csv = util.billsToCSV(bills, storage.getActiveMembers(), categories)
 
         if (res.tapIndex === 0) {
           // 复制到剪贴板
@@ -689,14 +689,19 @@ Page({
     wx.showLoading({ title: '备份中...' })
     try {
       const backup = {
-        version: 2,
+        version: 3,
         exportedAt: Date.now(),
         bills: storage.getBills(),
         accounts: storage.getAccounts(),
-        members: storage.getMembers(),
+        members: storage.getActiveMembers(),
         budget: storage.getBudget(),
         settings: storage.getSettings(),
-        ledgerList: ledger.getLedgerList()
+        ledgerList: ledger.getLedgerList(),
+        memberGroups: storage.getMemberGroups(),
+        deletedMembers: storage.getDeletedMembers(),
+        currencyOrder: (() => { try { return wx.getStorageSync('currency_order') || [] } catch(e) { return [] } })(),
+        categoriesExpense: (() => { try { return wx.getStorageSync('categories_expense') || null } catch(e) { return null } })(),
+        categoriesIncome: (() => { try { return wx.getStorageSync('categories_income') || null } catch(e) { return null } })()
       }
       wx.hideLoading()
 
@@ -759,6 +764,8 @@ Page({
             content: `将覆盖当前数据（${data.bills.length}条记录）。确定恢复？`,
             success: (modalRes) => {
               if (!modalRes.confirm) return
+              // 先失效缓存
+              storage.invalidateCache()
               // 恢复数据
               if (data.bills) storage.saveBills(data.bills)
               if (data.accounts) storage.saveAccounts(data.accounts)
@@ -766,6 +773,23 @@ Page({
               if (data.budget) storage.saveBudget(data.budget)
               if (data.settings) storage.saveSettings(data.settings)
               if (data.ledgerList) ledger.saveLedgerList(data.ledgerList)
+              // v3 补充字段
+              if (data.memberGroups) storage.saveMemberGroups(data.memberGroups)
+              if (data.deletedMembers) storage.saveDeletedMembers(data.deletedMembers)
+              if (data.currencyOrder) { try { wx.setStorageSync('currency_order', data.currencyOrder) } catch(e){} }
+              if (data.categoriesExpense) { try { wx.setStorageSync('categories_expense', data.categoriesExpense) } catch(e){} }
+              if (data.categoriesIncome) { try { wx.setStorageSync('categories_income', data.categoriesIncome) } catch(e){} }
+              // receipt 图片路径检查标记（跨设备恢复可能无效）
+              if (data.bills) {
+                const fs = wx.getFileSystemManager()
+                data.bills.forEach(b => {
+                  if (b.receipt) {
+                    try { fs.accessSync(b.receipt) }
+                    catch (e) { b.receipt = '' }  // 路径无效则清空
+                  }
+                })
+                storage.saveBills(data.bills)
+              }
 
               this.loadData()
               wx.showToast({ title: '恢复成功', icon: 'success' })

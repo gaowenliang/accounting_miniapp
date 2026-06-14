@@ -133,6 +133,7 @@ Page({
       }
       const cat = categories.getCategoryBy(b.category, b.type)
       const payer = memberMap.get(b.payer || 'self')
+      const payerName = payer ? payer.name : (b.payer === 'self' || !b.payer ? '我' : '未知')
 
       // 分摊信息
       let splitType = 'solo'  // solo=独占, aa=均摊, share=自定义
@@ -184,7 +185,7 @@ Page({
         categoryIcon: cat.icon,
         amountText: util.formatMoney(b.amount, false, currencySymbol),
         amountCNYText: b.amountCNY ? ((b.amountCNY / 100).toFixed(2)) : '',
-        payerName: payer ? payer.name : '我',
+        payerName: payerName,
         splitType,
         splitLabel,
         splitDetail,

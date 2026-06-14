@@ -79,7 +79,8 @@ Page({
       members,
       currentLedger: current,
       accounts: storage.getAccounts(),
-      currencies: currencies.getAllCurrencies()  // 重新加载币种（管理页可能改了排序）
+      currencies: currencies.getAllCurrencies(),
+      categoryList: categories.getCategories(this.data.billType)  // 同步分类排序
     })
     this.initSplitItems(members)
   },
