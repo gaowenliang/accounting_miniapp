@@ -1,5 +1,5 @@
 <!-- pages/manage/manage.wxml — 管理 -->
-<wxs src="../../utils/format.wxs" module="fmt" />
+<wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container">
 
   <!-- 概览卡片 -->

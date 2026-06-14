@@ -301,6 +301,9 @@ Page({
       bill.id = util.genId()
       bill.createdAt = Date.now()
       ledger.optimisticAddBill(current.id, bill)
+      // 共享账本也更新本地账户余额
+      const delta = bill.type === 'income' ? amountCNY : -amountCNY
+      storage.updateAccountBalance(bill.account, delta)
     } else {
       const record = storage.addBill(bill)
       bill.id = record.id
@@ -345,10 +348,12 @@ Page({
    */
   _safeEval(expr) {
     try {
-      // 只保留数字、小数点、+-
+      // 只保留数字、小数点、+、-
       const sanitized = expr.replace(/[^0-9.+-]/g, '')
-      // 用正则分割成 [数字, 运算符, 数字, ...]
-      const tokens = sanitized.match(/[+-]?[\d.]+/g)
+      // 防御连续运算符：把 ++/+-/-+/-- 替换为最后一个
+      const normalized = sanitized.replace(/[+-]{2,}/g, m => m[m.length - 1])
+      // 用正则分割成 [符号+数字, ...]
+      const tokens = normalized.match(/[+-]?[\d.]+/g)
       if (!tokens) return 0
       let result = 0
       for (const t of tokens) {

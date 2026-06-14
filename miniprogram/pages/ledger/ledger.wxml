@@ -1,5 +1,5 @@
 <!-- pages/ledger/ledger.wxml — 账本详情+统计 -->
-<wxs src="../../utils/format.wxs" module="fmt" />
+<wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container" wx:if="{{ledger}}">
 
   <!-- 头部 -->

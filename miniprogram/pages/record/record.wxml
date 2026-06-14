@@ -1,5 +1,5 @@
 <!-- pages/record/record.wxml — 记账页 -->
-<wxs src="../../utils/format.wxs" module="fmt" />
+<wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container">
 
   <!-- 收入/支出切换 + 金额 -->

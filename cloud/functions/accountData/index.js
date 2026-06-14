@@ -3,10 +3,18 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
+const { checkRateLimit } = require('../rateLimit')
 
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
   const { action } = event
+
+  // 写操作防刷
+  if (['create', 'update', 'delete'].includes(action)) {
+    if (!checkRateLimit(OPENID)) {
+      return { success: false, error: '操作太频繁，请稍后再试' }
+    }
+  }
 
   switch (action) {
     case 'list':

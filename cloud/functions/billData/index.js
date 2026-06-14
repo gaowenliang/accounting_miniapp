@@ -5,27 +5,8 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
-// 防刷：每用户每分钟最多 30 次，Map + 容量上限防 OOM
-const rateLimiter = new Map()
-const RATE_LIMIT_MAX_USERS = 10000
-
-function checkRateLimit(openid) {
-  const now = Date.now()
-  // 总容量保护：超过上限时全量清理
-  if (rateLimiter.size > RATE_LIMIT_MAX_USERS) {
-    for (const [key, timestamps] of rateLimiter) {
-      const filtered = timestamps.filter(t => now - t < 60000)
-      if (filtered.length === 0) rateLimiter.delete(key)
-      else rateLimiter.set(key, filtered)
-    }
-  }
-  const timestamps = rateLimiter.get(openid) || []
-  const recent = timestamps.filter(t => now - t < 60000)
-  if (recent.length >= 30) return false
-  recent.push(now)
-  rateLimiter.set(openid, recent)
-  return true
-}
+// 防刷：公共模块
+const { checkRateLimit } = require('../rateLimit')
 
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
@@ -58,6 +39,10 @@ exports.main = async (event, context) => {
       return leaveLedger(OPENID, event.ledgerId)
     case 'getLedgerBills':
       return getLedgerBills(OPENID, event.ledgerId, event.limit || 200, event.startTime, event.endTime)
+    case 'getLedgerMembers':
+      return getLedgerMembers(OPENID, event.ledgerId)
+    case 'removeLedgerMember':
+      return removeLedgerMember(OPENID, event.ledgerId, event.memberId)
     default:
       return { success: false, error: 'Unknown action' }
   }
@@ -133,7 +118,8 @@ async function getBillsByMonth(openid, year, month) {
   const end = new Date(year, month, 0, 23, 59, 59, 999).getTime()
 
   try {
-    const MAX = 5000
+    const MAX = 3000
+    const MAX_SKIP = 1000  // skip 超过 1000 后微信云数据库性能急剧下降
     let allData = []
     let batch
     let skip = 0
@@ -151,7 +137,7 @@ async function getBillsByMonth(openid, year, month) {
         .get()
       allData = allData.concat(batch.data)
       skip += BATCH_SIZE
-    } while (batch.data.length === BATCH_SIZE && allData.length < MAX)
+    } while (batch.data.length === BATCH_SIZE && allData.length < MAX && skip <= MAX_SKIP)
 
     return { success: true, data: allData }
   } catch (e) {
@@ -310,8 +296,18 @@ async function leaveLedger(openid, ledgerId) {
       }
       // 最后一人且是 owner → 解散账本
       await db.collection('ledgers').doc(ledgerId).remove()
-      await db.collection('ledger_bills').where({ ledgerId }).remove()
-      await db.collection('ledger_members').where({ ledgerId }).remove()
+      // 循环删除 ledger_bills（微信云 where().remove() 有数量限制）
+      let deletedBills = 0
+      do {
+        const delRes = await db.collection('ledger_bills').where({ ledgerId }).limit(100).remove()
+        deletedBills = delRes.stats.removed
+      } while (deletedBills > 0)
+      // 循环删除 ledger_members
+      let deletedMembers = 0
+      do {
+        const delMemRes = await db.collection('ledger_members').where({ ledgerId }).limit(100).remove()
+        deletedMembers = delMemRes.stats.removed
+      } while (deletedMembers > 0)
       return { success: true, dissolved: true }
     }
     await db.collection('ledger_members').doc(member._id).remove()
@@ -360,6 +356,53 @@ async function getLedgerBills(openid, ledgerId, limit, startTime, endTime) {
     } while (batch.data.length === BATCH_SIZE && allData.length < MAX)
 
     return { success: true, data: allData }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
+// ========== 成员管理（共享账本） ==========
+
+async function getLedgerMembers(openid, ledgerId) {
+  if (!ledgerId) return { success: false, error: '缺少 ledgerId' }
+  try {
+    // 验证成员身份
+    const memberRes = await db.collection('ledger_members')
+      .where({ ledgerId, _openid: openid })
+      .limit(1).get()
+    if (memberRes.data.length === 0) {
+      return { success: false, error: '无权访问' }
+    }
+    const members = await db.collection('ledger_members')
+      .where({ ledgerId })
+      .limit(100)
+      .get()
+    return { success: true, data: members.data }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
+async function removeLedgerMember(openid, ledgerId, memberId) {
+  if (!ledgerId || !memberId) return { success: false, error: '参数不完整' }
+  try {
+    // 只有 owner 能踢人
+    const callerRes = await db.collection('ledger_members')
+      .where({ ledgerId, _openid: openid })
+      .limit(1).get()
+    if (callerRes.data.length === 0) return { success: false, error: '无权操作' }
+    const caller = callerRes.data[0]
+    if (caller.role !== 'owner') return { success: false, error: '只有管理员能移除成员' }
+    // 不能踢自己（用 leaveLedger）
+    const targetRes = await db.collection('ledger_members')
+      .where({ ledgerId, _openid: memberId })
+      .limit(1).get()
+    if (targetRes.data.length === 0) return { success: false, error: '成员不存在' }
+    const target = targetRes.data[0]
+    if (target.role === 'owner') return { success: false, error: '不能移除管理员' }
+    await db.collection('ledger_members').doc(target._id).remove()
+    await db.collection('ledgers').doc(ledgerId).update({ data: { memberCount: _.inc(-1) } })
+    return { success: true }
   } catch (e) {
     return { success: false, error: e.message }
   }

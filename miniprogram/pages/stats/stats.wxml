@@ -1,5 +1,5 @@
 <!-- pages/stats/stats.wxml — 统计分析 -->
-<wxs src="../../utils/format.wxs" module="fmt" />
+<wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container">
 
   <!-- 分享浮动按钮 -->

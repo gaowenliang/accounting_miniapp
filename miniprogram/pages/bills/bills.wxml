@@ -1,5 +1,5 @@
 <!-- pages/bills/bills.wxml — 账单明细 -->
-<wxs src="../../utils/format.wxs" module="fmt" />
+<wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container">
 
   <!-- 月份导航 -->

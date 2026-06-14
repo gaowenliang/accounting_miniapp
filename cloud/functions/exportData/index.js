@@ -4,6 +4,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
+const { checkRateLimit } = require('../rateLimit')
 
 // 分类映射表
 const CATEGORIES = {
@@ -16,6 +17,11 @@ const CATEGORIES = {
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
   const { action } = event
+
+  // 导出防刷
+  if (!checkRateLimit(OPENID, 10)) {
+    return { success: false, error: '导出太频繁，请稍后再试' }
+  }
 
   switch (action) {
     case 'csv':
