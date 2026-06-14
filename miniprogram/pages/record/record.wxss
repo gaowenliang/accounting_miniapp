@@ -89,8 +89,8 @@
   padding: 8rpx 4rpx; border-radius: 12rpx; transition: background 0.15s;
 }
 .cat-item.selected { background: #EEF2FF; }
-.cat-icon { font-size: 32rpx; margin-bottom: 2rpx; }
-.cat-name { font-size: 18rpx; color: #6B7280; }
+.cat-icon { font-size: 44rpx; margin-bottom: 4rpx; }
+.cat-name { font-size: 22rpx; color: #6B7280; }
 .cat-item.selected .cat-icon { transform: scale(1.1); }
 .cat-item.selected .cat-name { color: #4F46E5; font-weight: 600; }
 .cat-more .cat-icon { color: #9CA3AF; }
