@@ -348,7 +348,7 @@ Page({
   },
 
   // ========== 提交 ==========
-  submitBill() {
+  async submitBill() {
     let amountStr = this.data.amountStr
     if (!amountStr) { wx.showToast({ title: '请输入金额', icon: 'none' }); return }
 
@@ -386,6 +386,19 @@ Page({
       payer: this.data.selectedPayer || 'self',
       splits: this.buildSplits(),
       receipt: this.data.receiptPath || ''
+    }
+
+    // 收据图片从临时路径保存到永久路径
+    if (bill.receipt) {
+      try {
+        const fs = wx.getFileSystemManager()
+        const permanentPath = `${wx.env.USER_DATA_PATH}/receipt_${bill.date}_${Date.now()}.jpg`
+        fs.copyFileSync(bill.receipt, permanentPath)
+        bill.receipt = permanentPath
+      } catch (e) {
+        console.warn('保存收据图片失败:', e)
+        bill.receipt = ''
+      }
     }
 
     if (ledger.isInLedger()) {

@@ -132,3 +132,4 @@
 .edit-cat { display: flex; align-items: center; gap: 4rpx; padding: 6rpx 14rpx; border-radius: 16rpx; background: #F9FAFB; font-size: 22rpx; color: #6B7280; }
 .edit-cat.selected { background: #EEF2FF; border: 2rpx solid #4F46E5; color: #4F46E5; font-weight: 600; }
 .edit-cat-name { font-size: 20rpx; }
+.bill-receipt-btn { font-size: 20rpx; color: #4F46E5; padding: 2rpx 10rpx; background: #EEF2FF; border-radius: 8rpx; }

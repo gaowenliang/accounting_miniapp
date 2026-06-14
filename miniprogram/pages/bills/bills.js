@@ -51,6 +51,12 @@ Page({
     this.setData({ showDetail: !this.data.showDetail })
   },
 
+  previewReceipt(e) {
+    const receipt = e.currentTarget.dataset.receipt
+    if (!receipt) return
+    wx.previewImage({ urls: [receipt] })
+  },
+
   async loadBills() {
     const { currentYear, currentMonth, filterType, searchKeyword } = this.data
     this.setData({ monthLabel: `${currentYear}年${currentMonth}月` })

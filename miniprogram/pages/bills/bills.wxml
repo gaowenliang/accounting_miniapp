@@ -64,6 +64,7 @@
             <view class="bill-meta">
               <text class="bill-payer">👤 {{bill.payerName}}</text>
               <text class="bill-split-detail" wx:if="{{bill.splitDetail}}">👥 {{bill.splitDetail}}</text>
+              <text class="bill-receipt-btn" wx:if="{{bill.receipt}}" catchtap="previewReceipt" data-receipt="{{bill.receipt}}">📸 收据</text>
             </view>
             <text class="bill-currency" wx:if="{{bill.currency && bill.currency !== 'CNY' && bill.amountCNYText}}">≈¥{{bill.amountCNYText}}</text>
           </view>
