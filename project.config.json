@@ -27,9 +27,10 @@
       "outputPath": ""
     }
   },
+  "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
   "condition": {},
-  "appid": "touristappid",
+  "appid": "wx05895730de031d6e",
   "projectname": "记账助手",
   "libVersion": "3.3.4"
 }
