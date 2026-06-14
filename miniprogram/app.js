@@ -7,6 +7,12 @@ App({
     this.setupErrorMonitor()
 
     try {
+      // 恢复上次缓存的汇率
+      const currencies = require('./data/currencies')
+      currencies.restoreRatesFromCache()
+    } catch (e) {}
+
+    try {
       if (wx.cloud) {
         wx.cloud.init({ env: 'cloud1-d5g6bfj6dbdf799ad', traceUser: true })
         this.cloudSync()

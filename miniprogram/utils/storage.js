@@ -527,8 +527,14 @@ const StorageManager = {
       const billAmount = b.amountCNY || b.amount
       const payerId = b.payer || 'self'
 
-      // 只有参与人的账单才统计
-      if (!participantSet.has(payerId)) return
+      // payer 不在参与者中：这笔支出计入 totalExpense，但只算对 payer 的应收
+      // 参与者不需要承担这笔钱（因为 payer 不是「我们的人」）
+      if (!participantSet.has(payerId)) {
+        totalExpense += billAmount
+        paid[payerId] = (paid[payerId] || 0) + billAmount
+        // shouldPay 不分配，payer 全权承担
+        return
+      }
 
       totalExpense += billAmount
       paid[payerId] = (paid[payerId] || 0) + billAmount

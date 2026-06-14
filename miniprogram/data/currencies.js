@@ -128,7 +128,7 @@ async function refreshRatesFromAPI() {
           }
         }
       })
-      saveRates({ updatedAt: now })
+      saveRates({ updatedAt: now, rates: { ...rates } })
       return { success: true, updatedAt: now }
     }
     return { success: false, error: 'API 返回异常' }
@@ -145,8 +145,25 @@ function getRatesUpdatedAt() {
   return saved ? saved.updatedAt : null
 }
 
+/**
+ * 从缓存恢复上次的汇率数据（小程序启动时调用）
+ */
+function restoreRatesFromCache() {
+  const saved = loadRates()
+  if (!saved || !saved.rates) return
+  Object.keys(saved.rates).forEach(code => {
+    const c = CURRENCIES.find(item => item.code === code)
+    if (!c) return
+    if (c.mode === 'direct') {
+      c.rate = saved.rates[code]
+    } else {
+      c.rate = 1 / saved.rates[code]
+    }
+  })
+}
+
 module.exports = {
   CURRENCIES, getCurrency, toCNY, getAllCurrencies,
   getRateDisplay, saveRates, loadRates, saveCurrencyOrder,
-  refreshRatesFromAPI, getRatesUpdatedAt
+  refreshRatesFromAPI, getRatesUpdatedAt, restoreRatesFromCache
 }

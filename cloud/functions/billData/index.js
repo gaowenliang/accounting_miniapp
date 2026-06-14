@@ -30,6 +30,8 @@ exports.main = async (event, context) => {
       return getMonthStats(OPENID, event.year, event.month)
     case 'deleteBill':
       return deleteBill(OPENID, event.billId, event.ledgerId)
+    case 'updateBill':
+      return updateBill(OPENID, event.billId, event.ledgerId, event.updates)
     // 账本相关
     case 'createLedger':
       return createLedger(OPENID, event.data)
@@ -173,12 +175,35 @@ async function deleteBill(openid, billId, ledgerId) {
   if (!billId) return { success: false, error: '缺少 billId' }
   try {
     const collection = ledgerId ? 'ledger_bills' : 'bills'
-    // 先查再删，验证所有权
     const doc = await db.collection(collection).doc(billId).get()
     if (!doc.data || doc.data._openid !== openid) {
       return { success: false, error: '无权删除' }
     }
     await db.collection(collection).doc(billId).remove()
+    return { success: true }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
+async function updateBill(openid, billId, ledgerId, updates) {
+  if (!billId) return { success: false, error: '缺少 billId' }
+  if (!updates || Object.keys(updates).length === 0) return { success: false, error: '缺少更新内容' }
+  try {
+    const collection = ledgerId ? 'ledger_bills' : 'bills'
+    // 先查再改，验证所有权
+    const doc = await db.collection(collection).doc(billId).get()
+    if (!doc.data || doc.data._openid !== openid) {
+      return { success: false, error: '无权修改' }
+    }
+    // 只允许修改安全字段
+    const safe = {}
+    const allowed = ['amount', 'amountCNY', 'category', 'note', 'account', 'date', 'payer', 'splits', 'currency', 'exchangeRate']
+    for (const key of allowed) {
+      if (updates[key] !== undefined) safe[key] = updates[key]
+    }
+    safe.updatedAt = Date.now()
+    await db.collection(collection).doc(billId).update({ data: safe })
     return { success: true }
   } catch (e) {
     return { success: false, error: e.message }
@@ -249,12 +274,14 @@ async function createLedger(openid, data) {
 }
 
 async function joinLedger(openid, inviteCode) {
-  if (!inviteCode || inviteCode.length !== 6) {
+  // 归一化为大写
+  const normalized = (inviteCode || '').toUpperCase()
+  if (!normalized || normalized.length !== 6) {
     return { success: false, reason: '邀请码格式不对' }
   }
   try {
     const ledgerRes = await db.collection('ledgers')
-      .where({ inviteCode })
+      .where({ inviteCode: normalized })
       .limit(1).get()
     if (ledgerRes.data.length === 0) {
       return { success: false, reason: '邀请码无效' }

@@ -378,10 +378,17 @@ const LedgerManager = {
         name: 'billData',
         data: { action: 'addBill', ledgerId: cloudId, data: bill }
       }).then(res => {
-        if (res.result && res.result.success) {
-          // 静默拉真数据
-          this.refreshBills(ledgerId)
+        if (res.result && res.result.success && res.result._id) {
+          // 回写 cloudId 到本地缓存
+          const current = this.getCachedBills(ledgerId)
+          const added = current.find(b => b.id === bill.id)
+          if (added) {
+            added.cloudId = res.result._id
+            this.setCachedBills(ledgerId, current)
+          }
         }
+        // 静默拉真数据
+        this.refreshBills(ledgerId)
       }).catch(err => {
         // 回滚
         console.warn('推送失败，回滚:', err)
@@ -418,23 +425,30 @@ const LedgerManager = {
    */
   optimisticDeleteBill(ledgerId, billId) {
     const cache = this.getCachedBills(ledgerId)
+    const target = cache.find(b => b.id === billId)
     const filtered = cache.filter(b => b.id !== billId)
     this.setCachedBills(ledgerId, filtered)
 
     const cloudId = this.getCloudId(ledgerId)
     if (wx.cloud) {
-      wx.cloud.callFunction({
-        name: 'billData',
-        data: { action: 'deleteBill', billId, ledgerId: cloudId }
-      }).then(res => {
-        if (res.result && res.result.success) {
+      // 用账单的 cloudId（云数据库 _id）来删除
+      const cloudBillId = target && (target.cloudId || target._id)
+      if (cloudBillId) {
+        wx.cloud.callFunction({
+          name: 'billData',
+          data: { action: 'deleteBill', billId: cloudBillId, ledgerId: cloudId }
+        }).then(res => {
+          if (res.result && res.result.success) {
+            this.refreshBills(ledgerId)
+          }
+        }).catch(err => {
+          console.warn('云端删除失败:', err)
           this.refreshBills(ledgerId)
-        }
-      }).catch(err => {
-        console.warn('云端删除失败:', err)
-        // 回滚：重新拉取
+        })
+      } else {
+        // 没有 cloudId（老数据），直接全量刷新
         this.refreshBills(ledgerId)
-      })
+      }
     }
   },
 
@@ -451,9 +465,24 @@ const LedgerManager = {
 
     const cloudId = this.getCloudId(ledgerId)
     if (wx.cloud) {
-      // 云端没有独立 updateBill action，用 addBill + deleteBill 模拟
-      // 或者直接刷新拉取最新
-      this.refreshBills(ledgerId)
+      // 用账单的 cloudId（云数据库 _id）来定位
+      const cloudBillId = cache[idx] && (cache[idx].cloudId || cache[idx]._id)
+      if (cloudBillId) {
+        wx.cloud.callFunction({
+          name: 'billData',
+          data: { action: 'updateBill', billId: cloudBillId, ledgerId: cloudId, updates }
+        }).then(res => {
+          if (res.result && res.result.success) {
+            this.refreshBills(ledgerId)
+          }
+        }).catch(err => {
+          console.warn('云端编辑失败:', err)
+          this.refreshBills(ledgerId)
+        })
+      } else {
+        // 没有 cloudId（老数据），直接全量刷新拉最新
+        this.refreshBills(ledgerId)
+      }
     }
   },
 
