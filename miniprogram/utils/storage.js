@@ -305,7 +305,7 @@ const StorageManager = {
     bills.forEach(b => {
       if (b.type === 'income') {
         totalIncome += (b.amountCNY || b.amount)
-      } else {
+      } else if (b.type === 'expense') {
         totalExpense += (b.amountCNY || b.amount)
         if (!categoryStats[b.category]) {
           categoryStats[b.category] = { amount: 0, count: 0 }
@@ -313,6 +313,7 @@ const StorageManager = {
         categoryStats[b.category].amount += (b.amountCNY || b.amount)
         categoryStats[b.category].count += 1
       }
+      // transfer 类型不计入收支统计
     })
 
     const data = {
@@ -445,9 +446,10 @@ const StorageManager = {
         stat.totalExpense += (b.amountCNY || b.amount)
         const cat = b.category || 'other'
         stat.categories[cat] = (stat.categories[cat] || 0) + (b.amountCNY || b.amount)
-      } else {
+      } else if (b.type === 'income') {
         stat.totalIncome += (b.amountCNY || b.amount)
       }
+      // transfer 不计入
     })
 
     // 转换分类为排序列表，带百分比
@@ -511,15 +513,32 @@ const StorageManager = {
       // 计算每人应承担多少
       if (b.splits && b.splits.length > 0) {
         // 有分摊明细：splits 表示每人应承担的金额
-        b.splits.forEach(s => {
-          if (participantSet.has(s.memberId)) {
-            // 外币换算：按比例折算
-            const splitAmount = b.currency && b.currency !== 'CNY' && b.exchangeRate && b.amount > 0
-              ? Math.round(s.amount / b.amount * billAmount)
-              : s.amount
-            shouldPay[s.memberId] = (shouldPay[s.memberId] || 0) + splitAmount
-          }
-        })
+        // 外币 splits：最后一个分攤者吸收取整误差，保证总额守恒
+        if (b.currency && b.currency !== 'CNY' && b.exchangeRate && b.amount > 0) {
+          let splitSum = 0
+          const splitsInCNY = b.splits.filter(s => participantSet.has(s.memberId)).map((s, i, arr) => {
+            if (i < arr.length - 1) {
+              const v = Math.round(s.amount / b.amount * billAmount)
+              splitSum += v
+              return { memberId: s.memberId, amount: v }
+            } else {
+              // 最后一个取剩余值
+              return { memberId: s.memberId, amount: billAmount - splitSum }
+            }
+          })
+          splitsInCNY.forEach(s => {
+            if (participantSet.has(s.memberId)) {
+              shouldPay[s.memberId] = (shouldPay[s.memberId] || 0) + s.amount
+            }
+          })
+        } else {
+          // CNY splits 直接用
+          b.splits.forEach(s => {
+            if (participantSet.has(s.memberId)) {
+              shouldPay[s.memberId] = (shouldPay[s.memberId] || 0) + s.amount
+            }
+          })
+        }
         // splits 可能没覆盖所有参与人，未覆盖的人承担 0
       } else {
         // 无分摊：参与人均攤
@@ -658,12 +677,14 @@ const StorageManager = {
     const currencyMap = {}
     const currencies = require('../data/currencies')
     let totalCNY = 0
-    bills.forEach(b => {
+    // 只统计支出，区分收入
+    const expenseBills = bills.filter(b => b.type === 'expense')
+    expenseBills.forEach(b => {
       const cur = b.currency || 'CNY'
       const amtCNY = b.amountCNY || b.amount
       if (!currencyMap[cur]) currencyMap[cur] = { code: cur, count: 0, amount: 0, amountCNY: 0 }
       currencyMap[cur].count++
-      currencyMap[cur].amount += b.amount  // 原始金额（分）
+      currencyMap[cur].amount += b.amount
       currencyMap[cur].amountCNY += amtCNY
       totalCNY += amtCNY
     })
@@ -688,14 +709,15 @@ const StorageManager = {
   getAccountStats(year, month) {
     const bills = this.getBillsByMonth(year, month)
     const accounts = this.getAccounts()
-    const members = this.getMembers()
-    // 预建 Map，避免循环内 O(n) 查找
+    const members = this.getActiveMembers()
     const memberMap = new Map(members.map(m => [m.id, m]))
     const accountMap = new Map(accounts.map(a => [a.key, a]))
     const statsMap = {}
     let totalCNY = 0
 
-    bills.forEach(b => {
+    // 只统计支出
+    const expenseBills = bills.filter(b => b.type === 'expense')
+    expenseBills.forEach(b => {
       const amt = b.amountCNY || b.amount
       const accountKey = b.account || 'unknown'
       const payerId = b.payer || 'self'
@@ -710,6 +732,7 @@ const StorageManager = {
         count: 0, amount: 0, amountCNY: 0
       }
       statsMap[key].count++
+      statsMap[key].amount += b.amount
       statsMap[key].amountCNY += amt
       totalCNY += amt
     })
