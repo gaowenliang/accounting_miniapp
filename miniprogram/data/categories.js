@@ -1,18 +1,23 @@
 // data/categories.js — 收支分类数据
 
 const EXPENSE_CATEGORIES = [
-  { key: 'food',           name: '餐饮', icon: '🍜', color: '#FF9800' },
-  { key: 'transport',      name: '交通', icon: '🚇', color: '#2196F3' },
+  { key: 'food',           name: '美食', icon: '🍜', color: '#FF9800' },
+  { key: 'drinks',         name: '饮品', icon: '☕', color: '#D2691E' },
+  { key: 'transport',      name: '交通', icon: '✈️', color: '#2196F3' },
+  { key: 'accommodation',  name: '住宿', icon: '🏨', color: '#795548' },
+  { key: 'tickets',        name: '门票', icon: '🎫', color: '#9C27B0' },
   { key: 'shopping',       name: '购物', icon: '🛒', color: '#E91E63' },
-  { key: 'housing',        name: '住房', icon: '🏠', color: '#795548' },
-  { key: 'entertainment',  name: '娱乐', icon: '🎮', color: '#9C27B0' },
+  { key: 'entertainment',  name: '娱乐', icon: '🎮', color: '#FF5722' },
   { key: 'telecom',        name: '通讯', icon: '📱', color: '#00BCD4' },
   { key: 'medical',        name: '医疗', icon: '💊', color: '#F44336' },
+  { key: 'grocery',        name: '超市', icon: '🛍️', color: '#4CAF50' },
+  { key: 'laundry',        name: '洗衣', icon: '🧺', color: '#8BC34A' },
+  { key: 'housing',        name: '住房', icon: '🏠', color: '#607D8B' },
   { key: 'education',      name: '教育', icon: '🎓', color: '#3F51B5' },
-  { key: 'clothing',       name: '服饰', icon: '👕', color: '#FF5722' },
-  { key: 'travel',         name: '旅行', icon: '✈️', color: '#009688' },
-  { key: 'social',         name: '人情', icon: '🎁', color: '#FF4081' },
+  { key: 'clothing',       name: '服饰', icon: '👕', color: '#FF4081' },
+  { key: 'social',         name: '人情', icon: '🎁', color: '#FF9800' },
   { key: 'pet',            name: '宠物', icon: '🐾', color: '#8BC34A' },
+  { key: 'luggage',        name: '行李', icon: '🧳', color: '#6366F1' },
   { key: 'other',          name: '其他', icon: '📦', color: '#607D8B' }
 ]
 
