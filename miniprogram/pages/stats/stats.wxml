@@ -1,4 +1,5 @@
 <!-- pages/stats/stats.wxml — 统计分析 -->
+<wxs src="../../utils/format.wxs" module="fmt" />
 <view class="container">
 
   <!-- 分享浮动按钮 -->
@@ -34,20 +35,20 @@
         <view class="summary-bar-wrap">
           <view class="summary-bar income-bar" style="width:{{monthIncome/(monthIncome+monthExpense||1)*100}}%"></view>
         </view>
-        <text class="summary-amount text-income">¥{{(monthIncome/100).toFixed(2)}}</text>
+        <text class="summary-amount text-income">¥{{fmt.fen2yuan(monthIncome)}}</text>
       </view>
       <view class="summary-row">
         <text class="summary-label">支出</text>
         <view class="summary-bar-wrap">
           <view class="summary-bar expense-bar" style="width:{{monthExpense/(monthIncome+monthExpense||1)*100}}%"></view>
         </view>
-        <text class="summary-amount text-expense">¥{{(monthExpense/100).toFixed(2)}}</text>
+        <text class="summary-amount text-expense">¥{{fmt.fen2yuan(monthExpense)}}</text>
       </view>
       <view class="summary-divider"></view>
       <view class="balance-row">
         <text class="summary-label">结余</text>
         <text class="balance-amount {{monthBalance >= 0 ? 'text-income' : 'text-expense'}}">
-          ¥{{(Math.abs(monthBalance)/100).toFixed(2)}}
+          ¥{{fmt.absFen2yuan(monthBalance)}}
         </text>
       </view>
     </view>
@@ -99,7 +100,7 @@
       <view class="cat-rank-total" wx:if="{{categoryRanking.length > 0}}">
         <text>合计</text>
         <text></text>
-        <text>¥{{(categoryTotal/100).toFixed(2)}}</text>
+        <text>¥{{fmt.fen2yuan(categoryTotal)}}</text>
         <text>100%</text>
       </view>
       <view class="empty-hint" wx:if="{{categoryRanking.length === 0}}">暂无数据</view>
@@ -130,8 +131,8 @@
         <view class="currency-stat-row" wx:for="{{currencyStats.list}}" wx:key="code">
           <text class="cs-code">{{item.flag}} {{item.code}}</text>
           <text class="cs-count">{{item.count}}笔</text>
-          <text class="cs-amount">{{item.symbol}}{{(item.amount/100).toFixed(2)}}</text>
-          <text class="cs-cny">¥{{(item.amountCNY/100).toFixed(2)}}</text>
+          <text class="cs-amount">{{item.symbol}}{{fmt.fen2yuan(item.amount)}}</text>
+          <text class="cs-cny">¥{{fmt.fen2yuan(item.amountCNY)}}</text>
           <text class="cs-pct">{{item.percent}}%</text>
         </view>
         <view class="empty-hint" wx:if="{{currencyStats.list.length === 0}}">暂无数据</view>
@@ -165,8 +166,8 @@
         <view class="rate-stat-row" wx:for="{{currencyStats.list}}" wx:key="code">
           <text class="rs-cur">{{item.flag}} {{item.code}}</text>
           <text class="rs-rate">{{item.rateDisplay || '-'}}</text>
-          <text class="rs-amount">{{item.symbol}}{{(item.amount/100).toFixed(2)}}</text>
-          <text class="rs-cny">¥{{(item.amountCNY/100).toFixed(2)}}</text>
+          <text class="rs-amount">{{item.symbol}}{{fmt.fen2yuan(item.amount)}}</text>
+          <text class="rs-cny">¥{{fmt.fen2yuan(item.amountCNY)}}</text>
         </view>
       </view>
     </block>
@@ -181,7 +182,7 @@
         <view class="account-stat-row" wx:for="{{accountStats.list}}" wx:key="payerId">
           <text class="as-name">{{item.payerName}}-{{item.accountName}}</text>
           <text class="as-count">{{item.count}}笔</text>
-          <text class="as-amount">¥{{(item.amountCNY/100).toFixed(2)}}</text>
+          <text class="as-amount">¥{{fmt.fen2yuan(item.amountCNY)}}</text>
           <text class="as-pct">{{item.percent}}%</text>
         </view>
         <view class="empty-hint" wx:if="{{accountStats.list.length === 0}}">暂无数据</view>
@@ -191,7 +192,7 @@
         <view class="h-bar-item" wx:for="{{accountStats.list}}" wx:key="payerId">
           <text class="h-bar-label">{{item.payerName}}-{{item.accountName}}</text>
           <view class="h-bar-wrap"><view class="h-bar" style="width:{{item.percent}}%"></view></view>
-          <text class="h-bar-val">¥{{(item.amountCNY/100).toFixed(0)}}</text>
+          <text class="h-bar-val">¥{{fmt.fen2yuanInt(item.amountCNY)}}</text>
         </view>
       </view>
     </block>
@@ -209,17 +210,17 @@
     <view class="card summary-card">
       <view class="summary-row">
         <text class="summary-label">收入</text>
-        <text class="summary-amount text-income">¥{{(yearlyIncome/100).toFixed(2)}}</text>
+        <text class="summary-amount text-income">¥{{fmt.fen2yuan(yearlyIncome)}}</text>
       </view>
       <view class="summary-row">
         <text class="summary-label">支出</text>
-        <text class="summary-amount text-expense">¥{{(yearlyExpense/100).toFixed(2)}}</text>
+        <text class="summary-amount text-expense">¥{{fmt.fen2yuan(yearlyExpense)}}</text>
       </view>
       <view class="summary-divider"></view>
       <view class="balance-row">
         <text class="summary-label">结余</text>
         <text class="balance-amount {{yearlyIncome-yearlyExpense >= 0 ? 'text-income' : 'text-expense'}}">
-          ¥{{(Math.abs(yearlyIncome-yearlyExpense)/100).toFixed(2)}}
+          ¥{{fmt.absFen2yuan(yearlyIncome-yearlyExpense)}}
         </text>
       </view>
     </view>
@@ -236,8 +237,8 @@
           <view class="yearly-bar expense" style="width:{{item.expense/(yearlyExpense||1)*100}}%"></view>
           <view class="yearly-bar income" style="width:{{item.income/(yearlyIncome||1)*100}}%"></view>
         </view>
-        <text class="yearly-amount text-expense">¥{{(item.expense/100).toFixed(0)}}</text>
-        <text class="yearly-amount text-income">¥{{(item.income/100).toFixed(0)}}</text>
+        <text class="yearly-amount text-expense">¥{{fmt.fen2yuanInt(item.expense)}}</text>
+        <text class="yearly-amount text-income">¥{{fmt.fen2yuanInt(item.income)}}</text>
       </view>
     </view>
   </block>
@@ -260,11 +261,11 @@
       <view class="person-stats-row">
         <view class="person-stat">
           <text class="person-stat-label">支出</text>
-          <text class="person-stat-value text-expense">¥{{(item.totalExpense/100).toFixed(2)}}</text>
+          <text class="person-stat-value text-expense">¥{{fmt.fen2yuan(item.totalExpense)}}</text>
         </view>
         <view class="person-stat">
           <text class="person-stat-label">收入</text>
-          <text class="person-stat-value text-income">¥{{(item.totalIncome/100).toFixed(2)}}</text>
+          <text class="person-stat-value text-income">¥{{fmt.fen2yuan(item.totalIncome)}}</text>
         </view>
       </view>
       <!-- 分类明细 -->
@@ -274,7 +275,7 @@
           <view class="person-cat-bar-wrap">
             <view class="person-cat-bar" style="width:{{cat.percent}}%"></view>
           </view>
-          <text class="person-cat-amount">¥{{(cat.amount/100).toFixed(0)}}</text>
+          <text class="person-cat-amount">¥{{fmt.fen2yuanInt(cat.amount)}}</text>
         </view>
       </view>
       <!-- 展开的账单明细 -->
@@ -286,7 +287,7 @@
             <text class="pd-bill-note">{{bill.note || ''}}</text>
           </view>
           <text class="pd-bill-amount {{bill.type === 'income' ? 'text-income' : 'text-expense'}}">
-            {{bill.type === 'income' ? '+' : '-'}}¥{{(bill.amountDisplay/100).toFixed(2)}}
+            {{bill.type === 'income' ? '+' : '-'}}¥{{fmt.fen2yuan(bill.amountDisplay)}}
           </text>
           <text class="pd-bill-date">{{bill.dateStr}}</text>
         </view>
@@ -327,11 +328,11 @@
     <view class="card aa-summary" wx:if="{{aaResult}}">
       <view class="aa-summary-row">
         <text class="aa-summary-label">总支出</text>
-        <text class="aa-summary-value">¥{{(aaResult.totalExpense/100).toFixed(2)}}</text>
+        <text class="aa-summary-value">¥{{fmt.fen2yuan(aaResult.totalExpense)}}</text>
       </view>
       <view class="aa-summary-row">
         <text class="aa-summary-label">人均应出</text>
-        <text class="aa-summary-value">¥{{(aaResult.perPerson/100).toFixed(2)}}</text>
+        <text class="aa-summary-value">¥{{fmt.fen2yuan(aaResult.perPerson)}}</text>
       </view>
       <view class="aa-summary-row">
         <text class="aa-summary-label">参与人数</text>
@@ -348,9 +349,9 @@
           <text class="aa-detail-name">{{item.name}}</text>
         </view>
         <view class="aa-detail-right">
-          <text class="aa-detail-paid">已付 ¥{{(item.paid/100).toFixed(2)}}</text>
+          <text class="aa-detail-paid">已付 ¥{{fmt.fen2yuan(item.paid)}}</text>
           <text class="aa-detail-balance {{item.balance > 0 ? 'text-income' : item.balance < 0 ? 'text-expense' : ''}}">
-            {{item.balance > 0 ? '应收' : item.balance < 0 ? '应付' : '平'}} ¥{{(Math.abs(item.balance)/100).toFixed(2)}}
+            {{item.balance > 0 ? '应收' : item.balance < 0 ? '应付' : '平'}} ¥{{fmt.absFen2yuan(item.balance)}}
           </text>
         </view>
       </view>
@@ -366,7 +367,7 @@
             <text class="aa-settle-name">{{item.fromName}}</text>
           </view>
           <view class="aa-settle-arrow">
-            <text class="aa-settle-amount">¥{{(item.amount/100).toFixed(2)}}</text>
+            <text class="aa-settle-amount">¥{{fmt.fen2yuan(item.amount)}}</text>
             <view class="aa-settle-dir">
               <text class="aa-arrow-anim">→</text>
               <text class="aa-settle-label">付给</text>

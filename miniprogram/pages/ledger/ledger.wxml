@@ -1,4 +1,5 @@
 <!-- pages/ledger/ledger.wxml — 账本详情+统计 -->
+<wxs src="../../utils/format.wxs" module="fmt" />
 <view class="container" wx:if="{{ledger}}">
 
   <!-- 头部 -->
@@ -14,11 +15,11 @@
   <!-- 快速统计 -->
   <view class="stats-row">
     <view class="stat-chip">
-      <text class="stat-chip-val text-expense">¥{{(stats.totalExpense/100).toFixed(0)}}</text>
+      <text class="stat-chip-val text-expense">¥{{fmt.fen2yuanInt(stats.totalExpense)}}</text>
       <text class="stat-chip-lbl">总支出</text>
     </view>
     <view class="stat-chip">
-      <text class="stat-chip-val text-income">¥{{(stats.totalIncome/100).toFixed(0)}}</text>
+      <text class="stat-chip-val text-income">¥{{fmt.fen2yuanInt(stats.totalIncome)}}</text>
       <text class="stat-chip-lbl">总收入</text>
     </view>
     <view class="stat-chip">
@@ -47,16 +48,16 @@
       <view class="ps-row">
         <text class="ps-label">支出</text>
         <view class="ps-bar-wrap"><view class="ps-bar expense" style="width:{{periodStats.expensePct}}%"></view></view>
-        <text class="ps-amt text-expense">¥{{(periodStats.totalExpense/100).toFixed(2)}}</text>
+        <text class="ps-amt text-expense">¥{{fmt.fen2yuan(periodStats.totalExpense)}}</text>
       </view>
       <view class="ps-row">
         <text class="ps-label">收入</text>
         <view class="ps-bar-wrap"><view class="ps-bar income" style="width:{{periodStats.incomePct}}%"></view></view>
-        <text class="ps-amt text-income">¥{{(periodStats.totalIncome/100).toFixed(2)}}</text>
+        <text class="ps-amt text-income">¥{{fmt.fen2yuan(periodStats.totalIncome)}}</text>
       </view>
       <view class="ps-row">
         <text class="ps-label">结余</text>
-        <text class="ps-amt {{periodStats.balance >= 0 ? 'text-income' : 'text-expense'}}">{{periodStats.balance >= 0 ? '+' : ''}}¥{{(Math.abs(periodStats.balance)/100).toFixed(2)}}</text>
+        <text class="ps-amt {{periodStats.balance >= 0 ? 'text-income' : 'text-expense'}}">{{periodStats.balance >= 0 ? '+' : ''}}¥{{fmt.absFen2yuan(periodStats.balance)}}</text>
       </view>
     </view>
 
@@ -68,7 +69,7 @@
         <text class="rank-name">{{item.name}}</text>
         <view class="rank-bar-wrap"><view class="rank-bar" style="width:{{item.pct}}%;background:{{item.color}}"></view></view>
         <text class="rank-pct">{{item.pct}}%</text>
-        <text class="rank-amt">¥{{(item.amount/100).toFixed(0)}}</text>
+        <text class="rank-amt">¥{{fmt.fen2yuanInt(item.amount)}}</text>
       </view>
     </view>
 
@@ -80,7 +81,7 @@
         <text class="rank-name">{{item.name}}</text>
         <view class="rank-bar-wrap"><view class="rank-bar" style="width:{{item.pct}}%;background:#4F46E5"></view></view>
         <text class="rank-pct">{{item.pct}}%</text>
-        <text class="rank-amt">¥{{(item.amount/100).toFixed(0)}}</text>
+        <text class="rank-amt">¥{{fmt.fen2yuanInt(item.amount)}}</text>
       </view>
     </view>
 
@@ -94,7 +95,7 @@
           <text class="rb-note">{{item.note}}</text>
         </view>
         <text class="rb-amt {{item.type === 'income' ? 'text-income' : 'text-expense'}}">
-          {{item.type === 'income' ? '+' : '-'}}¥{{(item.amountDisplay/100).toFixed(2)}}
+          {{item.type === 'income' ? '+' : '-'}}¥{{fmt.fen2yuan(item.amountDisplay)}}
         </text>
       </view>
       <view class="rb-more" bindtap="goBills">查看全部明细 ›</view>

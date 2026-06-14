@@ -1,4 +1,5 @@
 <!-- pages/bills/bills.wxml — 账单明细 -->
+<wxs src="../../utils/format.wxs" module="fmt" />
 <view class="container">
 
   <!-- 月份导航 -->
@@ -7,9 +8,9 @@
     <view class="nav-info">
       <text class="nav-month">{{monthLabel}}</text>
       <view class="nav-summary">
-        <text class="text-income">收入 ¥{{(monthIncome/100).toFixed(2)}}</text>
+        <text class="text-income">收入 ¥{{fmt.fen2yuan(monthIncome)}}</text>
         <text class="nav-divider">|</text>
-        <text class="text-expense">支出 ¥{{(monthExpense/100).toFixed(2)}}</text>
+        <text class="text-expense">支出 ¥{{fmt.fen2yuan(monthExpense)}}</text>
       </view>
     </view>
     <view class="nav-btn" bindtap="nextMonth">▶</view>
@@ -47,8 +48,8 @@
     <view class="group-header">
       <text class="group-date">{{item.dateLabel}}</text>
       <view class="group-summary">
-        <text class="text-income" wx:if="{{item.dayIncome > 0}}">+{{(item.dayIncome/100).toFixed(2)}}</text>
-        <text class="text-expense" wx:if="{{item.dayExpense > 0}}">-{{(item.dayExpense/100).toFixed(2)}}</text>
+        <text class="text-income" wx:if="{{item.dayIncome > 0}}">+{{fmt.fen2yuan(item.dayIncome)}}</text>
+        <text class="text-expense" wx:if="{{item.dayExpense > 0}}">-{{fmt.fen2yuan(item.dayExpense)}}</text>
       </view>
     </view>
     <view class="card">

@@ -1,0 +1,38 @@
+// format.wxs — WXML 内可用的格式化函数
+// 微信小程序 {{}} 不支持调用 .toFixed() 等方法，必须用 WXS
+
+/**
+ * 分转元，保留2位小数
+ */
+var fen2yuan = function(fen) {
+  return (fen / 100).toFixed(2)
+}
+
+/**
+ * 分转元，不保留小数（取整）
+ */
+var fen2yuanInt = function(fen) {
+  return (fen / 100).toFixed(0)
+}
+
+/**
+ * 分转元，保留1位小数
+ */
+var fen2yuan1 = function(fen) {
+  return (fen / 100).toFixed(1)
+}
+
+/**
+ * 绝对值后分转元，保留2位
+ */
+var absFen2yuan = function(fen) {
+  if (fen < 0) fen = -fen
+  return (fen / 100).toFixed(2)
+}
+
+module.exports = {
+  fen2yuan: fen2yuan,
+  fen2yuanInt: fen2yuanInt,
+  fen2yuan1: fen2yuan1,
+  absFen2yuan: absFen2yuan
+}

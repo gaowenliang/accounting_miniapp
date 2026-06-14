@@ -1,4 +1,5 @@
 <!-- pages/manage/manage.wxml — 管理 -->
+<wxs src="../../utils/format.wxs" module="fmt" />
 <view class="container">
 
   <!-- 概览卡片 -->
@@ -17,7 +18,7 @@
       </view>
       <view class="stat-divider"></view>
       <view class="overview-stat">
-        <text class="stat-num">¥{{(totalAssets/100).toFixed(0)}}</text>
+        <text class="stat-num">¥{{fmt.fen2yuanInt(totalAssets)}}</text>
         <text class="stat-label">总资产</text>
       </view>
     </view>
@@ -39,15 +40,15 @@
     <view class="ledger-ov-row">
       <view class="ledger-ov-label">💸 支出汇总</view>
       <view class="ledger-ov-values">
-        <text class="ledger-ov-amount">¥{{(overview.totalExpenseCNY/100).toFixed(2)}}</text>
+        <text class="ledger-ov-amount">¥{{fmt.fen2yuan(overview.totalExpenseCNY)}}</text>
         <text class="ledger-ov-sub" wx:for="{{overview.expenseByCurrency}}" wx:key="code" wx:if="{{item.code !== 'CNY'}}">
-          {{item.symbol}}{{(item.amount/100).toFixed(2)}} {{item.name}}
+          {{item.symbol}}{{fmt.fen2yuan(item.amount)}} {{item.name}}
         </text>
       </view>
     </view>
     <view class="ledger-ov-row">
       <view class="ledger-ov-label">💰 收入汇总</view>
-      <text class="ledger-ov-amount income">¥{{(overview.totalIncomeCNY/100).toFixed(2)}}</text>
+      <text class="ledger-ov-amount income">¥{{fmt.fen2yuan(overview.totalIncomeCNY)}}</text>
     </view>
   </view>
 
@@ -97,7 +98,7 @@
         <text class="account-icon">{{item.icon}}</text>
         <text class="account-name">{{item.name}}</text>
         <text class="account-balance {{item.balance >= 0 ? 'text-income' : 'text-expense'}}">
-          ¥{{((item.balance || 0)/100).toFixed(2)}}
+          ¥{{fmt.fen2yuan(item.balance || 0)}}
         </text>
       </view>
       <view class="add-btn" bindtap="addAccount">
@@ -412,6 +413,46 @@
       </view>
       <view class="modal-footer">
         <view class="btn-primary" bindtap="closeAssignGroup">完成</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 错误日志 -->
+  <view class="section" wx:if="{{errorLogs.length > 0}}">
+    <view class="card">
+      <view class="setting-row" bindtap="showErrorLog">
+        <view class="setting-left">
+          <text>🐛</text>
+          <text class="setting-label">错误日志</text>
+        </view>
+        <view class="setting-right">
+          <text class="setting-value warn">{{errorLogs.length}}条</text>
+          <text class="setting-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 错误日志弹窗 -->
+  <view class="modal-mask" wx:if="{{showErrorModal}}" bindtap="closeErrorLog">
+    <view class="modal-content" catchtap="">
+      <view class="modal-header">🐛 错误日志</view>
+      <view class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+        <view class="error-log-item" wx:for="{{errorLogs}}" wx:key="index">
+          <view class="error-log-header">
+            <text class="error-log-type">{{item.type}}</text>
+            <text class="error-log-page">{{item.page}}</text>
+          </view>
+          <text class="error-log-msg">{{item.error}}</text>
+          <text class="error-log-time">{{item.timeText}}</text>
+        </view>
+        <view class="empty-tip" wx:if="{{errorLogs.length === 0}}">
+          <text>暂无错误 🎉</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="btn-cancel" bindtap="clearErrorLog">清除日志</view>
+        <view class="btn-primary" bindtap="closeErrorLog">关闭</view>
       </view>
     </view>
   </view>
