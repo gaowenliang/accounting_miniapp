@@ -2,11 +2,6 @@
 <wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container">
 
-  <!-- 分享浮动按钮 -->
-  <button class="share-float" open-type="share" style="position:fixed;right:20rpx;bottom:140rpx;z-index:99;background:#4F46E5;color:#fff;border-radius:24rpx;padding:12rpx 24rpx;font-size:24rpx;border:none;display:flex;align-items:center;gap:6rpx;">
-    📤 分享
-  </button>
-
   <!-- 模式切换 -->
   <view class="mode-switch">
     <view class="mode-btn {{mode === 'monthly' ? 'active' : ''}}" bindtap="switchMode" data-mode="monthly">月度</view>
@@ -386,5 +381,8 @@
       刚好平了，不用结算 🎉
     </view>
   </block>
+
+  <!-- 分享按钮 -->
+  <button class="share-btn-bottom" open-type="share">📤 分享统计</button>
 
 </view>
