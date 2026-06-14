@@ -79,9 +79,9 @@ Page({
     const accounts = storage.getAccounts()
     const totalAssets = accounts.reduce((s, a) => s + (a.balance || 0), 0)
     const budget = storage.getBudget()
-    const members = storage.getMembers()
+    const members = storage.getActiveMembers()
 
-    // 计算账本概览
+    // 计算当前账本概览（getBills 在共享模式下自动走账本缓存）
     const bills = storage.getBills()
     const currencySet = new Set()
     const expenseMap = {}
@@ -95,9 +95,10 @@ Page({
       if (b.type === 'expense') {
         expenseMap[cur] += amt
         totalExpenseCNY += amtCNY
-      } else {
+      } else if (b.type === 'income') {
         totalIncomeCNY += amtCNY
       }
+      // transfer 不计入
     })
     const currencyList2 = Array.from(currencySet).map(code => {
       const info = currencies.getCurrency(code)

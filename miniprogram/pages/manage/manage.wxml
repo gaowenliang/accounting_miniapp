@@ -26,7 +26,11 @@
 
   <!-- 账本概况 -->
   <view class="ledger-overview-card">
-    <text class="ledger-ov-title">账本概况</text>
+    <view class="ledger-ov-header">
+      <text class="ledger-ov-title">{{currentLedger.name || '账本'}}概况</text>
+      <text class="ledger-ov-type" wx:if="{{currentLedger.type === 'shared'}}">👥 共享</text>
+      <text class="ledger-ov-type" wx:else>📒 个人</text>
+    </view>
     <view class="ledger-ov-row">
       <view class="ledger-ov-label">👤 成员人数</view>
       <text class="ledger-ov-value">{{overview.memberCount}}人</text>
