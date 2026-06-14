@@ -28,6 +28,7 @@
     }
   },
   "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloud/functions/",
   "compileType": "miniprogram",
   "condition": {},
   "appid": "wx05895730de031d6e",
