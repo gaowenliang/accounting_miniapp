@@ -130,6 +130,38 @@ const LedgerManager = {
   },
 
   /**
+   * 创建云端账本（异步，失败不阻塞本地）
+   */
+  _createCloudLedger(ledger) {
+    if (!wx.cloud) return
+    wx.cloud.callFunction({
+      name: 'billData',
+      data: {
+        action: 'createLedger',
+        data: {
+          name: ledger.name,
+          icon: ledger.icon
+        }
+      }
+    }).then(res => {
+      if (res.result && res.result.success) {
+        // 用云端返回的真实邀请码更新本地
+        const list = this.getLedgerList()
+        const target = list.find(l => l.id === ledger.id)
+        if (target) {
+          target.inviteCode = res.result.inviteCode
+          target.cloudId = res.result._id  // 记住云端 ID
+          this.saveLedgerList(list)
+        }
+      } else {
+        console.warn('创建云端账本失败:', res.result)
+      }
+    }).catch(err => {
+      console.error('创建云端账本异常:', err)
+    })
+  },
+
+  /**
    * 删除账本
    */
   deleteLedger(ledgerId) {
