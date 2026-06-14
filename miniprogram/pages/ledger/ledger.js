@@ -167,8 +167,29 @@ Page({
     wx.switchTab({ url: '/pages/bills/bills' })
   },
 
-  goExport() {
-    wx.showToast({ title: '开发中', icon: 'none' })
+  async goExport() {
+    const util = require('../../utils/util')
+    const storage = require('../../utils/storage')
+    const categories = require('../../data/categories')
+    const ledger = require('../../utils/ledger')
+
+    const current = ledger.getCurrentLedger()
+    let bills
+    if (current.inLedger && current.id) {
+      await ledger.refreshBills(current.id)
+      bills = ledger.getCachedBills(current.id)
+    } else {
+      bills = storage.getBills()
+    }
+    if (bills.length === 0) {
+      wx.showToast({ title: '没有数据可导出', icon: 'none' }); return
+    }
+
+    const csv = util.billsToCSV(bills, storage.getActiveMembers(), categories)
+    wx.setClipboardData({
+      data: csv,
+      success: () => wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
+    })
   },
 
   leaveLedger() {

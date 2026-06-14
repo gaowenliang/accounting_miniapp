@@ -130,6 +130,7 @@
           <text class="cs-arrow" bindtap="moveCurrencyDown" data-idx="{{index}}" wx:if="{{index < currencyList.length - 1}}">↓</text>
         </view>
       </view>
+      <view style="padding:10rpx 0;color:#9CA3AF;font-size:20rpx;">顺序影响记账页币种排列 · 汇率可手动修改</view>
     </view>
   </view>
 

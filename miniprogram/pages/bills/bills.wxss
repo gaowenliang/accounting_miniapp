@@ -101,30 +101,12 @@
 .bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
 .bill-detail { width: 100%; box-sizing: border-box; }
 
-/* 空状态 */
-.empty-state {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 100rpx 40rpx;
-}
-.empty-state .emoji { font-size: 72rpx; margin-bottom: 20rpx; }
-.empty-state .title { font-size: 30rpx; font-weight: 600; color: #374151; margin-bottom: 8rpx; }
-.empty-state .desc { font-size: 24rpx; color: #9CA3AF; }
-
 /* 操作按钮 */
 .bill-actions { display: flex; gap: 16rpx; margin-top: 6rpx; }
 .bill-action { font-size: 22rpx; color: #4F46E5; padding: 8rpx 12rpx; border-radius: 8rpx; background: #F9FAFB; }
 .bill-action.action-delete { color: #EF4444; background: #FEF2F2; }
 
 /* 编辑弹窗 */
-.modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 999; }
-.modal-content { width: 85%; background: #FFF; border-radius: 28rpx; overflow: hidden; }
-.modal-header { text-align: center; font-size: 32rpx; font-weight: 700; color: #1F2937; padding: 36rpx 28rpx 12rpx; }
-.modal-body { padding: 16rpx 36rpx 28rpx; }
-.modal-footer { display: flex; border-top: 1rpx solid #F3F4F6; }
-.modal-footer view { flex: 1; text-align: center; padding: 28rpx; font-size: 30rpx; }
-.btn-cancel { color: #6B7280; }
-.btn-primary { color: #4F46E5; font-weight: 700; }
-
 .edit-row { margin-bottom: 16rpx; }
 .edit-label { font-size: 24rpx; color: #9CA3AF; font-weight: 600; margin-bottom: 6rpx; display: block; }
 .edit-input { border: 2rpx solid #E5E7EB; border-radius: 16rpx; padding: 16rpx; font-size: 28rpx; background: #F9FAFB; }

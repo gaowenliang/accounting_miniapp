@@ -1,5 +1,9 @@
 // cloud/functions/rateLimit.js — 公共防刷模块
 // 每用户每分钟最多 N 次，Map + 容量上限防 OOM
+//
+// ⚠️ 注意：云函数独立部署，此文件需要同步复制到每个云函数目录：
+//    billData/  accountData/  exportData/
+//    修改后需要手动同步：cp rateLimit.js ../billData/ ../accountData/ ../exportData/
 
 const rateLimiter = new Map()
 const MAX_USERS = 10000

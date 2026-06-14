@@ -139,26 +139,6 @@
 .setting-arrow { font-size: 28rpx; color: #D1D5DB; }
 
 /* 弹窗 */
-.modal-mask {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4); display: flex;
-  align-items: center; justify-content: center; z-index: 999;
-}
-.modal-content { width: 82%; background: #FFF; border-radius: 28rpx; overflow: hidden; }
-.modal-header { text-align: center; font-size: 32rpx; font-weight: 700; color: #1F2937; padding: 36rpx 28rpx 12rpx; }
-.modal-header.danger { color: #EF4444; }
-.modal-body { padding: 16rpx 36rpx 28rpx; }
-.form-input {
-  border: 2rpx solid #E5E7EB; border-radius: 16rpx;
-  padding: 20rpx; font-size: 28rpx; background: #F9FAFB;
-}
-.modal-hint { font-size: 22rpx; color: #9CA3AF; margin-top: 12rpx; display: block; }
-.modal-warn { font-size: 26rpx; color: #EF4444; line-height: 1.6; }
-.modal-footer { display: flex; border-top: 1rpx solid #F3F4F6; }
-.modal-footer view { flex: 1; text-align: center; padding: 28rpx; font-size: 30rpx; }
-.btn-cancel { color: #6B7280; }
-.btn-primary { color: #4F46E5; font-weight: 700; }
-.btn-danger { color: #EF4444; font-weight: 700; }
 
 .type-select { display: flex; gap: 12rpx; margin-top: 16rpx; }
 .type-opt {
