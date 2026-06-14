@@ -100,6 +100,9 @@ Page({
       const payer = memberMap.get(b.payer || 'self')
 
       // 分摊信息
+      let splitType = 'solo'  // solo=独占, aa=均摊, share=自定义
+      let splitLabel = ''
+      let splitDetail = ''
       let splitNames = ''
       let perPerson = ''
       if (b.splits && b.splits.length > 0) {
@@ -110,8 +113,25 @@ Page({
         splitNames = memberNames.join('、')
         const total = b.amountCNY || b.amount
         perPerson = '¥' + (Math.round(total / b.splits.length) / 100).toFixed(2)
-      } else if (members.length > 1) {
-        splitNames = '未分摊'
+        // 判断类型：金额全一样=AA，否则=自定义分摊
+        const amounts = b.splits.map(s => s.amount)
+        const isAllEqual = amounts.every(a => a === amounts[0])
+        if (isAllEqual) {
+          splitType = 'aa'
+          splitLabel = 'AA ' + b.splits.length + '人'
+        } else {
+          splitType = 'share'
+          splitLabel = '分摊 ' + b.splits.length + '人'
+        }
+        // 分摊明细：人名 ¥金额
+        splitDetail = b.splits.map(s => {
+          const m = memberMap.get(s.memberId)
+          const name = m ? m.name : '未知'
+          return name + ' ¥' + (s.amount / 100).toFixed(2)
+        }).join(' · ')
+      } else {
+        splitType = 'solo'
+        splitLabel = members.length > 1 ? '独占' : ''
       }
 
       // 币种显示
@@ -128,6 +148,9 @@ Page({
         amountText: util.formatMoney(b.amount),
         amountCNYText: b.amountCNY ? ((b.amountCNY / 100).toFixed(2)) : '',
         payerName: payer ? payer.name : '我',
+        splitType,
+        splitLabel,
+        splitDetail,
         splitNames,
         perPerson,
         currencyDisplay

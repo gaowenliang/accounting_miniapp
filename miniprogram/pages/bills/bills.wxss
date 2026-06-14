@@ -77,11 +77,25 @@
 .bill-icon { font-size: 40rpx; margin-right: 16rpx; flex-shrink: 0; }
 .bill-info { display: flex; flex-direction: column; min-width: 0; }
 .bill-category { font-size: 28rpx; font-weight: 500; color: #1F2937; }
+
+/* 标题行 */
+.bill-title-row { display: flex; align-items: center; gap: 8rpx; }
+
+/* 分摊标签 */
+.bill-split-tag { font-size: 18rpx; padding: 2rpx 10rpx; border-radius: 8rpx; font-weight: 600; }
+.bill-split-solo { background: #F3F4F6; color: #9CA3AF; }
+.bill-split-aa { background: #DCFCE7; color: #16A34A; }
+.bill-split-share { background: #FEF3C7; color: #D97706; }
+
+/* 元信息行 */
+.bill-meta { display: flex; flex-wrap: wrap; gap: 6rpx 14rpx; margin-top: 4rpx; }
+.bill-payer { font-size: 20rpx; color: #6B7280; }
+.bill-split-detail { font-size: 20rpx; color: #4F46E5; opacity: 0.8; }
 .bill-note {
   font-size: 22rpx; color: #9CA3AF; margin-top: 4rpx;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.bill-payer { font-size: 20rpx; color: #4F46E5; margin-top: 2rpx; opacity: 0.75; }
+.bill-payer { font-size: 20rpx; color: #6B7280; margin-top: 2rpx; }
 .bill-currency { font-size: 18rpx; color: #F59E0B; margin-top: 2rpx; }
 .bill-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .bill-amount { font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; }

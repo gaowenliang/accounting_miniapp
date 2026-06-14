@@ -30,8 +30,7 @@
         <text class="search-clear" wx:if="{{searching}}" bindtap="clearSearch">✕</text>
       </view>
       <view class="detail-toggle" bindtap="toggleShowDetail">
-        <text class="detail-toggle-text">{{showDetail ? '隐藏详情' : '显示详情'}}</text>
-        <text class="detail-toggle-icon">{{showDetail ? '▼' : '▶'}}</text>
+        <text class="detail-toggle-text">{{showDetail ? '简洁' : '详细'}}</text>
       </view>
     </view>
   </view>
@@ -57,9 +56,15 @@
         <view class="bill-left">
           <text class="bill-icon">{{bill.categoryIcon}}</text>
           <view class="bill-info">
-            <text class="bill-category">{{bill.categoryName}}</text>
-            <text class="bill-note" wx:if="{{bill.note}}">{{bill.note}}</text>
-            <text class="bill-payer" wx:if="{{bill.payerName && bill.payerName !== '我'}}">{{bill.payerName}} 付款</text>
+            <view class="bill-title-row">
+              <text class="bill-category">{{bill.categoryName}}</text>
+              <text class="bill-split-tag bill-split-{{bill.splitType}}" wx:if="{{bill.splitLabel}}">{{bill.splitLabel}}</text>
+            </view>
+            <text class="bill-note" wx:if="{{bill.note}}">📝 {{bill.note}}</text>
+            <view class="bill-meta">
+              <text class="bill-payer">👤 {{bill.payerName}}</text>
+              <text class="bill-split-detail" wx:if="{{bill.splitDetail}}">👥 {{bill.splitDetail}}</text>
+            </view>
             <text class="bill-currency" wx:if="{{bill.currency && bill.currency !== 'CNY'}}">{{bill.currency}} → ≈¥{{bill.amountCNYText}}</text>
           </view>
         </view>
@@ -71,12 +76,6 @@
             <text class="bill-action" catchtap="editBill" data-id="{{bill.id}}">编辑</text>
             <text class="bill-action action-delete" catchtap="deleteBill" data-id="{{bill.id}}">删除</text>
           </view>
-        </view>
-        <view class="bill-detail" wx:if="{{showDetail}}">
-          <text class="bill-detail-item" wx:if="{{bill.payerName}}">👤 {{bill.payerName}} 付款</text>
-          <text class="bill-detail-item" wx:if="{{bill.splitNames}}">👥 {{bill.splitNames}}</text>
-          <text class="bill-detail-item" wx:if="{{bill.perPerson}}">📊 人均 {{bill.perPerson}}</text>
-          <text class="bill-detail-item" wx:if="{{bill.currencyDisplay}}">💱 {{bill.currencyDisplay}}</text>
         </view>
       </view>
     </view>
