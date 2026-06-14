@@ -131,6 +131,11 @@
 
   <!-- 自定义数字键盘 -->
   <view class="keyboard {{billType === 'expense' ? 'kb-expense' : 'kb-income'}}">
+    <!-- 收据预览 -->
+    <view class="receipt-preview" wx:if="{{receiptThumb}}">
+      <image class="receipt-thumb" src="{{receiptThumb}}" mode="aspectFill" bindtap="previewReceipt"></image>
+      <text class="receipt-remove" catchtap="removeReceipt">✕</text>
+    </view>
     <view class="kb-toolbar">
       <picker class="kb-toolbar-item" mode="date" value="{{billDateStr}}" bindchange="onDateChange">
         <text class="kb-toolbar-icon">📅</text>
@@ -139,6 +144,10 @@
       <view class="kb-toolbar-item" bindtap="pickAccount">
         <text class="kb-toolbar-icon">💳</text>
         <text class="kb-toolbar-text">{{accountName}}</text>
+      </view>
+      <view class="kb-toolbar-item" bindtap="takePhoto">
+        <text class="kb-toolbar-icon">📸</text>
+        <text class="kb-toolbar-text">{{receiptThumb ? '已拍' : '收据'}}</text>
       </view>
     </view>
     <view class="keypad">

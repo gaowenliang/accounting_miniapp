@@ -52,6 +52,9 @@ Page({
     selectedAccount: 'wechat',
     accountName: '微信支付',
     showAccountPicker: false,
+    // 收据照片
+    receiptThumb: '',
+    receiptPath: '',
   },
 
   onLoad() {
@@ -233,6 +236,53 @@ Page({
     this.setData({ accountName: acc ? acc.name : '未知' })
   },
 
+  // ========== 收据拍照 ==========
+  takePhoto() {
+    // 已有照片时点击预览
+    if (this.data.receiptThumb) {
+      this.previewReceipt()
+      return
+    }
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      camera: 'back',
+      success: (res) => {
+        const tempPath = res.tempFiles[0].tempFilePath
+        // 压缩
+        wx.compressImage({
+          src: tempPath,
+          quality: 60,
+          success: (compressed) => {
+            this.setData({
+              receiptThumb: compressed.tempFilePath,
+              receiptPath: compressed.tempFilePath
+            })
+          },
+          fail: () => {
+            // 压缩失败用原图
+            this.setData({
+              receiptThumb: tempPath,
+              receiptPath: tempPath
+            })
+          }
+        })
+      }
+    })
+  },
+
+  previewReceipt() {
+    if (!this.data.receiptThumb) return
+    wx.previewImage({
+      urls: [this.data.receiptThumb]
+    })
+  },
+
+  removeReceipt() {
+    this.setData({ receiptThumb: '', receiptPath: '' })
+  },
+
   // ========== 键盘 ==========
   pressKey(e) {
     const val = e.currentTarget.dataset.val
@@ -334,7 +384,8 @@ Page({
       account: this.data.selectedAccount,
       date: this.data.billDate || Date.now(),
       payer: this.data.selectedPayer || 'self',
-      splits: this.buildSplits()
+      splits: this.buildSplits(),
+      receipt: this.data.receiptPath || ''
     }
 
     if (ledger.isInLedger()) {
@@ -377,7 +428,9 @@ Page({
       selectedCategory: '',
       note: '',
       splitMode: 'no_split',
-      splitMembers: []
+      splitMembers: [],
+      receiptThumb: '',
+      receiptPath: ''
     })
     const sym = this.data.currencySymbol
     wx.showToast({ title: `${bill.type === 'income' ? '收入' : '支出'} ${sym}${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
