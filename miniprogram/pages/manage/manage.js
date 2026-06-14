@@ -232,6 +232,26 @@ Page({
 
   noop() {},
 
+  goLedgerSettings(e) {
+    const id = e.currentTarget.dataset.id
+    // 先切换到该账本
+    const result = ledger.switchLedger(id)
+    if (result.success) {
+      storage.invalidateCache()
+      this.loadData()
+      // 展开成员和币种区域
+      this.setData({
+        showMemberMgr: true,
+        showCurrencySort: true
+      })
+      wx.showToast({ title: `已切换到 ${result.info.name}`, icon: 'none' })
+      // 滚动到成员区域
+      setTimeout(() => {
+        wx.pageScrollTo({ scrollTop: 9999, duration: 300 })
+      }, 200)
+    }
+  },
+
   async confirmCreateLedger() {
     const name = this.data.newLedgerName.trim()
     if (!name) { wx.showToast({ title: '请输入账本名称', icon: 'none' }); return }

@@ -3,10 +3,10 @@
 const EXPENSE_CATEGORIES = [
   { key: 'food',           name: '美食', icon: '🍜', color: '#FF9800' },
   { key: 'drinks',         name: '饮品', icon: '☕', color: '#D2691E' },
-  { key: 'transport',      name: '交通', icon: '✈️', color: '#2196F3' },
-  { key: 'accommodation',  name: '住宿', icon: '🏨', color: '#795548' },
-  { key: 'tickets',        name: '门票', icon: '🎫', color: '#9C27B0' },
   { key: 'shopping',       name: '购物', icon: '🛒', color: '#E91E63' },
+  { key: 'transport',      name: '交通', icon: '✈️', color: '#2196F3' },
+  { key: 'tickets',        name: '门票', icon: '🎫', color: '#9C27B0' },
+  { key: 'accommodation',  name: '住宿', icon: '🏨', color: '#795548' },
   { key: 'entertainment',  name: '娱乐', icon: '🎮', color: '#FF5722' },
   { key: 'telecom',        name: '通讯', icon: '📱', color: '#00BCD4' },
   { key: 'medical',        name: '医疗', icon: '💊', color: '#F44336' },

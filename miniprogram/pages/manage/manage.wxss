@@ -330,3 +330,5 @@
 .shared-custom-code { margin-top: 12rpx; text-align: center; letter-spacing: 8rpx; font-size: 32rpx; font-weight: 700; text-transform: uppercase; }
 .ledger-ov-header { display: flex; align-items: center; gap: 8rpx; margin-bottom: 8rpx; }
 .ledger-ov-type { font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 8rpx; background: #F3F4F6; color: #6B7280; }
+.section-subtitle { font-size: 20rpx; color: #9CA3AF; margin-left: auto; margin-right: 8rpx; }
+.ledger-settings-btn { font-size: 28rpx; color: #9CA3AF; padding: 8rpx 12rpx; }

@@ -75,6 +75,7 @@
           <text class="ledger-name">{{item.name}}</text>
           <text class="ledger-meta">{{item.type === 'shared' ? '共享·' + item.memberCount + '人' : '个人'}}</text>
         </view>
+        <text class="ledger-settings-btn" catchtap="goLedgerSettings" data-id="{{item.id}}">⚙</text>
         <view class="ledger-check" wx:if="{{currentLedger.id === item.id}}">
           <text class="check-mark">✓</text>
         </view>
@@ -115,6 +116,7 @@
   <view class="section">
     <view class="section-header collapsible" bindtap="toggleCurrencySort">
       <text class="section-title">🌍 币种排序</text>
+      <text class="section-subtitle">当前账本：{{currentLedger.name || '默认'}}</text>
       <text class="collapse-icon">{{showCurrencySort ? '▲' : '▼'}}</text>
     </view>
     <view class="card" wx:if="{{showCurrencySort}}">
@@ -164,6 +166,7 @@
   <view class="section">
     <view class="section-header">
       <text class="section-title">👥 人员</text>
+      <text class="section-subtitle">当前账本：{{currentLedger.name || '默认'}}</text>
       <view class="header-actions">
         <text class="action-btn" bindtap="openGroupManager">分组管理</text>
         <text class="action-btn" bindtap="openHistoryImport">历史导入</text>
