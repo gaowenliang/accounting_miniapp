@@ -5,16 +5,16 @@
  * @param {number} fen 金额（分）
  * @param {boolean} showSign 是否显示正负号
  */
-function formatMoney(fen, showSign = false) {
+function formatMoney(fen, showSign = false, symbol = '¥') {
   const yuan = fen / 100
   const formatted = Math.abs(yuan).toLocaleString('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })
   if (showSign) {
-    return fen >= 0 ? `+¥${formatted}` : `-¥${formatted}`
+    return fen >= 0 ? `+${symbol}${formatted}` : `-${symbol}${formatted}`
   }
-  return `¥${formatted}`
+  return `${symbol}${formatted}`
 }
 
 /**

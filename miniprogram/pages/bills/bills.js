@@ -164,17 +164,19 @@ Page({
       }
 
       // 币种显示
+      let currencySymbol = '¥'
       let currencyDisplay = ''
       if (b.currency && b.currency !== 'CNY') {
         const info = currencies.getCurrency(b.currency)
-        currencyDisplay = info ? `${info.symbol}${(b.amount/100).toFixed(2)} → ≈¥${((b.amountCNY||b.amount)/100).toFixed(2)}` : `${b.currency} ${(b.amount/100).toFixed(2)}`
+        currencySymbol = info ? info.symbol : ''
+        currencyDisplay = info ? `${info.symbol}${(b.amount/100).toFixed(2)}` : `${b.currency} ${(b.amount/100).toFixed(2)}`
       }
 
       groups[dateStr].bills.push({
         ...b,
         categoryName: cat.name,
         categoryIcon: cat.icon,
-        amountText: util.formatMoney(b.amount),
+        amountText: util.formatMoney(b.amount, false, currencySymbol),
         amountCNYText: b.amountCNY ? ((b.amountCNY / 100).toFixed(2)) : '',
         payerName: payer ? payer.name : '我',
         splitType,
@@ -182,6 +184,7 @@ Page({
         splitDetail,
         splitNames,
         perPerson,
+        currencySymbol,
         currencyDisplay
       })
       if (b.type === 'income') groups[dateStr].dayIncome += b.amount

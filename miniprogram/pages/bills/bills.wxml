@@ -65,7 +65,7 @@
               <text class="bill-payer">👤 {{bill.payerName}}</text>
               <text class="bill-split-detail" wx:if="{{bill.splitDetail}}">👥 {{bill.splitDetail}}</text>
             </view>
-            <text class="bill-currency" wx:if="{{bill.currency && bill.currency !== 'CNY'}}">{{bill.currency}} → ≈¥{{bill.amountCNYText}}</text>
+            <text class="bill-currency" wx:if="{{bill.currency && bill.currency !== 'CNY' && bill.amountCNYText}}">≈¥{{bill.amountCNYText}}</text>
           </view>
         </view>
         <view class="bill-right">
