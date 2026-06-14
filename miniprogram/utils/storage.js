@@ -444,10 +444,15 @@ const StorageManager = {
 
   /**
    * AA结算计算
+   * 核心逻辑：
+   *   - 每笔支出由 payer 全额垫付
+   *   - 有 splits 时，splits 表示每人应承担的份额（不是实付）
+   *   - 无 splits 时，参与人均攤
+   *   - 最后计算每人「垫付总额 - 应承担总额」= 净差额
    * @param {number} year
    * @param {number} month
    * @param {Array} participantIds 参与AA的人员ID列表，不传则用全部人员
-   * @returns {{ totalExpense, perPerson, details: [{ from, fromName, to, toName, amount }] }}
+   * @returns {{ totalExpense, perPerson, details }}
    */
   getAAResult(year, month, participantIds) {
     const bills = this.getBillsByMonth(year, month)
@@ -455,52 +460,63 @@ const StorageManager = {
     const memberMap = {}
     members.forEach(m => { memberMap[m.id] = m })
 
-    // 只算支出，只算指定人员的（或全部）
-    const expenseBills = bills.filter(b => b.type === 'expense')
-    const applicableBills = participantIds
-      ? expenseBills.filter(b => participantIds.includes(b.payer || 'self'))
-      : expenseBills
-
-    const totalExpense = applicableBills.reduce((s, b) => s + (b.amountCNY || b.amount), 0)
-
     // 参与AA的人
     const participants = participantIds || members.map(m => m.id)
+    const participantSet = new Set(participants)
     const personCount = participants.length
-    if (personCount === 0) return { totalExpense, perPerson: 0, details: [] }
+    if (personCount === 0) return { totalExpense: 0, perPerson: 0, details: [], personCount: 0, paid: {}, balance: {} }
 
-    const perPerson = Math.floor(totalExpense / personCount)
-    const remainder = totalExpense - perPerson * personCount
+    // 只算支出账单
+    const expenseBills = bills.filter(b => b.type === 'expense')
 
-    // 每人已付（处理 splits + 多币种）
+    // 每人垫付总额（payer 实际付了多少）
     const paid = {}
-    participants.forEach(id => { paid[id] = 0 })
-    applicableBills.forEach(b => {
+    // 每人应承担总额（根据 splits 或均攤）
+    const shouldPay = {}
+    participants.forEach(id => { paid[id] = 0; shouldPay[id] = 0 })
+    let totalExpense = 0
+
+    expenseBills.forEach(b => {
       const billAmount = b.amountCNY || b.amount
       const payerId = b.payer || 'self'
+
+      // 只有参与人的账单才统计
+      if (!participantSet.has(payerId)) return
+
+      totalExpense += billAmount
+      paid[payerId] = (paid[payerId] || 0) + billAmount
+
+      // 计算每人应承担多少
       if (b.splits && b.splits.length > 0) {
-        // 有分摊明细，按 splits 算每人实付
+        // 有分摊明细：splits 表示每人应承担的金额
         b.splits.forEach(s => {
-          if (paid[s.memberId] !== undefined) {
-            // splits 的 amount 也需要换算
-            const splitAmount = b.currency && b.currency !== 'CNY' && b.exchangeRate
+          if (participantSet.has(s.memberId)) {
+            // 外币换算：按比例折算
+            const splitAmount = b.currency && b.currency !== 'CNY' && b.exchangeRate && b.amount > 0
               ? Math.round(s.amount / b.amount * billAmount)
               : s.amount
-            paid[s.memberId] += splitAmount
+            shouldPay[s.memberId] = (shouldPay[s.memberId] || 0) + splitAmount
           }
         })
+        // splits 可能没覆盖所有参与人，未覆盖的人承担 0
       } else {
-        // 无分摊，payer 全额
-        if (paid[payerId] !== undefined) paid[payerId] += billAmount
+        // 无分摊：参与人均攤
+        const perPersonShare = Math.floor(billAmount / personCount)
+        const remainder = billAmount - perPersonShare * personCount
+        participants.forEach((id, idx) => {
+          shouldPay[id] = (shouldPay[id] || 0) + perPersonShare + (idx < remainder ? 1 : 0)
+        })
       }
     })
 
-    // 计算差额：正数=多付了（应收），负数=少付了（应付）
-    // 余数（remainder）归到最后一个结算，保证总额守恒
+    // 每人净差额 = 垫付 - 应承担
+    // 正数=多付了（应收），负数=少付了（应付）
     const balance = {}
-    participants.forEach((id, idx) => {
-      const base = perPerson + (idx === 0 ? remainder : 0)  // 余数归第一个人
-      balance[id] = paid[id] - base
+    participants.forEach(id => {
+      balance[id] = (paid[id] || 0) - (shouldPay[id] || 0)
     })
+
+    const perPerson = Math.floor(totalExpense / personCount)
 
     // 贪心算法算谁给谁
     const details = []
@@ -537,8 +553,9 @@ const StorageManager = {
       totalExpense,
       perPerson,
       personCount,
-      paid,           // 每人已付 { id: amount }
-      balance,        // 每人差额 { id: amount } 正=应收 负=应付
+      paid,           // 每人垫付总额
+      shouldPay,      // 每人应承担总额
+      balance,        // 每人净差额 正=应收 负=应付
       details         // 结算明细
     }
   },
