@@ -10,9 +10,8 @@ const { checkRateLimit } = require('./rateLimit')
 const CATEGORIES = {
   food: '美食', drinks: '饮品', transport: '交通', accommodation: '住宿',
   tickets: '门票', shopping: '购物', entertainment: '娱乐', telecom: '通讯',
-  medical: '医疗', grocery: '超市', laundry: '洗衣', housing: '住房',
-  education: '教育', clothing: '服饰', social: '人情', pet: '宠物',
-  luggage: '行李', other: '其他',
+  medical: '医疗', education: '教育', clothing: '服饰', social: '人情',
+  pet: '宠物', luggage: '行李', other: '其他',
   salary: '工资', bonus: '奖金', investment: '投资', gift: '红包', freelance: '兼职'
 }
 
