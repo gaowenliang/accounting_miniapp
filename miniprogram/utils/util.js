@@ -122,6 +122,31 @@ function fenToYuan(fen) {
   return fen / 100
 }
 
+/**
+ * 生成 CSV 字符串（带 BOM 头，Excel 兼容）
+ * @param {Array} bills 账单列表
+ * @param {Array} members 成员列表（可选）
+ * @param {Object} categoriesModule categories 模块（可选，用于查分类名）
+ * @returns {string} CSV 字符串
+ */
+function billsToCSV(bills, members, categoriesModule) {
+  const catMod = categoriesModule || require('../data/categories')
+  const memberMap = new Map((members || []).map(m => [m.id, m]))
+  let csv = '\uFEFF'  // BOM 头
+  csv += '日期,类型,分类,金额(元),币种,汇率,人民币等值(元),备注,账户,付款人\n'
+  bills.forEach(b => {
+    const cat = catMod.getCategoryBy(b.category, b.type)
+    const payer = memberMap.get(b.payer || 'self')
+    // CSV 注入防护
+    let note = b.note || ''
+    if (/^[=+@\-]/.test(note)) note = "'" + note
+    const rate = b.exchangeRate || 1
+    const amountCNY = b.amountCNY || b.amount
+    csv += `${formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${rate},${(amountCNY/100).toFixed(2)},${note},${b.account},${payer ? payer.name : '我'}\n`
+  })
+  return csv
+}
+
 module.exports = {
   formatMoney,
   formatDate,
@@ -134,5 +159,6 @@ module.exports = {
   genId,
   todayStart,
   yuanToFen,
-  fenToYuan
+  fenToYuan,
+  billsToCSV
 }

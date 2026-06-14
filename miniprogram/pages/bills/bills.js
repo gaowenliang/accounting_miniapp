@@ -82,6 +82,9 @@ Page({
 
     // 按日期分组
     const groups = {}
+    // 预加载 members 避免循环内重复调用
+    const members = storage.getMembers()
+    const memberMap = new Map(members.map(m => [m.id, m]))
     bills.forEach(b => {
       const dateStr = util.formatDate(b.date)
       if (!groups[dateStr]) {
@@ -94,15 +97,14 @@ Page({
         }
       }
       const cat = categories.getCategoryBy(b.category, b.type)
-      const members = storage.getMembers()
-      const payer = members.find(m => m.id === (b.payer || 'self'))
+      const payer = memberMap.get(b.payer || 'self')
 
       // 分摊信息
       let splitNames = ''
       let perPerson = ''
       if (b.splits && b.splits.length > 0) {
         const memberNames = b.splits.map(s => {
-          const m = members.find(mm => mm.id === s.memberId)
+          const m = memberMap.get(s.memberId)
           return m ? m.name : '未知'
         })
         splitNames = memberNames.join('、')

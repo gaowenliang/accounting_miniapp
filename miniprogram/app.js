@@ -50,7 +50,7 @@ App({
 
   async cloudSync() {
     try {
-      const result = await cloudSync.syncOnStartup(storage)
+      const result = await cloudSync.syncOnStartup()
       console.debug('[app] 云同步完成:', result)
     } catch (e) {
       console.warn('云同步失败:', e)

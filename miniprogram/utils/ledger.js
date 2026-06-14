@@ -10,6 +10,7 @@
 //   乐观写：操作先本地生效，后台推云端，失败回滚
 
 const util = require('./util')
+const storage = require('./storage')
 
 const LedgerManager = {
   KEYS: {
@@ -26,11 +27,7 @@ const LedgerManager = {
    * @returns {{ id, name, type, role, inLedger }}
    */
   getCurrentLedger() {
-    try {
-      return wx.getStorageSync(this.KEYS.CURRENT_LEDGER) || { inLedger: false }
-    } catch (e) {
-      return { inLedger: false }
-    }
+    return storage.cachedGet(this.KEYS.CURRENT_LEDGER) || { inLedger: false }
   },
 
   /**
@@ -55,30 +52,22 @@ const LedgerManager = {
         icon: ledger.icon,
         inLedger: ledger.type === 'shared'
       }
-      wx.setStorageSync(this.KEYS.CURRENT_LEDGER, info)
+      storage.cachedSet(this.KEYS.CURRENT_LEDGER, info)
       return { success: true, info }
     }
     // 切到个人模式
-    wx.setStorageSync(this.KEYS.CURRENT_LEDGER, { inLedger: false, type: 'personal' })
+    storage.cachedSet(this.KEYS.CURRENT_LEDGER, { inLedger: false, type: 'personal' })
     return { success: true, info: { inLedger: false, type: 'personal' } }
   },
 
   // ========== 账本列表 ==========
 
   getLedgerList() {
-    try {
-      return wx.getStorageSync(this.KEYS.LEDGER_LIST) || []
-    } catch (e) {
-      return []
-    }
+    return storage.cachedGet(this.KEYS.LEDGER_LIST) || []
   },
 
   saveLedgerList(list) {
-    try {
-      wx.setStorageSync(this.KEYS.LEDGER_LIST, list)
-    } catch (e) {
-      console.error('保存账本列表失败:', e)
-    }
+    storage.cachedSet(this.KEYS.LEDGER_LIST, list)
   },
 
   /**
@@ -161,12 +150,8 @@ const LedgerManager = {
       this.switchLedger(list[0].id)
     }
 
-    // 清缓存（bills + members + 所有可能的 key）
-    const types = ['bills', 'members', 'accounts']
-    types.forEach(t => {
-      try { wx.removeStorageSync(this._cacheKey(ledgerId, t)) } catch (e) {}
-    })
-    try { wx.removeStorageSync(this.KEYS.LEDGER_CACHE + ledgerId) } catch (e) {}
+    // 清缓存
+    this._clearLedgerCache(ledgerId)
 
     // 共享账本：云端清理
     if (target && target.type === 'shared' && wx.cloud) {
@@ -197,7 +182,7 @@ const LedgerManager = {
       if (this.getCurrentLedger().id === ledgerId) {
         const info = this.getCurrentLedger()
         info.name = newName.trim()
-        wx.setStorageSync(this.KEYS.CURRENT_LEDGER, info)
+        storage.cachedSet(this.KEYS.CURRENT_LEDGER, info)
       }
     }
     return { success: true }
@@ -280,10 +265,7 @@ const LedgerManager = {
         }
         if (result.dissolved) {
           // 账本已解散，清理本地所有相关缓存
-          const types = ['bills', 'members']
-          types.forEach(t => {
-            try { wx.removeStorageSync(this._cacheKey(ledgerId, t)) } catch(e){}
-          })
+          this._clearLedgerCache(ledgerId)
         }
       } catch (e) {
         return { success: false, reason: '网络错误，请重试' }
@@ -312,34 +294,22 @@ const LedgerManager = {
    * 获取缓存的账单
    */
   getCachedBills(ledgerId) {
-    try {
-      return wx.getStorageSync(this._cacheKey(ledgerId, 'bills')) || []
-    } catch (e) {
-      return []
-    }
+    return storage.cachedGet(this._cacheKey(ledgerId, 'bills')) || []
   },
 
   setCachedBills(ledgerId, bills) {
-    try {
-      wx.setStorageSync(this._cacheKey(ledgerId, 'bills'), bills)
-    } catch (e) {}
+    storage.cachedSet(this._cacheKey(ledgerId, 'bills'), bills)
   },
 
   /**
    * 获取缓存的成员
    */
   getCachedMembers(ledgerId) {
-    try {
-      return wx.getStorageSync(this._cacheKey(ledgerId, 'members')) || []
-    } catch (e) {
-      return []
-    }
+    return storage.cachedGet(this._cacheKey(ledgerId, 'members')) || []
   },
 
   setCachedMembers(ledgerId, members) {
-    try {
-      wx.setStorageSync(this._cacheKey(ledgerId, 'members'), members)
-    } catch (e) {}
+    storage.cachedSet(this._cacheKey(ledgerId, 'members'), members)
   },
 
   // ========== 乐观写 ==========
@@ -392,6 +362,17 @@ const LedgerManager = {
     } catch (e) {
       console.warn('刷新账单失败:', e)
     }
+  },
+
+  /**
+   * 清理账本相关缓存（统一方法）
+   */
+  _clearLedgerCache(ledgerId) {
+    const types = ['bills', 'members', 'accounts']
+    types.forEach(t => {
+      try { wx.removeStorageSync(this._cacheKey(ledgerId, t)) } catch (e) {}
+    })
+    try { wx.removeStorageSync(this.KEYS.LEDGER_CACHE + ledgerId) } catch (e) {}
   },
 
   // ========== 工具 ==========

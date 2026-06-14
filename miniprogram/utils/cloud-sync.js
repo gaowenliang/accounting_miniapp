@@ -1,12 +1,10 @@
 // utils/cloud-sync.js — 云端同步（参考养花小程序架构）
 
-const storage = require('./storage')
-
 const CloudSync = {
   /**
    * 启动时同步
    */
-  async syncOnStartup(storage) {
+  async syncOnStartup() {
     if (!wx.cloud) return { mode: 'local' }
 
     try {
@@ -18,22 +16,22 @@ const CloudSync = {
       if (res.result && res.result.success) {
         const cloudBills = res.result.data || []
         if (cloudBills.length > 0) {
+          // 引入 storage（延迟 require 避免循环依赖）
+          const storage = require('./storage')
           const localBills = storage.getBills()
 
-          // 建立 cloudId → 本地记录的映射（本地记录可能有 cloudId 字段）
+          // 建立 cloudId → 本地记录的映射
           const localByCloudId = new Map()
-          const localById = new Map()
           localBills.forEach(b => {
             if (b.cloudId) localByCloudId.set(b.cloudId, b)
-            localById.set(b.id, b)
           })
 
-          // 标记云端已覆盖的 cloudId
+          // 云端已覆盖的 cloudId 集合
           const syncedCloudIds = new Set(cloudBills.map(b => b._id))
 
           // 云端记录 → 本地格式
           const synced = cloudBills.map(b => {
-            const local = localByCloudId.get(b._id) || localById.get(b._id)
+            const local = localByCloudId.get(b._id)
             return {
               id: local ? local.id : b._id,  // 保留本地 id
               cloudId: b._id,  // 记住云端 id
@@ -52,11 +50,10 @@ const CloudSync = {
             }
           })
 
-          // 本地独有的（没被云端覆盖的）
+          // 本地独有的：有 cloudId 但云端已不存在的 + 没有 cloudId 的
           const localOnly = localBills.filter(b => {
-            if (b.cloudId && syncedCloudIds.has(b.cloudId)) return false
-            if (localByCloudId.has(b.id)) return false
-            return !syncedCloudIds.has(b.id)
+            if (b.cloudId) return !syncedCloudIds.has(b.cloudId)
+            return true  // 没推过云端的本地账单，保留
           })
 
           const merged = [...synced, ...localOnly]
@@ -100,6 +97,7 @@ const CloudSync = {
       })
       // 把 cloudId 回写到本地
       if (res.result && res.result.success && res.result._id) {
+        const storage = require('./storage')
         const bills = storage.getBills()
         const target = bills.find(b => b.id === bill.id)
         if (target && !target.cloudId) {

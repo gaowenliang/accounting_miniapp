@@ -15,6 +15,10 @@ const StorageManager = {
 
   // 内存缓存，避免高频重复读取 Storage
   _cache: {},
+  // 按月索引: { '2026-5': [billId, ...] }，加速按月查询
+  _monthIndex: null,
+  // 统计缓存: { 'stats_2026-5': { data, signature } }，signature 为账单数+最新时间戳
+  _statsCache: {},
 
   _getCached(key) {
     if (this._cache[key] !== undefined) return this._cache[key]
@@ -31,6 +35,62 @@ const StorageManager = {
 
   invalidateCache() {
     this._cache = {}
+    this._monthIndex = null
+    this._statsCache = {}
+  },
+
+  // ========== 按月索引 ===========
+
+  /**
+   * 构建或重建按月索引（懒加载，首次调用 getBillsByMonth 时触发）
+   */
+  _ensureMonthIndex() {
+    if (this._monthIndex) return
+    this._monthIndex = {}
+    const bills = this.getBills()
+    for (const b of bills) {
+      if (!b.date) continue
+      const d = new Date(b.date)
+      const key = d.getFullYear() + '-' + (d.getMonth() + 1)
+      if (!this._monthIndex[key]) this._monthIndex[key] = []
+      this._monthIndex[key].push(b)
+    }
+  },
+
+  /**
+   * 增量更新索引（单条账单变化时）
+   */
+  _indexBill(bill, action) {
+    if (!this._monthIndex || !bill.date) return
+    const d = new Date(bill.date)
+    const key = d.getFullYear() + '-' + (d.getMonth() + 1)
+    if (!this._monthIndex[key]) this._monthIndex[key] = []
+    if (action === 'add') {
+      this._monthIndex[key].unshift(bill)
+    } else if (action === 'remove') {
+      this._monthIndex[key] = this._monthIndex[key].filter(b => b.id !== bill.id)
+    }
+    // 统计缓存失效
+    this._invalidateStatsCache(key)
+  },
+
+  _invalidateStatsCache(monthKey) {
+    delete this._statsCache['stats_' + monthKey]
+    delete this._statsCache['ranking_' + monthKey]
+    delete this._statsCache['trend_' + monthKey]
+  },
+
+  /**
+   * 计算统计签名（用于检测数据是否变化）
+   */
+  _statsSignature(bills) {
+    if (bills.length === 0) return '0_0'
+    let maxTs = 0
+    for (const b of bills) {
+      const ts = b.updatedAt || b.createdAt || b.date || 0
+      if (ts > maxTs) maxTs = ts
+    }
+    return bills.length + '_' + maxTs
   },
 
   // ========== 账单 ==========
@@ -72,6 +132,7 @@ const StorageManager = {
     // 保留最近 5000 条
     if (bills.length > 5000) bills.length = 5000
     this.saveBills(bills)
+    this._indexBill(record, 'add')
     return record
   },
 
@@ -80,8 +141,10 @@ const StorageManager = {
    */
   deleteBill(billId) {
     let bills = this.getBills()
+    const deleted = bills.find(b => b.id === billId)
     bills = bills.filter(b => b.id !== billId)
     this.saveBills(bills)
+    if (deleted) this._indexBill(deleted, 'remove')
   },
 
   /**
@@ -93,17 +156,22 @@ const StorageManager = {
     if (idx !== -1) {
       bills[idx] = { ...bills[idx], ...updates, updatedAt: Date.now() }
       this.saveBills(bills)
+      // 重建该月索引（日期可能变了）
+      if (this._monthIndex) {
+        this._monthIndex = null
+        this._statsCache = {}
+      }
     }
     return bills[idx]
   },
 
   /**
-   * 获取某月账单
+   * 获取某月账单（使用按月索引，O(1) 查找）
    */
   getBillsByMonth(year, month) {
-    const start = util.monthStart(year, month)
-    const end = util.monthEnd(year, month)
-    return this.getBills().filter(b => b.date >= start && b.date <= end)
+    this._ensureMonthIndex()
+    const key = year + '-' + month
+    return this._monthIndex[key] || []
   },
 
   /**
@@ -197,10 +265,17 @@ const StorageManager = {
   // ========== 统计 ==========
 
   /**
-   * 获取月度统计
+   * 获取月度统计（带缓存，数据未变化时直接返回）
    */
   getMonthStats(year, month) {
+    const monthKey = year + '-' + month
     const bills = this.getBillsByMonth(year, month)
+    const sig = this._statsSignature(bills)
+    const cacheKey = 'stats_' + monthKey
+    if (this._statsCache[cacheKey] && this._statsCache[cacheKey].signature === sig) {
+      return this._statsCache[cacheKey].data
+    }
+
     let totalIncome = 0
     let totalExpense = 0
     const categoryStats = {}
@@ -218,15 +293,17 @@ const StorageManager = {
       }
     })
 
-    return {
+    const data = {
       totalIncome,
       totalExpense,
       balance: totalIncome - totalExpense,
       billCount: bills.length,
       categoryStats,
       // 日均支出
-      dailyAvg: totalExpense / new Date(year, month + 1, 0).getDate()
+      dailyAvg: totalExpense / new Date(year, month, 0).getDate()
     }
+    this._statsCache[cacheKey] = { data, signature: sig }
+    return data
   },
 
   /**
@@ -467,10 +544,17 @@ const StorageManager = {
   },
 
   /**
-   * 分类支出排行
+   * 分类支出排行（带缓存）
    */
   getCategoryRanking(year, month) {
+    const monthKey = year + '-' + month
     const bills = this.getBillsByMonth(year, month)
+    const sig = this._statsSignature(bills)
+    const cacheKey = 'ranking_' + monthKey
+    if (this._statsCache[cacheKey] && this._statsCache[cacheKey].signature === sig) {
+      return this._statsCache[cacheKey].data
+    }
+
     const expenseBills = bills.filter(b => b.type === 'expense')
     const totalExpense = expenseBills.reduce((s, b) => s + (b.amountCNY || b.amount), 0) || 1
     const catMap = {}
@@ -478,7 +562,7 @@ const StorageManager = {
       if (!catMap[b.category]) catMap[b.category] = 0
       catMap[b.category] += (b.amountCNY || b.amount)
     })
-    return Object.entries(catMap)
+    const data = Object.entries(catMap)
       .map(([key, amount]) => {
         const catInfo = categories.getCategoryBy(key, 'expense')
         return {
@@ -491,13 +575,22 @@ const StorageManager = {
         }
       })
       .sort((a, b) => b.amount - a.amount)
+    this._statsCache[cacheKey] = { data, signature: sig }
+    return data
   },
 
   /**
-   * 每日支出趋势
+   * 每日支出趋势（带缓存）
    */
   getDailyTrend(year, month) {
+    const monthKey = year + '-' + month
     const bills = this.getBillsByMonth(year, month)
+    const sig = this._statsSignature(bills)
+    const cacheKey = 'trend_' + monthKey
+    if (this._statsCache[cacheKey] && this._statsCache[cacheKey].signature === sig) {
+      return this._statsCache[cacheKey].data
+    }
+
     const expenseBills = bills.filter(b => b.type === 'expense')
     const daysInMonth = new Date(year, month, 0).getDate()
     const dayMap = {}
@@ -507,11 +600,13 @@ const StorageManager = {
       dayMap[day] = (dayMap[day] || 0) + (b.amountCNY || b.amount)
     })
     const maxVal = Math.max(...Object.values(dayMap), 1)
-    return Object.entries(dayMap).map(([day, amount]) => ({
+    const data = Object.entries(dayMap).map(([day, amount]) => ({
       day: parseInt(day),
       amount,
       height: Math.round(amount / maxVal * 100)
     }))
+    this._statsCache[cacheKey] = { data, signature: sig }
+    return data
   },
 
   // ========== 多维度统计（月度子维度） ==========
@@ -604,8 +699,18 @@ const StorageManager = {
 
   // ========== 全局统计 ==========
 
+  // 导出通用缓存接口，供 ledger 等模块使用
+  cachedGet(key, fallback = null) {
+    return this._getCached(key) || fallback
+  },
+  cachedSet(key, val) {
+    this._setCached(key, val)
+  },
+
   clearBills() {
     this._setCached(this.KEYS.BILLS, [])
+    this._monthIndex = null
+    this._statsCache = {}
   },
 
   getOverallStats() {

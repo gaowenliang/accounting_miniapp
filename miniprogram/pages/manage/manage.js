@@ -58,6 +58,9 @@ Page({
     editingGroupId: null,
     showAssignGroup: false,
     assigningMemberId: null,
+    // 错误日志
+    errorLogs: [],
+    showErrorModal: false,
     // 折叠状态
     showCurrencySort: false,
     showCatSort: false
@@ -132,6 +135,9 @@ Page({
       return { ...m, groups }
     })
     this.setData({ members: membersWithGroups, memberGroups })
+
+    // 加载错误日志
+    this.loadErrorLogs()
   },
 
   // ========== 账本切换 ==========
@@ -499,8 +505,20 @@ Page({
 
   // ========== 导出 ==========
 
-  exportData() {
-    const bills = storage.getBills()
+  async exportData() {
+    // 获取数据：共享账本用云端缓存，个人用本地
+    let bills
+    const current = ledger.getCurrentLedger()
+    if (current.inLedger && current.id) {
+      bills = ledger.getCachedBills(current.id)
+      if (bills.length === 0) {
+        // 尝试从云端拉
+        await ledger.refreshBills(current.id)
+        bills = ledger.getCachedBills(current.id)
+      }
+    } else {
+      bills = storage.getBills()
+    }
     if (bills.length === 0) {
       wx.showToast({ title: '没有数据可导出', icon: 'none' }); return
     }
@@ -508,19 +526,7 @@ Page({
     wx.showActionSheet({
       itemList: ['复制到剪贴板', '保存为文件'],
       success: (res) => {
-        let csv = '\uFEFF'  // BOM 头，Excel 兼容中文
-        csv += '日期,类型,分类,金额(元),币种,汇率,人民币等值(元),备注,账户,付款人\n'
-        const members = storage.getMembers()
-        bills.forEach(b => {
-          const cat = categories.getCategoryBy(b.category, b.type)
-          const payer = members.find(m => m.id === (b.payer || 'self'))
-          // CSV 注入防护
-          let note = b.note || ''
-          if (/^[=+@\-]/.test(note)) note = "'" + note
-          const rate = b.exchangeRate || 1
-          const amountCNY = b.amountCNY || b.amount
-          csv += `${util.formatDate(b.date)},${b.type === 'income' ? '收入' : '支出'},${cat.name},${(b.amount/100).toFixed(2)},${b.currency || 'CNY'},${rate},${(amountCNY/100).toFixed(2)},${note},${b.account},${payer ? payer.name : '我'}\n`
-        })
+        const csv = util.billsToCSV(bills, storage.getMembers(), categories)
 
         if (res.tapIndex === 0) {
           // 复制到剪贴板
@@ -688,6 +694,36 @@ Page({
         }
       }
     })
+  },
+
+  // ===== 错误日志 =====
+  loadErrorLogs() {
+    try {
+      const logs = wx.getStorageSync('errorLog') || []
+      const now = Date.now()
+      // 只显示最近7天的
+      const recent = logs.filter(l => now - l.time < 7 * 86400000).map(l => ({
+        ...l,
+        timeText: util.formatDate(l.time) + ' ' + new Date(l.time).toTimeString().substring(0, 8)
+      }))
+      this.setData({ errorLogs: recent })
+    } catch (e) {
+      this.setData({ errorLogs: [] })
+    }
+  },
+
+  showErrorLog() {
+    this.setData({ showErrorModal: true })
+  },
+
+  closeErrorLog() {
+    this.setData({ showErrorModal: false })
+  },
+
+  clearErrorLog() {
+    try { wx.removeStorageSync('errorLog') } catch (e) {}
+    this.setData({ errorLogs: [], showErrorModal: false })
+    wx.showToast({ title: '已清除', icon: 'success' })
   },
 
   // ===== 币种排序 =====
