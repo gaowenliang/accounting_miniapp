@@ -6,7 +6,7 @@ const db = cloud.database()
 const _ = db.command
 
 // 防刷：公共模块
-const { checkRateLimit } = require('../rateLimit')
+const { checkRateLimit } = require('./rateLimit')
 
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
