@@ -35,6 +35,27 @@
     </view>
   </view>
 
+  <!-- 预算进度条 -->
+  <view class="budget-bar-wrap" wx:if="{{budgetInfo.enabled && budgetInfo.amount > 0}}">
+    <view class="budget-bar-header">
+      <text class="budget-label">📅 本月预算</text>
+      <text class="budget-text {{budgetInfo.exceeded ? 'over' : ''}}">¥{{budgetInfo.usedText}} / ¥{{budgetInfo.totalText}}</text>
+    </view>
+    <view class="budget-bar-track">
+      <view class="budget-bar-fill {{budgetInfo.exceeded ? 'over' : ''}}" style="width:{{budgetInfo.percent > 100 ? 100 : budgetInfo.percent}}%"></view>
+    </view>
+    <text class="budget-hint" wx:if="{{budgetInfo.exceeded}}">⚠️ 超出预算 ¥{{budgetInfo.overText}}</text>
+    <text class="budget-hint" wx:elif="{{budgetInfo.percent >= 80}}">💡 已用 {{budgetInfo.percent}}%，注意控制</text>
+  </view>
+
+  <!-- 分类筛选 chips -->
+  <scroll-view class="cat-filter-scroll" scroll-x enable-flex wx:if="{{!searching && categoryFilters.length > 0}}">
+    <view class="cat-chip {{filterCategory === '' ? 'active' : ''}}" bindtap="setCategoryFilter" data-cat="">全部</view>
+    <view class="cat-chip {{filterCategory === item.key ? 'active' : ''}}" wx:for="{{categoryFilters}}" wx:key="key" bindtap="setCategoryFilter" data-cat="{{item.key}}">
+      <text>{{item.icon}} {{item.name}}</text>
+    </view>
+  </scroll-view>
+
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{groupedBills.length === 0 && !loading}}">
     <text class="emoji">📋</text>

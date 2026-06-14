@@ -26,6 +26,11 @@ Page({
     _searchTimer: null,
     // 详情开关
     showDetail: false,
+    // 预算
+    budgetInfo: { enabled: false, amount: 0, used: 0, percent: 0 },
+    // 分类筛选
+    filterCategory: '',
+    categoryFilters: [],
     // 编辑
     showEditModal: false,
     editingBillId: '',
@@ -55,6 +60,11 @@ Page({
     const receipt = e.currentTarget.dataset.receipt
     if (!receipt) return
     wx.previewImage({ urls: [receipt] })
+  },
+
+  setCategoryFilter(e) {
+    this.setData({ filterCategory: e.currentTarget.dataset.cat })
+    this.loadBills()
   },
 
   async loadBills() {
@@ -92,10 +102,13 @@ Page({
       allMonthBills = storage.getBillsByMonth(currentYear, currentMonth)
     }
 
-    // 类型筛选 + 搜索
+    // 类型筛选 + 搜索 + 分类筛选
     let bills = allMonthBills
     if (filterType !== 'all') {
       bills = bills.filter(b => b.type === filterType)
+    }
+    if (this.data.filterCategory) {
+      bills = bills.filter(b => b.category === this.data.filterCategory)
     }
     if (searchKeyword) {
       const kw = searchKeyword.toLowerCase()
@@ -200,12 +213,40 @@ Page({
 
     const groupedBills = Object.values(groups).sort((a, b) => b.date.localeCompare(a.date))
 
+    // 预算信息
+    const budget = storage.getBudget()
+    let budgetInfo = { enabled: false, amount: 0, used: 0, percent: 0 }
+    if (budget.enabled && budget.amount > 0) {
+      const percent = Math.round(monthExpense / budget.amount * 100)
+      budgetInfo = {
+        enabled: true,
+        amount: budget.amount,
+        used: monthExpense,
+        percent,
+        exceeded: monthExpense > budget.amount,
+        usedText: (monthExpense / 100).toFixed(2),
+        totalText: (budget.amount / 100).toFixed(0),
+        overText: ((monthExpense - budget.amount) / 100).toFixed(2)
+      }
+    }
+
+    // 分类筛选列表（本月用过的分类）
+    const catMap = {}
+    allMonthBills.forEach(b => {
+      if (b.type === 'expense' && !catMap[b.category]) {
+        const cat = categories.getCategoryBy(b.category, 'expense')
+        catMap[b.category] = { key: b.category, name: cat.name, icon: cat.icon }
+      }
+    })
+
     this.setData({
       loading: false,
       groupedBills,
       monthIncome,
       monthExpense,
-      hasBills: allMonthBills.length > 0
+      hasBills: allMonthBills.length > 0,
+      budgetInfo,
+      categoryFilters: Object.values(catMap)
     })
   },
 

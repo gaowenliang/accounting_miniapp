@@ -50,6 +50,16 @@
     <text class="exchange-text">{{rateDisplay}} → ≈¥{{amountCNYText}}</text>
   </view>
 
+  <!-- 快速模板 -->
+  <view class="quick-templates" wx:if="{{quickTemplates.length > 0 && !amountStr}}">
+    <text class="qt-label">⚡ 快速记账</text>
+    <scroll-view scroll-x enable-flex class="qt-scroll">
+      <view class="qt-item" wx:for="{{quickTemplates}}" wx:key="index" bindtap="useTemplate" data-idx="{{index}}">
+        <text class="qt-text">{{item.category}} ¥{{item.amount / 100}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 分类：单行6个，其他展开 -->
   <view class="section-flat">
     <text class="flat-label">分类</text>

@@ -55,6 +55,8 @@ Page({
     // 收据照片
     receiptThumb: '',
     receiptPath: '',
+    // 快速模板
+    quickTemplates: [],
   },
 
   onLoad() {
@@ -70,6 +72,7 @@ Page({
     })
     this.updateAccountName()
     this.splitCategories()
+    this.loadQuickTemplates()
   },
 
   onShow() {
@@ -284,6 +287,40 @@ Page({
     this.setData({ receiptThumb: '', receiptPath: '' })
   },
 
+  // ========== 快速模板 ==========
+  loadQuickTemplates() {
+    try {
+      const templates = wx.getStorageSync('quick_templates') || []
+      this.setData({ quickTemplates: templates.slice(0, 4) })
+    } catch (e) {}
+  },
+
+  saveQuickTemplate(bill) {
+    try {
+      let templates = wx.getStorageSync('quick_templates') || []
+      // 去重：同分类+同金额视为相同模板
+      templates = templates.filter(t => !(t.category === bill.category && t.amount === bill.amount))
+      templates.unshift({ category: bill.category, amount: bill.amount, type: bill.type })
+      templates = templates.slice(0, 8)  // 最多存8个
+      wx.setStorageSync('quick_templates', templates)
+    } catch (e) {}
+  },
+
+  useTemplate(e) {
+    const idx = e.currentTarget.dataset.idx
+    const tpl = this.data.quickTemplates[idx]
+    if (!tpl) return
+    const cat = categories.getCategoryBy(tpl.category, tpl.type)
+    this.setData({
+      billType: tpl.type,
+      selectedCategory: tpl.category,
+      amountStr: String(tpl.amount / 100),
+      categoryList: categories.getCategories(tpl.type)
+    })
+    this.splitCategories()
+    this.afterAmountChange()
+  },
+
   // ========== 键盘 ==========
   pressKey(e) {
     const val = e.currentTarget.dataset.val
@@ -447,6 +484,7 @@ Page({
       receiptPath: ''
     })
     const sym = this.data.currencySymbol
+    this.saveQuickTemplate(bill)
     wx.showToast({ title: `${bill.type === 'income' ? '收入' : '支出'} ${sym}${amountResult.value.toFixed(2)}`, icon: 'success', duration: 1200 })
   },
 

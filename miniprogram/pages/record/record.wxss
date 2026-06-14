@@ -212,3 +212,10 @@
 /* 键盘工具栏3列 */
 .kb-toolbar { display: flex; }
 .kb-toolbar-item { flex: 1; }
+
+/* 快速模板 */
+.quick-templates { padding: 8rpx 28rpx; background: #FFF; }
+.qt-label { font-size: 20rpx; font-weight: 600; color: #9CA3AF; display: block; margin-bottom: 6rpx; }
+.qt-scroll { white-space: nowrap; }
+.qt-item { display: inline-flex; align-items: center; padding: 8rpx 20rpx; border-radius: 24rpx; background: linear-gradient(135deg, #EEF2FF, #F5F3FF); margin-right: 8rpx; }
+.qt-text { font-size: 22rpx; color: #4F46E5; font-weight: 600; }

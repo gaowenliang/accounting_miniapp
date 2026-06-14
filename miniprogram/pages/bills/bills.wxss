@@ -115,3 +115,19 @@
 .edit-cat.selected { background: #EEF2FF; border: 2rpx solid #4F46E5; color: #4F46E5; font-weight: 600; }
 .edit-cat-name { font-size: 20rpx; }
 .bill-receipt-btn { font-size: 20rpx; color: #4F46E5; padding: 2rpx 10rpx; background: #EEF2FF; border-radius: 8rpx; }
+
+/* 预算进度条 */
+.budget-bar-wrap { padding: 16rpx 28rpx; background: #FFF; margin-top: 8rpx; }
+.budget-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8rpx; }
+.budget-label { font-size: 22rpx; font-weight: 600; color: #6B7280; }
+.budget-text { font-size: 24rpx; font-weight: 700; color: #1F2937; font-variant-numeric: tabular-nums; }
+.budget-text.over { color: #EF4444; }
+.budget-bar-track { height: 12rpx; background: #F3F4F6; border-radius: 6rpx; overflow: hidden; }
+.budget-bar-fill { height: 100%; background: linear-gradient(90deg, #10B981, #34D399); border-radius: 6rpx; transition: width 0.3s; }
+.budget-bar-fill.over { background: linear-gradient(90deg, #EF4444, #F87171); }
+.budget-hint { font-size: 20rpx; color: #F59E0B; margin-top: 6rpx; display: block; }
+
+/* 分类筛选 chips */
+.cat-filter-scroll { white-space: nowrap; padding: 8rpx 28rpx; background: #FFF; }
+.cat-chip { display: inline-flex; align-items: center; padding: 8rpx 20rpx; border-radius: 24rpx; background: #F3F4F6; font-size: 22rpx; color: #6B7280; margin-right: 8rpx; }
+.cat-chip.active { background: #4F46E5; color: #FFF; font-weight: 600; }
