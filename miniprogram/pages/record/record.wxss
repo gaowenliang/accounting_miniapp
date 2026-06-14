@@ -22,9 +22,14 @@
 .type-btn.active.income { background: linear-gradient(135deg, #10B981, #34D399); color: #FFF; }
 
 .amount-display {
-  display: flex; align-items: baseline; justify-content: center;
+  display: flex; align-items: baseline;
   padding: 8rpx 0 12rpx;
 }
+.amount-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8rpx 0 12rpx;
+}
+.amount-row .amount-display { flex: 1; justify-content: center; padding: 0; }
 .amount-symbol { font-size: 36rpx; font-weight: 700; color: #1F2937; margin-right: 8rpx; }
 .amount-value { font-size: 64rpx; font-weight: 700; color: #1F2937; font-variant-numeric: tabular-nums; }
 .cursor { width: 3rpx; height: 48rpx; background: #4F46E5; animation: blink 1s infinite; }
@@ -34,18 +39,46 @@
 .section-flat { padding: 12rpx 28rpx; background: #FFF; margin-top: 8rpx; }
 .flat-label { font-size: 22rpx; font-weight: 600; color: #9CA3AF; margin-bottom: 8rpx; display: block; }
 
-/* 币种 */
-.currency-scroll { white-space: nowrap; }
-.currency-item {
-  display: inline-flex; align-items: center; gap: 4rpx;
-  padding: 6rpx 14rpx; border-radius: 16rpx; background: #F9FAFB;
-  margin-right: 8rpx; transition: all 0.15s;
+/* 币种胶囊 */
+.currency-capsule {
+  display: flex; align-items: center; gap: 4rpx;
+  background: #F3F4F6; border-radius: 32rpx; padding: 8rpx 16rpx;
+  flex-shrink: 0;
 }
-.currency-item.selected { background: #EEF2FF; border: 2rpx solid #4F46E5; }
-.currency-flag { font-size: 20rpx; }
-.currency-code { font-size: 20rpx; color: #6B7280; font-weight: 500; }
-.currency-item.selected .currency-code { color: #4F46E5; font-weight: 600; }
-.exchange-info { margin-top: 6rpx; }
+.currency-capsule-flag { font-size: 24rpx; }
+.currency-capsule-code { font-size: 22rpx; font-weight: 600; color: #4F46E5; }
+.currency-capsule-arrow { font-size: 16rpx; color: #9CA3AF; margin-left: 2rpx; }
+
+/* 币种选择弹出层 */
+.currency-picker-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); z-index: 998;
+  display: flex; align-items: flex-end;
+}
+.currency-picker {
+  width: 100%; background: #FFF; border-radius: 28rpx 28rpx 0 0;
+  max-height: 70vh; display: flex; flex-direction: column;
+}
+.currency-picker-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 28rpx 32rpx 16rpx; border-bottom: 1rpx solid #F3F4F6;
+}
+.currency-picker-title { font-size: 30rpx; font-weight: 700; color: #1F2937; }
+.currency-picker-close { font-size: 32rpx; color: #9CA3AF; padding: 8rpx; }
+.currency-picker-list { max-height: 55vh; padding: 8rpx 0; }
+.currency-pick-item {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 20rpx 32rpx; transition: background 0.1s;
+}
+.currency-pick-item:active { background: #F9FAFB; }
+.currency-pick-item.selected { background: #EEF2FF; }
+.currency-pick-flag { font-size: 36rpx; }
+.currency-pick-info { flex: 1; display: flex; flex-direction: column; }
+.currency-pick-code { font-size: 26rpx; font-weight: 600; color: #1F2937; }
+.currency-pick-name { font-size: 20rpx; color: #9CA3AF; }
+.currency-pick-check { font-size: 28rpx; color: #4F46E5; }
+
+.exchange-info { padding: 6rpx 28rpx; }
 .exchange-text { font-size: 22rpx; color: #F59E0B; font-weight: 500; }
 
 /* 分类 4列网格 */

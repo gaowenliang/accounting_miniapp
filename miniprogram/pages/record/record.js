@@ -16,6 +16,8 @@ Page({
     // 币种
     currencies: currencies.getAllCurrencies(),
     selectedCurrency: 'CNY',
+    currentCurrency: { flag: '🇨🇳', code: 'CNY' },
+    showCurrencyPicker: false,
     currencySymbol: '¥',
     exchangeRate: 1,
     amountCNYText: '0.00',
@@ -115,6 +117,10 @@ Page({
   },
 
   // ========== 币种 ==========
+  toggleCurrencyPicker() {
+    this.setData({ showCurrencyPicker: !this.data.showCurrencyPicker })
+  },
+
   selectCurrency(e) {
     const code = e.currentTarget.dataset.code
     const info = currencies.getCurrency(code)
@@ -122,7 +128,9 @@ Page({
       selectedCurrency: code,
       currencySymbol: info.symbol,
       exchangeRate: info.rate,
-      rateDisplay: currencies.getRateDisplay(code)
+      rateDisplay: currencies.getRateDisplay(code),
+      currentCurrency: { flag: info.flag, code: code },
+      showCurrencyPicker: false
     })
     this.afterAmountChange()
   },

@@ -2,33 +2,52 @@
 <wxs src="../../utils/format.wxs" module="fmt"></wxs>
 <view class="container">
 
-  <!-- 收入/支出切换 + 金额 -->
+  <!-- 收入/支出切换 + 金额 + 币种胶囊 -->
   <view class="type-amount">
     <view class="type-switch">
       <view class="type-btn {{billType === 'expense' ? 'active expense' : ''}}" bindtap="switchType" data-type="expense">支出</view>
       <view class="type-btn {{billType === 'income' ? 'active income' : ''}}" bindtap="switchType" data-type="income">收入</view>
     </view>
-    <view class="amount-display">
-      <text class="amount-symbol">{{currencySymbol}}</text>
-      <text class="amount-value">{{amountStr || '0'}}</text>
-      <view class="cursor" wx:if="{{!amountStr}}"></view>
+    <view class="amount-row">
+      <view class="amount-display">
+        <text class="amount-symbol">{{currencySymbol}}</text>
+        <text class="amount-value">{{amountStr || '0'}}</text>
+        <view class="cursor" wx:if="{{!amountStr}}"></view>
+      </view>
+      <!-- 币种胶囊 -->
+      <view class="currency-capsule" bindtap="toggleCurrencyPicker">
+        <text class="currency-capsule-flag">{{currentCurrency.flag}}</text>
+        <text class="currency-capsule-code">{{currentCurrency.code}}</text>
+        <text class="currency-capsule-arrow">{{showCurrencyPicker ? '▲' : '▼'}}</text>
+      </view>
     </view>
   </view>
 
-  <!-- 币种 -->
-  <view class="section-flat">
-    <text class="flat-label">币种</text>
-    <scroll-view class="currency-scroll" scroll-x enable-flex>
-      <view class="currency-item {{selectedCurrency === item.code ? 'selected' : ''}}"
-            wx:for="{{currencies}}" wx:key="code"
-            bindtap="selectCurrency" data-code="{{item.code}}">
-        <text class="currency-flag">{{item.flag}}</text>
-        <text class="currency-code">{{item.code}}</text>
+  <!-- 币种选择弹出层 -->
+  <view class="currency-picker-mask" wx:if="{{showCurrencyPicker}}" bindtap="toggleCurrencyPicker">
+    <view class="currency-picker" catchtap="">
+      <view class="currency-picker-header">
+        <text class="currency-picker-title">选择币种</text>
+        <text class="currency-picker-close" bindtap="toggleCurrencyPicker">✕</text>
       </view>
-    </scroll-view>
-    <view class="exchange-info" wx:if="{{selectedCurrency !== 'CNY'}}">
-      <text class="exchange-text">{{rateDisplay}} → ≈¥{{amountCNYText}}</text>
+      <scroll-view scroll-y class="currency-picker-list">
+        <view class="currency-pick-item {{selectedCurrency === item.code ? 'selected' : ''}}"
+              wx:for="{{currencies}}" wx:key="code"
+              bindtap="selectCurrency" data-code="{{item.code}}">
+          <text class="currency-pick-flag">{{item.flag}}</text>
+          <view class="currency-pick-info">
+            <text class="currency-pick-code">{{item.code}}</text>
+            <text class="currency-pick-name">{{item.name}}</text>
+          </view>
+          <text class="currency-pick-check" wx:if="{{selectedCurrency === item.code}}">✓</text>
+        </view>
+      </scroll-view>
     </view>
+  </view>
+
+  <!-- 汇率提示 -->
+  <view class="exchange-info" wx:if="{{selectedCurrency !== 'CNY' && rateDisplay}}">
+    <text class="exchange-text">{{rateDisplay}} → ≈¥{{amountCNYText}}</text>
   </view>
 
   <!-- 分类：单行6个，其他展开 -->
