@@ -113,6 +113,10 @@ Page({
       await Promise.all(tasks)
     }
 
+    // 切换账本后清统计缓存和索引
+    storage._monthIndex = null
+    storage._statsCache = {}
+
     const members = storage.getActiveMembers()
 
     // 计算当前账本概览（getBills 在共享模式下自动走账本缓存）
@@ -179,11 +183,13 @@ Page({
 
   // ========== 账本切换 ==========
 
-  switchLedgerTap(e) {
+  async switchLedgerTap(e) {
     const id = e.currentTarget.dataset.id
     const result = ledger.switchLedger(id)
     if (result.success) {
-      this.loadData()
+      // 切换账本后必须清缓存，否则 getBills 还返回旧账本的数据
+      storage.invalidateCache()
+      await this.loadData()
       wx.showToast({ title: `已切换到 ${result.info.name || '个人'}`, icon: 'none' })
     }
   },
