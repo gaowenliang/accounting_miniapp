@@ -72,13 +72,47 @@ Page({
     this.loadData()
   },
 
-  loadData() {
+  async loadData() {
     const current = ledger.getCurrentLedger()
     const list = ledger.ensureAndGetList()
     const stats = storage.getOverallStats()
     const accounts = storage.getAccounts()
     const totalAssets = accounts.reduce((s, a) => s + (a.balance || 0), 0)
     const budget = storage.getBudget()
+
+    // 共享账本模式下先拉最新数据
+    if (current.inLedger && current.id) {
+      const cloudId = ledger.getCloudId(current.id)
+      // 并行拉账单和成员
+      const tasks = []
+      tasks.push(
+        wx.cloud.callFunction({
+          name: 'billData',
+          data: { action: 'getLedgerBills', ledgerId: cloudId, limit: 2000 }
+        }).then(res => {
+          if (res.result && res.result.success) {
+            ledger.setCachedBills(current.id, res.result.data)
+          }
+        }).catch(() => {})
+      )
+      tasks.push(
+        wx.cloud.callFunction({
+          name: 'billData',
+          data: { action: 'getLedgerMembers', ledgerId: cloudId }
+        }).then(res => {
+          if (res.result && res.result.success) {
+            const ms = (res.result.data || []).map(m => ({
+              id: m._openid,
+              name: m.nickname || m._openid.slice(-4),
+              avatar: '😊'
+            }))
+            ledger.setCachedMembers(current.id, ms)
+          }
+        }).catch(() => {})
+      )
+      await Promise.all(tasks)
+    }
+
     const members = storage.getActiveMembers()
 
     // 计算当前账本概览（getBills 在共享模式下自动走账本缓存）
