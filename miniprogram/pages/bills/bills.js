@@ -4,6 +4,7 @@ const util = require('../../utils/util')
 const storage = require('../../utils/storage')
 const categories = require('../../data/categories')
 const currencies = require('../../data/currencies')
+const ledger = require('../../utils/ledger')
 
 Page({
   data: {
@@ -50,12 +51,40 @@ Page({
     this.setData({ showDetail: !this.data.showDetail })
   },
 
-  loadBills() {
+  async loadBills() {
     const { currentYear, currentMonth, filterType, searchKeyword } = this.data
     this.setData({ monthLabel: `${currentYear}年${currentMonth}月` })
 
-    // 一次取出全月数据
-    const allMonthBills = storage.getBillsByMonth(currentYear, currentMonth)
+    // 一次取出全月数据（共享账本用缓存，个人用本地 storage）
+    let allMonthBills
+    const current = ledger.getCurrentLedger()
+    if (current.inLedger && current.id) {
+      // 共享账本模式：从云端缓存读
+      await ledger.refreshBills(current.id)
+      allMonthBills = ledger.getCachedBills(current.id)
+        .filter(b => {
+          const d = new Date(b.date)
+          return d.getFullYear() === currentYear && (d.getMonth() + 1) === currentMonth
+        })
+      // 共享账本的 members 从云端缓存取
+      var ledgerMembers = ledger.getCachedMembers(current.id)
+      if (ledgerMembers.length === 0) {
+        // 尝试拉取
+        try {
+          const cloudId = ledger.getCloudId(current.id)
+          const res = await wx.cloud.callFunction({
+            name: 'billData',
+            data: { action: 'getLedgerMembers', ledgerId: cloudId }
+          })
+          if (res.result && res.result.success) {
+            ledgerMembers = res.result.data.map(m => ({ id: m._openid, name: m.nickname || m._openid.slice(-4), avatar: '😊' }))
+            ledger.setCachedMembers(current.id, ledgerMembers)
+          }
+        } catch (e) {}
+      }
+    } else {
+      allMonthBills = storage.getBillsByMonth(currentYear, currentMonth)
+    }
 
     // 类型筛选 + 搜索
     let bills = allMonthBills
@@ -83,7 +112,7 @@ Page({
     // 按日期分组
     const groups = {}
     // 预加载 members 避免循环内重复调用
-    const members = storage.getMembers()
+    const members = storage.getActiveMembers()
     const memberMap = new Map(members.map(m => [m.id, m]))
     bills.forEach(b => {
       const dateStr = util.formatDate(b.date)

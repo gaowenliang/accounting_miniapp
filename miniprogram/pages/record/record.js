@@ -70,7 +70,7 @@ Page({
   },
 
   onShow() {
-    const members = storage.getMembers()
+    const members = storage.getActiveMembers()
     const current = ledger.getCurrentLedger()
     this.setData({
       members,

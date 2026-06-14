@@ -96,6 +96,14 @@ const StorageManager = {
   // ========== 账单 ==========
 
   getBills() {
+    // 共享账本模式返回云端缓存
+    try {
+      const ledger = require('./ledger')
+      const current = ledger.getCurrentLedger()
+      if (current.inLedger && current.id) {
+        return ledger.getCachedBills(current.id) || []
+      }
+    } catch (e) {}
     const cached = this._getCached(this.KEYS.BILLS)
     return cached || []
   },
@@ -167,8 +175,22 @@ const StorageManager = {
 
   /**
    * 获取某月账单（使用按月索引，O(1) 查找）
+   * 共享账本模式下自动走云端缓存
    */
   getBillsByMonth(year, month) {
+    // 检查是否在共享账本模式
+    try {
+      const ledger = require('./ledger')
+      const current = ledger.getCurrentLedger()
+      if (current.inLedger && current.id) {
+        const all = ledger.getCachedBills(current.id) || []
+        return all.filter(b => {
+          const d = new Date(b.date)
+          return d.getFullYear() === year && (d.getMonth() + 1) === month
+        })
+      }
+    } catch (e) {}
+    // 个人模式
     this._ensureMonthIndex()
     const key = year + '-' + month
     return this._monthIndex[key] || []
@@ -698,6 +720,49 @@ const StorageManager = {
     })).sort((a, b) => b.amountCNY - a.amountCNY)
 
     return { list, totalCNY }
+  },
+
+  // ========== 统一数据获取（支持共享账本） ==========
+
+  /**
+   * 获取当前生效的账单（个人本地 or 共享缓存）
+   * 页面统一调这个，不用关心在哪个账本
+   */
+  getActiveBills() {
+    const ledger = require('./ledger')
+    const current = ledger.getCurrentLedger()
+    if (current.inLedger && current.id) {
+      return this.getCachedBillsForLedger(current.id)
+    }
+    return this.getBills()
+  },
+
+  getActiveBillsByMonth(year, month) {
+    const ledger = require('./ledger')
+    const current = ledger.getCurrentLedger()
+    if (current.inLedger && current.id) {
+      const all = ledger.getCachedBills(current.id) || []
+      return all.filter(b => {
+        const d = new Date(b.date)
+        return d.getFullYear() === year && (d.getMonth() + 1) === month
+      })
+    }
+    return this.getBillsByMonth(year, month)
+  },
+
+  getActiveMembers() {
+    const ledger = require('./ledger')
+    const current = ledger.getCurrentLedger()
+    if (current.inLedger && current.id) {
+      const cached = ledger.getCachedMembers(current.id)
+      if (cached && cached.length > 0) return cached
+    }
+    return this.getMembers()
+  },
+
+  getCachedBillsForLedger(ledgerId) {
+    const ledger = require('./ledger')
+    return ledger.getCachedBills(ledgerId) || []
   },
 
   // ========== 成员分组 ==========

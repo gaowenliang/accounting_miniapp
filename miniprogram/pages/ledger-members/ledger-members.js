@@ -42,9 +42,10 @@ Page({
 
   async fetchCloudMembers() {
     try {
+      const cloudId = ledger.getCloudId(this.ledgerId)
       const res = await wx.cloud.callFunction({
         name: 'billData',
-        data: { action: 'getLedgerMembers', ledgerId: this.ledgerId }
+        data: { action: 'getLedgerMembers', ledgerId: cloudId }
       })
       if (res.result && res.result.success) {
         const members = res.result.data || []
@@ -72,9 +73,10 @@ Page({
         wx.showLoading({ title: '移除中...' })
         try {
           if (wx.cloud) {
+            const cloudId = ledger.getCloudId(this.ledgerId)
             await wx.cloud.callFunction({
               name: 'billData',
-              data: { action: 'removeLedgerMember', ledgerId: this.ledgerId, targetOpenid: openid }
+              data: { action: 'removeLedgerMember', ledgerId: cloudId, targetOpenid: openid }
             })
           }
           wx.hideLoading()

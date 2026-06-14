@@ -113,7 +113,7 @@ Page({
     const ranking = storage.getCategoryRanking(currentYear, currentMonth)
 
     // 统计每个分类的笔数
-    const bills = storage.getBillsByMonth(currentYear, currentMonth)
+    const bills = storage.getActiveBillsByMonth(currentYear, currentMonth)
     const expenseBills = bills.filter(b => b.type === 'expense')
     const catCountMap = {}
     expenseBills.forEach(b => {
@@ -165,7 +165,7 @@ Page({
     // 一次拉全年数据，避免循环 12 次
     const yearStart = util.monthStart(currentYear, 1)
     const yearEnd = util.monthEnd(currentYear, 12)
-    const allBills = storage.getBills().filter(b => b.date >= yearStart && b.date <= yearEnd)
+    const allBills = storage.getActiveBills().filter(b => b.date >= yearStart && b.date <= yearEnd)
 
     let totalExpense = 0, totalIncome = 0
     const monthlyData = []
@@ -197,7 +197,7 @@ Page({
     const { currentYear, currentMonth } = this.data
     const stats = storage.getPersonStats(currentYear, currentMonth)
     // 给每人加账单明细
-    const bills = storage.getBillsByMonth(currentYear, currentMonth)
+    const bills = storage.getActiveBillsByMonth(currentYear, currentMonth)
     const categories = require('../../data/categories')
     stats.forEach(person => {
       const personBills = bills
@@ -230,7 +230,7 @@ Page({
 
   loadAA() {
     const { currentYear, currentMonth } = this.data
-    const members = storage.getMembers()
+    const members = storage.getActiveMembers()
     const result = storage.getAAResult(currentYear, currentMonth)
     this.setData({
       aaResult: result,

@@ -38,19 +38,30 @@ const LedgerManager = {
   },
 
   /**
+   * 获取账本的云端 ID
+   * 共享账本的 cloudId 才是云函数需要的真实 ID
+   */
+  getCloudId(ledgerId) {
+    const list = this.getLedgerList()
+    const item = list.find(l => l.id === ledgerId)
+    return item ? (item.cloudId || item.id) : ledgerId
+  },
+
+  /**
    * 切换账本
    */
   switchLedger(ledgerId) {
     const list = this.getLedgerList()
-    const ledger = list.find(l => l.id === ledgerId)
-    if (ledger) {
+    const item = list.find(l => l.id === ledgerId)
+    if (item) {
       const info = {
-        id: ledger.id,
-        name: ledger.name,
-        type: ledger.type,   // 'personal' | 'shared'
-        role: ledger.role,    // 'owner' | 'member'
-        icon: ledger.icon,
-        inLedger: ledger.type === 'shared'
+        id: item.id,
+        cloudId: item.cloudId || null,
+        name: item.name,
+        type: item.type,   // 'personal' | 'shared'
+        role: item.role,    // 'owner' | 'member'
+        icon: item.icon,
+        inLedger: item.type === 'shared'
       }
       storage.cachedSet(this.KEYS.CURRENT_LEDGER, info)
       return { success: true, info }
@@ -185,12 +196,13 @@ const LedgerManager = {
     // 清缓存
     this._clearLedgerCache(ledgerId)
 
-    // 共享账本：云端清理
+    // 共享账本：云端清理（用 cloudId）
     if (target && target.type === 'shared' && wx.cloud) {
+      const cloudId = target.cloudId || target.id
       try {
         wx.cloud.callFunction({
           name: 'billData',
-          data: { action: 'leaveLedger', ledgerId }
+          data: { action: 'leaveLedger', ledgerId: cloudId }
         })
       } catch (e) {}
     }
@@ -279,17 +291,19 @@ const LedgerManager = {
    */
   async leaveLedger(ledgerId) {
     const list = this.getLedgerList()
-    const ledger = list.find(l => l.id === ledgerId)
-    if (!ledger || ledger.type !== 'shared') {
+    const ledgerItem = list.find(l => l.id === ledgerId)
+    if (!ledgerItem || ledgerItem.type !== 'shared') {
       return { success: false, reason: '非共享账本' }
     }
+
+    const cloudId = ledgerItem.cloudId || ledgerId
 
     // 云端退出
     if (wx.cloud) {
       try {
         const res = await wx.cloud.callFunction({
           name: 'billData',
-          data: { action: 'leaveLedger', ledgerId }
+          data: { action: 'leaveLedger', ledgerId: cloudId }
         })
         const result = res.result || {}
         if (result.reason) {
@@ -352,15 +366,17 @@ const LedgerManager = {
    * 2. 后台推云端
    */
   optimisticAddBill(ledgerId, bill) {
+    // ledgerId 可能是本地 id，转换为 cloudId
+    const cloudId = this.getCloudId(ledgerId)
     const cache = this.getCachedBills(ledgerId)
     cache.unshift(bill)
     this.setCachedBills(ledgerId, cache)
 
-    // 后台推云
+    // 后台推云（用 cloudId）
     if (wx.cloud) {
       wx.cloud.callFunction({
         name: 'billData',
-        data: { action: 'addBill', ledgerId, data: bill }
+        data: { action: 'addBill', ledgerId: cloudId, data: bill }
       }).then(res => {
         if (res.result && res.result.success) {
           // 静默拉真数据
@@ -383,10 +399,11 @@ const LedgerManager = {
    */
   async refreshBills(ledgerId) {
     if (!wx.cloud) return
+    const cloudId = this.getCloudId(ledgerId)
     try {
       const res = await wx.cloud.callFunction({
         name: 'billData',
-        data: { action: 'getLedgerBills', ledgerId, limit: 200 }
+        data: { action: 'getLedgerBills', ledgerId: cloudId, limit: 200 }
       })
       if (res.result && res.result.success) {
         this.setCachedBills(ledgerId, res.result.data)
