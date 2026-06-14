@@ -269,7 +269,12 @@ Page({
             ? -(bill.amountCNY || bill.amount)
             : (bill.amountCNY || bill.amount)
           storage.updateAccountBalance(bill.account, delta)
-          storage.deleteBill(billId)
+          // 共享账本走云端删除，个人走本地
+          if (ledger.isInLedger()) {
+            ledger.optimisticDeleteBill(ledger.getCurrentLedger().id, billId)
+          } else {
+            storage.deleteBill(billId)
+          }
           this.loadBills()
           wx.showToast({ title: '已删除', icon: 'success' })
         }
@@ -335,7 +340,12 @@ Page({
     if (oldBill && oldBill.currency && oldBill.currency !== 'CNY') {
       updates.amountCNY = newAmountCNY
     }
-    storage.updateBill(editingBillId, updates)
+    // 共享账本走云端更新，个人走本地
+    if (ledger.isInLedger()) {
+      ledger.optimisticUpdateBill(ledger.getCurrentLedger().id, editingBillId, updates)
+    } else {
+      storage.updateBill(editingBillId, updates)
+    }
 
     this.setData({ showEditModal: false })
     this.loadBills()

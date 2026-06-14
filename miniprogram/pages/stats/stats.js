@@ -86,6 +86,8 @@ Page({
 
   nextMonth() {
     let { currentYear, currentMonth } = this.data
+    const now = new Date()
+    if (currentYear === now.getFullYear() && currentMonth === now.getMonth() + 1) return
     currentMonth++
     if (currentMonth > 12) { currentMonth = 1; currentYear++ }
     this.setData({ currentYear, currentMonth })
@@ -98,6 +100,8 @@ Page({
   },
 
   nextYear() {
+    const now = new Date()
+    if (this.data.currentYear >= now.getFullYear()) return
     this.setData({ currentYear: this.data.currentYear + 1 })
     this.refresh()
   },

@@ -76,7 +76,7 @@ Page({
             const cloudId = ledger.getCloudId(this.ledgerId)
             await wx.cloud.callFunction({
               name: 'billData',
-              data: { action: 'removeLedgerMember', ledgerId: cloudId, targetOpenid: openid }
+              data: { action: 'removeLedgerMember', ledgerId: cloudId, memberId: openid }
             })
           }
           wx.hideLoading()

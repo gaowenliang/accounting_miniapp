@@ -519,7 +519,8 @@ const StorageManager = {
           let splitSum = 0
           const splitsInCNY = b.splits.filter(s => participantSet.has(s.memberId)).map((s, i, arr) => {
             if (i < arr.length - 1) {
-              const v = Math.round(s.amount / b.amount * billAmount)
+              const ratio = b.amount > 0 ? s.amount / b.amount : 0
+              const v = Math.round(ratio * billAmount)
               splitSum += v
               return { memberId: s.memberId, amount: v }
             } else {

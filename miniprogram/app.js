@@ -49,6 +49,11 @@ App({
   },
 
   async cloudSync() {
+    // 只在个人模式下执行启动同步，共享账本不混数据
+    try {
+      const ledger = require('./utils/ledger')
+      if (ledger.isInLedger()) return
+    } catch (e) {}
     try {
       const result = await cloudSync.syncOnStartup()
       console.debug('[app] 云同步完成:', result)

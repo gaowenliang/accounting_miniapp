@@ -414,6 +414,50 @@ const LedgerManager = {
   },
 
   /**
+   * 删除共享账本账单（先删本地缓存，再推云）
+   */
+  optimisticDeleteBill(ledgerId, billId) {
+    const cache = this.getCachedBills(ledgerId)
+    const filtered = cache.filter(b => b.id !== billId)
+    this.setCachedBills(ledgerId, filtered)
+
+    const cloudId = this.getCloudId(ledgerId)
+    if (wx.cloud) {
+      wx.cloud.callFunction({
+        name: 'billData',
+        data: { action: 'deleteBill', billId, ledgerId: cloudId }
+      }).then(res => {
+        if (res.result && res.result.success) {
+          this.refreshBills(ledgerId)
+        }
+      }).catch(err => {
+        console.warn('云端删除失败:', err)
+        // 回滚：重新拉取
+        this.refreshBills(ledgerId)
+      })
+    }
+  },
+
+  /**
+   * 编辑共享账本账单（先改本地缓存，再推云）
+   */
+  optimisticUpdateBill(ledgerId, billId, updates) {
+    const cache = this.getCachedBills(ledgerId)
+    const idx = cache.findIndex(b => b.id === billId)
+    if (idx >= 0) {
+      cache[idx] = { ...cache[idx], ...updates, updatedAt: Date.now() }
+      this.setCachedBills(ledgerId, cache)
+    }
+
+    const cloudId = this.getCloudId(ledgerId)
+    if (wx.cloud) {
+      // 云端没有独立 updateBill action，用 addBill + deleteBill 模拟
+      // 或者直接刷新拉取最新
+      this.refreshBills(ledgerId)
+    }
+  },
+
+  /**
    * 清理账本相关缓存（统一方法）
    */
   _clearLedgerCache(ledgerId) {

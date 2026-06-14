@@ -10,8 +10,8 @@ const { checkRateLimit } = require('./rateLimit')
 const CATEGORIES = {
   food: '餐饮', transport: '交通', shopping: '购物', housing: '住房',
   entertainment: '娱乐', telecom: '通讯', medical: '医疗', education: '教育',
-  clothing: '服饰', travel: '旅行', gift: '人情', pet: '宠物', other: '其他',
-  salary: '工资', bonus: '奖金', invest: '投资', redpacket: '红包', freelance: '兼职'
+  clothing: '服饰', travel: '旅行', social: '人情', pet: '宠物', other: '其他',
+  salary: '工资', bonus: '奖金', investment: '投资', gift: '红包', freelance: '兼职'
 }
 
 exports.main = async (event, context) => {
