@@ -174,12 +174,65 @@ Page({
     this.setData({ newLedgerType: e.currentTarget.dataset.type })
   },
 
-  confirmCreateLedger() {
+  async confirmCreateLedger() {
     const name = this.data.newLedgerName.trim()
     if (!name) { wx.showToast({ title: '请输入账本名称', icon: 'none' }); return }
     if (name.length > 10) { wx.showToast({ title: '名称最多10个字', icon: 'none' }); return }
 
-    const newLedger = ledger.createLedger(name, this.data.newLedgerType)
+    const type = this.data.newLedgerType
+
+    // 共享账本需要云端创建
+    if (type === 'shared') {
+      if (!wx.cloud) {
+        wx.showToast({ title: '需要云开发支持', icon: 'none' }); return
+      }
+      wx.showLoading({ title: '创建中...' })
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'billData',
+          data: {
+            action: 'createLedger',
+            data: { name, icon: '📒' }
+          }
+        })
+        wx.hideLoading()
+        if (!res.result || !res.result.success) {
+          wx.showModal({
+            title: '创建失败',
+            content: res.result ? res.result.error : '云函数返回异常',
+            showCancel: false
+          })
+          return
+        }
+        // 云端创建成功，同步到本地
+        const cloudLedger = {
+          id: 'shared_' + res.result._id,
+          cloudId: res.result._id,
+          name,
+          icon: '📒',
+          type: 'shared',
+          role: 'owner',
+          inviteCode: res.result.inviteCode,
+          createdAt: Date.now(),
+          memberCount: 1
+        }
+        const list = ledger.getLedgerList()
+        list.unshift(cloudLedger)
+        ledger.saveLedgerList(list)
+      } catch (e) {
+        wx.hideLoading()
+        wx.showModal({
+          title: '创建失败',
+          content: '云函数调用失败：' + (e.errMsg || e.message || '未知错误') + '\n\n请确认：\n1. 已部署 billData 云函数\n2. 已运行 initCollections 创建数据库集合\n3. ledgers/ledger_members 集合权限已设置',
+          showCancel: false
+        })
+        return
+      }
+    } else {
+      // 个人账本，纯本地
+      ledger.createLedger(name, type)
+    }
+
     this.setData({ showLedgerModal: false })
     this.loadData()
     wx.showToast({ title: `已创建「${name}」`, icon: 'success' })
