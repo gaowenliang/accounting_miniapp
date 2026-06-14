@@ -49,9 +49,8 @@
 .exchange-text { font-size: 22rpx; color: #F59E0B; font-weight: 500; }
 
 /* 分类 4列网格 */
-.category-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8rpx 4rpx;
-}
+.category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8rpx 4rpx; }
+.category-grid-6 { grid-template-columns: repeat(6, 1fr); gap: 4rpx; }
 .cat-item {
   display: flex; flex-direction: column; align-items: center;
   padding: 8rpx 4rpx; border-radius: 12rpx; transition: background 0.15s;

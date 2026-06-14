@@ -31,24 +31,19 @@
     </view>
   </view>
 
-  <!-- 分类：前8个 + 更多 -->
+  <!-- 分类：单行6个，其他展开 -->
   <view class="section-flat">
     <text class="flat-label">分类</text>
-    <view class="category-grid">
+    <view class="category-grid category-grid-6">
       <view class="cat-item {{selectedCategory === item.key ? 'selected' : ''}}"
             wx:for="{{topCategories}}" wx:key="key"
             bindtap="selectCategory" data-key="{{item.key}}">
         <text class="cat-icon">{{item.icon}}</text>
         <text class="cat-name">{{item.name}}</text>
       </view>
-      <!-- 更多/收起 -->
-      <view class="cat-item cat-more" bindtap="toggleMoreCategories">
-        <text class="cat-icon">{{showMoreCategories ? '▲' : '···'}}</text>
-        <text class="cat-name">{{showMoreCategories ? '收起' : '更多'}}</text>
-      </view>
     </view>
     <!-- 展开的更多分类 -->
-    <view class="category-grid" wx:if="{{showMoreCategories}}">
+    <view class="category-grid category-grid-6" wx:if="{{showMoreCategories && moreCategories.length > 0}}">
       <view class="cat-item {{selectedCategory === item.key ? 'selected' : ''}}"
             wx:for="{{moreCategories}}" wx:key="key"
             bindtap="selectCategory" data-key="{{item.key}}">

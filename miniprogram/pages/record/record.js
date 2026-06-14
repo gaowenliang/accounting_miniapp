@@ -76,10 +76,28 @@ Page({
 
   splitCategories() {
     const list = this.data.categoryList
-    this.setData({
-      topCategories: list.slice(0, 7),
-      moreCategories: list.slice(7)
+    // 固定前5个常用分类 + 第6位「其他」占位
+    // 支出：餐饮、购物、交通、住宿、旅行 + 其他
+    // 收入：工资、奖金、投资、兼职、红包 + 其他
+    const isExpense = this.data.billType === 'expense'
+    const topKeys = isExpense
+      ? ['food', 'shopping', 'transport', 'housing', 'travel']
+      : ['salary', 'bonus', 'investment', 'freelance', 'gift']
+    const topCategories = []
+    const moreCategories = []
+    list.forEach(c => {
+      if (topKeys.includes(c.key)) {
+        topCategories.push(c)
+      } else if (c.key !== 'other') {
+        moreCategories.push(c)
+      }
     })
+    // 按预设顺序排
+    topCategories.sort((a, b) => topKeys.indexOf(a.key) - topKeys.indexOf(b.key))
+    // 「其他」放第6位
+    const otherCat = list.find(c => c.key === 'other')
+    if (otherCat) topCategories.push(otherCat)
+    this.setData({ topCategories, moreCategories })
   },
 
   toggleMoreCategories() {
@@ -110,7 +128,17 @@ Page({
   },
   // ========== 分类 ==========
   selectCategory(e) {
-    this.setData({ selectedCategory: e.currentTarget.dataset.key })
+    const key = e.currentTarget.dataset.key
+    if (key === 'other') {
+      // 点「其他」：如果已经选中就收起，否则选中并展开更多
+      if (this.data.selectedCategory === 'other' && this.data.showMoreCategories) {
+        this.setData({ showMoreCategories: false })
+      } else {
+        this.setData({ selectedCategory: 'other', showMoreCategories: true })
+      }
+    } else {
+      this.setData({ selectedCategory: key, showMoreCategories: false })
+    }
   },
 
   // ========== 花费人 ==========
