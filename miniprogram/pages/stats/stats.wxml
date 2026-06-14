@@ -295,9 +295,7 @@
   <!-- ===== AA结算 ===== -->
   <block wx:if="{{mode === 'aa'}}">
     <view class="period-nav">
-      <view class="nav-arrow" bindtap="prevMonth">◀</view>
-      <text class="period-label">{{currentYear}}年{{currentMonth}}月</text>
-      <view class="nav-arrow" bindtap="nextMonth">▶</view>
+      <text class="period-label" style="color:#4F46E5;">📊 全量结算（覆盖账本内所有支出）</text>
     </view>
 
     <!-- 参与人选择 -->

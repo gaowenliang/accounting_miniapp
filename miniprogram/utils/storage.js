@@ -479,9 +479,31 @@ const StorageManager = {
    * @param {Array} participantIds 参与AA的人员ID列表，不传则用全部人员
    * @returns {{ totalExpense, perPerson, details }}
    */
+  /**
+   * AA结算计算（全量，覆盖整个账本所有支出）
+   */
+  getAAResultAll(participantIds) {
+    const bills = this.getBills().filter(b => b.type === 'expense')
+    const members = this.getActiveMembers()
+    return this._calcAA(bills, members, participantIds)
+  },
+
+  /**
+   * AA结算计算（按月）
+   */
   getAAResult(year, month, participantIds) {
     const bills = this.getBillsByMonth(year, month)
     const members = this.getMembers()
+    return this._calcAA(bills, members, participantIds)
+  },
+
+  /**
+   * AA结算核心算法
+   * @param {Array} bills 支出账单列表
+   * @param {Array} members 成员列表
+   * @param {Array} participantIds 参与AA的人员ID列表，不传则用全部成员
+   */
+  _calcAA(bills, members, participantIds) {
     const memberMap = {}
     members.forEach(m => { memberMap[m.id] = m })
 

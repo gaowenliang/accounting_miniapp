@@ -101,7 +101,52 @@ function loadRates() {
   try { return wx.getStorageSync('exchange_rates') } catch (e) { return null }
 }
 
+/**
+ * 从免费 API 获取最新汇率并更新 CURRENCIES 数组
+ * 数据源: open.er-api.com (无 API Key 限制)
+ */
+async function refreshRatesFromAPI() {
+  try {
+    const res = await new Promise((resolve, reject) => {
+      wx.request({
+        url: 'https://open.er-api.com/v6/latest/CNY',
+        success: resolve,
+        fail: reject
+      })
+    })
+    if (res.statusCode === 200 && res.data && res.data.rates) {
+      const rates = res.data.rates
+      const now = Date.now()
+      CURRENCIES.forEach(c => {
+        if (c.code === 'CNY') { c.rate = 1; return }
+        const r = rates[c.code]
+        if (r) {
+          if (c.mode === 'direct') {
+            c.rate = r  // 1外币 = r人民币
+          } else {
+            c.rate = 1 / r  // 1人民币 = r外币 → rate = 1/r
+          }
+        }
+      })
+      saveRates({ updatedAt: now })
+      return { success: true, updatedAt: now }
+    }
+    return { success: false, error: 'API 返回异常' }
+  } catch (e) {
+    return { success: false, error: e.message || '网络错误' }
+  }
+}
+
+/**
+ * 获取汇率最后更新时间
+ */
+function getRatesUpdatedAt() {
+  const saved = loadRates()
+  return saved ? saved.updatedAt : null
+}
+
 module.exports = {
   CURRENCIES, getCurrency, toCNY, getAllCurrencies,
-  getRateDisplay, saveRates, loadRates, saveCurrencyOrder
+  getRateDisplay, saveRates, loadRates, saveCurrencyOrder,
+  refreshRatesFromAPI, getRatesUpdatedAt
 }

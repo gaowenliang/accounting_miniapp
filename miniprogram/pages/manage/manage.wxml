@@ -118,9 +118,12 @@
       <text class="collapse-icon">{{showCurrencySort ? '▲' : '▼'}}</text>
     </view>
     <view class="card" wx:if="{{showCurrencySort}}">
-      <view class="section-header" style="padding:0 0 10rpx">
-        <text class="action-btn" bindtap="resetCurrencyOrder">恢复默认</text>
+      <view class="section-header" style="padding:0 0 10rpx;display:flex;justify-content:space-between;">
+        <text class="action-btn" bindtap="refreshRates" wx:if="{{!refreshRatesLoading}}">🔄 更新汇率</text>
+        <text class="action-btn" wx:else>更新中...</text>
+        <text class="action-btn" bindtap="resetCurrencyOrder">恢复默认排序</text>
       </view>
+      <text class="rate-updated-hint" wx:if="{{rateUpdatedAt}}">上次更新: {{rateUpdatedAt}}</text>
       <view class="currency-sort-item" wx:for="{{currencyList}}" wx:key="code">
         <text class="cs-flag">{{item.flag}}</text>
         <text class="cs-code">{{item.code}}</text>

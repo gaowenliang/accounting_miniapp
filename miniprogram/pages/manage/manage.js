@@ -65,6 +65,8 @@ Page({
     showErrorModal: false,
     // 折叠状态
     showCurrencySort: false,
+    refreshRatesLoading: false,
+    rateUpdatedAt: '',
     showCatSort: false
   },
 
@@ -159,6 +161,7 @@ Page({
       budgetAmountText: budget.amount > 0 ? (budget.amount / 100).toFixed(0) : '0',
       members,
       currencyList: currencies.getAllCurrencies(),
+      rateUpdatedAt: this._fmtRateTime(currencies.getRatesUpdatedAt()),
       catSortList: categories.getCategories(this.data.catSortType),
       overview: {
         memberCount: members.length,
@@ -895,6 +898,31 @@ Page({
     try { wx.removeStorageSync('currency_order') } catch (e) {}
     this.setData({ currencyList: currencies.getAllCurrencies() })
     wx.showToast({ title: '已恢复默认', icon: 'success' })
+  },
+
+  async refreshRates() {
+    this.setData({ refreshRatesLoading: true })
+    const result = await currencies.refreshRatesFromAPI()
+    this.setData({ refreshRatesLoading: false })
+    if (result.success) {
+      this.setData({
+        currencyList: currencies.getAllCurrencies(),
+        rateUpdatedAt: this._fmtRateTime(result.updatedAt)
+      })
+      wx.showToast({ title: '汇率已更新', icon: 'success' })
+    } else {
+      wx.showToast({ title: '更新失败: ' + (result.error || '未知'), icon: 'none' })
+    }
+  },
+
+  _fmtRateTime(ts) {
+    if (!ts) return '从未更新'
+    const d = new Date(ts)
+    const now = new Date()
+    const diff = Math.floor((now - d) / 3600000)
+    if (diff < 1) return '刚刚'
+    if (diff < 24) return diff + '小时前'
+    return Math.floor(diff / 24) + '天前'
   },
 
   toggleCurrencySort() {

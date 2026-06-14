@@ -233,9 +233,8 @@ Page({
   // ========== AA结算 ==========
 
   loadAA() {
-    const { currentYear, currentMonth } = this.data
     const members = storage.getActiveMembers()
-    const result = storage.getAAResult(currentYear, currentMonth)
+    const result = storage.getAAResultAll()
     this.setData({
       aaResult: result,
       aaParticipants: members.map(m => ({
@@ -275,13 +274,13 @@ Page({
   },
 
   recalcAA() {
-    const { currentYear, currentMonth, aaParticipants } = this.data
+    const { aaParticipants } = this.data
     const selectedIds = aaParticipants.filter(p => p.selected).map(p => p.id)
     if (selectedIds.length === 0) {
       this.setData({ aaResult: { totalExpense: 0, perPerson: 0, details: [] } })
       return
     }
-    const result = storage.getAAResult(currentYear, currentMonth, selectedIds)
+    const result = storage.getAAResultAll(selectedIds)
     // 更新 paid 和 balance
     const updated = aaParticipants.map(p => ({
       ...p,
